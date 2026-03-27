@@ -22,6 +22,6 @@ export const hashPassword = async (password, salt) => {
   return await bcrypt.hash(password, salt);
 }
 
-const generateSalt = async () => {
+export const generateSalt = async () => {
   return await bcrypt.genSalt(10);
 }

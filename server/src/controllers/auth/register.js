@@ -1,6 +1,5 @@
 import User from "../../models/User.js";
-import generateSalt from "../../utils/generateSalt.js";
-import { hashPassword } from "../../utils/security.js";
+import { hashPassword, generateToken, generateSalt} from "../../utils/security.js";
 
 export async function register(req, res) {
   const { name, email, password } = req.body;
