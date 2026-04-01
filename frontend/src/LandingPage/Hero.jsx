@@ -8,7 +8,7 @@ export default function Hero() {
         <h1>Discover Your Next<br /><em>Favorite</em> Book</h1>
         <p className={styles['hero-sub']}>Join millions of readers exploring thousands of books. From classics to contemporary, find your perfect read today.</p>
         <div className={styles['btn-group']}>
-          <a href="#" className={styles['btn-primary']}>Start Reading Free →</a>
+          <a href="/login" className={styles['btn-primary']}>Start Reading Free →</a>
           <a href="#books" className={styles['btn-outline']}>Browse Books</a>
         </div>
       </div>

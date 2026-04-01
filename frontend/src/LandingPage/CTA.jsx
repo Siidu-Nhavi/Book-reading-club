@@ -5,8 +5,8 @@ export default function CTA() {
     <section className={styles['cta-section']} id="cta">
       <h2>Join <em>thousands</em> of readers<br />and start your journey today.</h2>
       <p>Free to sign up. Thousands of books waiting. Your story starts here.</p>
-      <a href="#" className={styles['btn-primary']}>Sign Up Free →</a>
-      <a href="#books" className={styles['btn-outline']}>Browse First</a>
+      <a href="/login" className={styles['btn-primary']}>Sign Up Free →</a>
+      <a href="#books" className={styles['btn-outline']}>Browse Books</a>
     </section>
   );
 }
