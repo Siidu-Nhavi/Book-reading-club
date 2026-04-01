@@ -9,7 +9,7 @@ export default function Nav() {
         <li><a href="#categories">Categories</a></li>
         <li><a href="#books">Books</a></li>
         <li><a href="#how">How It Works</a></li>
-        <li><a href="/login" className={styles['nav-cta']}>Sign Up</a></li>
+        <li><a href="/signup" className={styles['nav-cta']}>Sign Up</a></li>
       </ul>
     </nav>
   );
