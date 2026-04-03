@@ -36,7 +36,7 @@ export default function Footer() {
           </ul>
         </div>
       </footer>
-      <div className={styles['footer-bottom']}>© 2025 BookNest – Online Reading Book System. All rights reserved.</div>
+      <div className={styles['footer-bottom']}>© 2026 BookNest – Online Reading Book System. All rights reserved.</div>
     </>
   );
 }
