@@ -1,23 +1,59 @@
-import { useState } from "react";
+import { useFormik } from "formik";
 import { Link } from "react-router-dom";
 import "./Auth.css";
 
-const Signup = () => {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
+const validateSignup = ({ name, email, password }) => {
+  const errors = {};
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Signup:", form);
-  };
+  if (!name.trim()) {
+    errors.name = "Name is required";
+  } else if (name.trim().length < 3) {
+    errors.name = "Name must be at least 3 characters";
+  }
+
+  if (!email.trim()) {
+    errors.email = "Email is required";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+    errors.email = "Enter a valid email address";
+  }
+
+  if (!password) {
+    errors.password = "Password is required";
+  } else if (password.length < 6) {
+    errors.password = "Password must be at least 6 characters";
+  }
+
+  return errors;
+};
+
+const inputErrorStyle = { border: "1px solid #ef4444" };
+const errorTextStyle = {
+  color: "#f87171",
+  fontSize: "12px",
+  marginTop: "-4px",
+  marginBottom: "6px",
+};
+
+const Signup = () => {
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      email: "",
+      password: "",
+    },
+    validate: validateSignup,
+    onSubmit: (values) => {
+      console.log("Signup:", {
+        ...values,
+        name: values.name.trim(),
+        email: values.email.trim(),
+      });
+    },
+  });
 
   return (
     <div className="auth-page">
       <div className="auth-shell">
-
         <div className="auth-card">
           <div className="auth-header">
             <span className="eyebrow">Start renting</span>
@@ -25,38 +61,51 @@ const Signup = () => {
             <p>Join and explore thousands of books.</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="auth-form">
+          <form onSubmit={formik.handleSubmit} className="auth-form" noValidate>
             <input
               type="text"
+              name="name"
               placeholder="Name"
-              value={form.name}
-              onChange={(e) =>
-                setForm({ ...form, name: e.target.value })
-              }
-              required
+              value={formik.values.name}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              style={formik.touched.name && formik.errors.name ? inputErrorStyle : undefined}
             />
+            {formik.touched.name && formik.errors.name && (
+              <small style={errorTextStyle}>{formik.errors.name}</small>
+            )}
 
             <input
               type="email"
+              name="email"
               placeholder="Email"
-              value={form.email}
-              onChange={(e) =>
-                setForm({ ...form, email: e.target.value })
-              }
-              required
+              value={formik.values.email}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              style={formik.touched.email && formik.errors.email ? inputErrorStyle : undefined}
             />
+            {formik.touched.email && formik.errors.email && (
+              <small style={errorTextStyle}>{formik.errors.email}</small>
+            )}
 
             <input
               type="password"
+              name="password"
               placeholder="Password"
-              value={form.password}
-              onChange={(e) =>
-                setForm({ ...form, password: e.target.value })
+              value={formik.values.password}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              style={
+                formik.touched.password && formik.errors.password ? inputErrorStyle : undefined
               }
-              required
             />
+            {formik.touched.password && formik.errors.password && (
+              <small style={errorTextStyle}>{formik.errors.password}</small>
+            )}
 
-            <button className="btn primary">Sign Up</button>
+            <button type="submit" className="btn primary">
+              Sign Up
+            </button>
           </form>
 
           <p className="auth-footer">
@@ -70,7 +119,6 @@ const Signup = () => {
             <p>Discover, rent, and enjoy books easily.</p>
           </div>
         </aside>
-
       </div>
     </div>
   );
