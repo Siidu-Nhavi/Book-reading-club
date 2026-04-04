@@ -1,8 +1,8 @@
-import express from "express";
-import dotenv from "dotenv";
-import authRoutes from "./routes/auth.js";
-import userRoutes from "./routes/user.js";
-import connectDB from "../config/db.js";
+const express = require("express");
+const dotenv = require("dotenv");
+const authRoutes = require("./routes/auth.js");
+const userRoutes = require("./routes/user.js");
+const connectDB = require("../config/db.js");
 
 dotenv.config();
 
