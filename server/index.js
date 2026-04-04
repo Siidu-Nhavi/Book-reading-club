@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/user.js";
-import connectDB from "./config/db.js";
+import connectDB from "../config/db.js";
 
 dotenv.config();
 
@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 // });
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ message: "Server is healthy" });
+  res.status(200).json({ message: "Server is running" });
 });
 
 app.use("/api/auth", authRoutes);
