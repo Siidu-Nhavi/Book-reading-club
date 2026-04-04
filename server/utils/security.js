@@ -1,7 +1,7 @@
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs");
 
-export const generateToken = (user) => {
+const generateToken = (user) => {
   const payload = {
     id: user._id,
     email: user.email,
@@ -10,7 +10,7 @@ export const generateToken = (user) => {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "30d" });
 };
 
-export const verifyToken = (token) => {
+const verifyToken = (token) => {
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
   } catch (err) {
@@ -18,10 +18,17 @@ export const verifyToken = (token) => {
   }
 };
 
-export const hashPassword = async (password, salt) => {
-  return await bcrypt.hash(password, salt);
-}
+const hashPassword = async (password, salt) => {
+  return bcrypt.hash(password, salt);
+};
 
-export const generateSalt = async () => {
-  return await bcrypt.genSalt(10);
-}
+const generateSalt = async () => {
+  return bcrypt.genSalt(10);
+};
+
+module.exports = {
+  generateToken,
+  verifyToken,
+  hashPassword,
+  generateSalt,
+};

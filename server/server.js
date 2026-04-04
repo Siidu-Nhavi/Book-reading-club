@@ -1,10 +1,11 @@
 const express = require("express");
+const path = require("path");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/auth.js");
 const userRoutes = require("./routes/user.js");
-const connectDB = require("../config/db.js");
+const connectDB = require("./config/db.js");
 
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -26,8 +27,17 @@ app.get("/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 
-await connectDB();
+async function startServer() {
+  try {
+    await connectDB();
 
-app.listen(PORT, () => {
-  console.log(`server is ready on http://${HOST}:${PORT}/`);
-});
+    app.listen(PORT, () => {
+      console.log(`server is ready on http://${HOST}:${PORT}/`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error.message);
+    process.exit(1);
+  }
+}
+
+startServer();
