@@ -8,8 +8,9 @@ const connectDB = require("./config/db.js");
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
 
 const app = express();
-const PORT = process.env.PORT ?? 3000;
+const PORT = process.env.PORT ;
 const HOST = process.env.HOST;
+
 
 //content type - application/json
 app.use(express.json());
@@ -32,7 +33,7 @@ async function startServer() {
     await connectDB();
 
     app.listen(PORT, () => {
-      console.log(`server is ready on http://${HOST}:${PORT}/`);
+      console.log(`server is ready on ${PORT}`);
     });
   } catch (error) {
     console.error("Failed to start server:", error.message);
