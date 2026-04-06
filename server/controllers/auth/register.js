@@ -3,13 +3,21 @@ const {
   hashPassword,
   generateToken,
   generateSalt,
+  setAuthCookie,
 } = require("../../utils/security.js");
+const { serializeUser } = require("../../utils/user.js");
 
 async function register(req, res) {
-  const { name, email, password } = req.body;
+  const name = req.body.name?.trim();
+  const email = req.body.email?.trim().toLowerCase();
+  const password = req.body.password;
 
   if (!name || !email || !password) {
-    return res.status(400).json({ message: "Email and password are required" });
+    return res.status(400).json({ message: "Name, email, and password are required" });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ message: "Password must be at least 6 characters long" });
   }
 
   try {
@@ -33,17 +41,15 @@ async function register(req, res) {
 
     const token = generateToken(newUser);
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
+    setAuthCookie(res, token);
 
-    res.status(201).json({ message: "User registered successfully" });
+    return res.status(201).json({
+      message: "User registered successfully",
+      user: serializeUser(newUser),
+    });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ message: "Server error" });
   }
 }
 
