@@ -1,5 +1,7 @@
+import { useEffect, useState } from "react";
 import { useFormik } from "formik";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/useAuth";
 import "./Auth.css";
 
 const validateSignup = ({ name, email, password }) => {
@@ -35,6 +37,16 @@ const errorTextStyle = {
 };
 
 const Signup = () => {
+  const navigate = useNavigate();
+  const { signup, isAuthenticated, isReady } = useAuth();
+  const [submitError, setSubmitError] = useState("");
+
+  useEffect(() => {
+    if (isReady && isAuthenticated) {
+      navigate("/", { replace: true });
+    }
+  }, [isAuthenticated, isReady, navigate]);
+
   const formik = useFormik({
     initialValues: {
       name: "",
@@ -42,12 +54,22 @@ const Signup = () => {
       password: "",
     },
     validate: validateSignup,
-    onSubmit: (values) => {
-      console.log("Signup:", {
-        ...values,
-        name: values.name.trim(),
-        email: values.email.trim(),
-      });
+    onSubmit: async (values, helpers) => {
+      setSubmitError("");
+
+      try {
+        await signup({
+          name: values.name.trim(),
+          email: values.email.trim().toLowerCase(),
+          password: values.password,
+        });
+
+        navigate("/", { replace: true });
+      } catch (error) {
+        setSubmitError(error.message);
+      } finally {
+        helpers.setSubmitting(false);
+      }
     },
   });
 
@@ -95,16 +117,16 @@ const Signup = () => {
               value={formik.values.password}
               onChange={formik.handleChange}
               onBlur={formik.handleBlur}
-              style={
-                formik.touched.password && formik.errors.password ? inputErrorStyle : undefined
-              }
+              style={formik.touched.password && formik.errors.password ? inputErrorStyle : undefined}
             />
             {formik.touched.password && formik.errors.password && (
               <small style={errorTextStyle}>{formik.errors.password}</small>
             )}
 
-            <button type="submit" className="btn primary">
-              Sign Up
+            {submitError && <small style={errorTextStyle}>{submitError}</small>}
+
+            <button type="submit" className="btn primary" disabled={formik.isSubmitting}>
+              {formik.isSubmitting ? "Creating account..." : "Sign Up"}
             </button>
           </form>
 
@@ -115,7 +137,7 @@ const Signup = () => {
 
         <aside className="auth-aside">
           <div className="auth-aside-inner">
-            <h3>📖 Your library awaits</h3>
+            <h3>Your library awaits</h3>
             <p>Discover, rent, and enjoy books easily.</p>
           </div>
         </aside>
