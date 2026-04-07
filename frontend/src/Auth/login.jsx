@@ -35,7 +35,7 @@ const Login = () => {
 
   useEffect(() => {
     if (isReady && isAuthenticated) {
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, isReady, navigate]);
 
@@ -54,7 +54,7 @@ const Login = () => {
           password: values.password,
         });
 
-        navigate("/", { replace: true });
+        navigate("/dashboard", { replace: true });
       } catch (error) {
         setSubmitError(error.message);
       } finally {

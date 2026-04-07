@@ -36,6 +36,8 @@ function App() {
         <Route path="/community" element={<CommunityPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
         <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+
+        <Route path="/dashboard" element={<h1>Dashboard (Protected)</h1>} />
       </Routes>
     </BrowserRouter>
   );

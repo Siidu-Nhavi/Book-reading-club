@@ -64,7 +64,7 @@ const Signup = () => {
           password: values.password,
         });
 
-        navigate("/", { replace: true });
+        navigate("/dashboard", { replace: true });
       } catch (error) {
         setSubmitError(error.message);
       } finally {
