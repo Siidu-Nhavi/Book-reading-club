@@ -6,7 +6,7 @@ const userRoutes = require("./routes/user.js");
 const connectDB = require("./config/db.js");
 const { parseCookies } = require("./utils/security.js");
 
-dotenv.config({ path: path.resolve(__dirname, "../.env") });
+dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 const app = express();
 const PORT = process.env.PORT || 8080;
