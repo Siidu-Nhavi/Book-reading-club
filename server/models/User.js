@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const profileSchema = require("./Profile.js");
 
 const userSchema = new mongoose.Schema(
   {
@@ -26,6 +27,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       enum: ["user", "admin"],
       default: "user",
+    },
+    profile: {
+      type: profileSchema,
+      default: () => ({}),
     },
   },
   { timestamps: true },

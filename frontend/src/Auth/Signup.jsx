@@ -28,12 +28,17 @@ const validateSignup = ({ name, email, password }) => {
   return errors;
 };
 
-const inputErrorStyle = { border: "1px solid #ef4444" };
+const inputErrorStyle = {
+  border: "1px solid #c55353",
+  background: "#fff7f6",
+  boxShadow: "0 0 0 4px rgba(197, 83, 83, 0.08)",
+};
 const errorTextStyle = {
-  color: "#f87171",
+  color: "#b04a4a",
   fontSize: "12px",
-  marginTop: "-4px",
-  marginBottom: "6px",
+  marginTop: "-2px",
+  marginBottom: "4px",
+  display: "block",
 };
 
 const Signup = () => {
@@ -43,7 +48,7 @@ const Signup = () => {
 
   useEffect(() => {
     if (isReady && isAuthenticated) {
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     }
   }, [isAuthenticated, isReady, navigate]);
 
@@ -64,7 +69,7 @@ const Signup = () => {
           password: values.password,
         });
 
-        navigate("/", { replace: true });
+        navigate("/dashboard", { replace: true });
       } catch (error) {
         setSubmitError(error.message);
       } finally {

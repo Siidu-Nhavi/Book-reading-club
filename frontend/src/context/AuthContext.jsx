@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AuthContext } from "./auth-context";
-import { authApi } from "../lib/api";
+import { authApi, userApi } from "../lib/api";
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
@@ -65,6 +65,12 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const updateProfile = async (payload) => {
+    const data = await userApi.updateProfile(payload);
+    setUser(data.user);
+    return data.user;
+  };
+
   const value = {
     user,
     isReady,
@@ -73,6 +79,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     refreshSession,
+    updateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

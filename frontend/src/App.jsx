@@ -1,6 +1,10 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Login from "./Auth/login";
 import Signup from "./Auth/Signup";
+import ProtectedRoute from "./components/ProtectedRoute";
+import AccountSettings from "./Dashboard/AccountSettings";
+import DashboardHome from "./Dashboard/DashboardHome";
+import DashboardLayout from "./Dashboard/DashboardLayout";
 import {
   AboutUsPage,
   AudioBooksPage,
@@ -16,6 +20,7 @@ import {
   TermsOfServicePage,
 } from "./Footer/index.js";
 import LandingPage from "./LandingPage/LandingPage";
+import UpdateProfile from "./Profile/UpdateProfile";
 
 function App() {
   return (
@@ -24,6 +29,13 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardHome />} />
+            <Route path="profile" element={<UpdateProfile />} />
+            <Route path="settings" element={<AccountSettings />} />
+          </Route>
+        </Route>
         <Route path="/features" element={<FeaturesPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/mobile-app" element={<MobileAppPage />} />

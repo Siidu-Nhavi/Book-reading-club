@@ -44,3 +44,12 @@ export const authApi = {
     return apiRequest("/api/user/me");
   },
 };
+
+export const userApi = {
+  updateProfile(payload) {
+    return apiRequest("/api/user/profile", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+};
