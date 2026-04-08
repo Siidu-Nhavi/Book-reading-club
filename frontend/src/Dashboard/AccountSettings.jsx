@@ -1,8 +1,11 @@
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import { Avatar, Paper, Stack, Typography } from "@mui/material";
+import usePageTitle from "../hooks/usePageTitle";
 import { BOOKNEST_COLORS } from "../utils/profile";
 
 export default function AccountSettings() {
+  usePageTitle("Settings — BookNest");
+
   return (
     <Paper
       elevation={0}

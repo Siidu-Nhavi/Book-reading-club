@@ -53,3 +53,24 @@ export const userApi = {
     });
   },
 };
+
+export const booksApi = {
+  list(params = {}) {
+    const searchParams = new URLSearchParams();
+
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== "") {
+        searchParams.set(key, String(value));
+      }
+    });
+
+    const queryString = searchParams.toString();
+    return apiRequest(`/api/books${queryString ? `?${queryString}` : ""}`);
+  },
+  categories() {
+    return apiRequest("/api/books/categories");
+  },
+  getById(id) {
+    return apiRequest(`/api/books/${id}`);
+  },
+};

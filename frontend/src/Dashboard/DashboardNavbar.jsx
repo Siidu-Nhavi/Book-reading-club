@@ -67,7 +67,6 @@ export default function DashboardNavbar() {
 
         <ProfileAvatarMenu
           avatarSize={44}
-          showIdentity
           tooltipTitle="Open dashboard menu"
           triggerTextColor={BOOKNEST_COLORS.text}
         />

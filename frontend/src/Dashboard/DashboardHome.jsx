@@ -2,7 +2,6 @@ import AutoStoriesRoundedIcon from "@mui/icons-material/AutoStoriesRounded";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
-import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import {
   Alert,
@@ -17,40 +16,20 @@ import {
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import DashboardHeader from "../components/dashboard/DashboardHeader";
 import { useAuth } from "../context/useAuth";
-import { BOOKNEST_COLORS, getProfileCompletion, getUserInitials } from "../utils/profile";
+import usePageTitle from "../hooks/usePageTitle";
+import { BOOKNEST_COLORS, getProfileCompletion } from "../utils/profile";
 
 export default function DashboardHome() {
+  usePageTitle("Dashboard - BookNest");
+
   const navigate = useNavigate();
   const { user } = useAuth();
-  const initials = getUserInitials(user?.name, user?.email);
   const profileCompletion = useMemo(() => getProfileCompletion(user), [user]);
   const [dismissedBannerAt, setDismissedBannerAt] = useState(null);
   const showCompletionBanner =
     profileCompletion.percentage < 80 && dismissedBannerAt !== profileCompletion.percentage;
-  const bannerActionButtonSx = {
-    minHeight: 48,
-    px: 2.5,
-    bgcolor: "rgba(255, 248, 238, 0.98)",
-    color: BOOKNEST_COLORS.primaryBrown,
-    border: "1px solid rgba(124, 79, 30, 0.14)",
-    textTransform: "none",
-    borderRadius: 999,
-    fontWeight: 700,
-    letterSpacing: "-0.01em",
-    boxShadow: "0 10px 22px rgba(48, 28, 8, 0.12)",
-    "& .MuiButton-startIcon": {
-      mr: 1,
-    },
-    "& .MuiButton-startIcon svg": {
-      fontSize: 18,
-    },
-    "&:hover": {
-      bgcolor: "#F2E3CF",
-      borderColor: "rgba(124, 79, 30, 0.2)",
-      boxShadow: "0 14px 28px rgba(48, 28, 8, 0.18)",
-    },
-  };
 
   return (
     <Stack spacing={3}>
@@ -109,98 +88,11 @@ export default function DashboardHome() {
         </Alert>
       ) : null}
 
-      <Paper
-        elevation={0}
-        sx={{
-          p: { xs: 3, md: 4 },
-          borderRadius: 3,
-          background: `linear-gradient(135deg, ${BOOKNEST_COLORS.primaryBrown} 0%, ${BOOKNEST_COLORS.secondaryBrown} 100%)`,
-          color: "#fff",
-        }}
-      >
-        <Stack
-          direction={{ xs: "column", md: "row" }}
-          spacing={3}
-          alignItems={{ xs: "flex-start", md: "center" }}
-          justifyContent="space-between"
-        >
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={2}
-            alignItems={{ xs: "flex-start", sm: "center" }}
-            sx={{ width: "100%" }}
-          >
-            <Avatar
-              src={user?.avatarUrl || ""}
-              sx={{
-                width: 68,
-                height: 68,
-                bgcolor: BOOKNEST_COLORS.gold,
-                color: BOOKNEST_COLORS.text,
-                fontSize: 24,
-              }}
-            >
-              {!user?.avatarUrl && initials}
-            </Avatar>
-            <Box sx={{ minWidth: 0 }}>
-              <Typography variant="overline" sx={{ color: "rgba(255,255,255,0.72)" }}>
-                Welcome back
-              </Typography>
-              <Typography
-                variant="h4"
-                sx={{
-                  fontWeight: 800,
-                  fontSize: { xs: "2rem", sm: "2.35rem" },
-                  lineHeight: 1.08,
-                  wordBreak: "break-word",
-                }}
-              >
-                {user?.name || "BookNest Reader"}
-              </Typography>
-              <Typography variant="body1" sx={{ color: "rgba(255,255,255,0.8)" }}>
-                Manage your BookNest profile and dashboard settings from one place.
-              </Typography>
-            </Box>
-          </Stack>
-
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1.25}
-            sx={{ width: { xs: "100%", md: "auto" } }}
-          >
-            <Button
-              variant="outlined"
-              startIcon={<EditRoundedIcon />}
-              onClick={() => navigate("/dashboard/profile")}
-              sx={{
-                ...bannerActionButtonSx,
-                width: { xs: "100%", sm: "auto" },
-                justifyContent: "center",
-              }}
-            >
-              Edit Profile
-            </Button>
-            <Button
-              variant="outlined"
-              startIcon={<SettingsRoundedIcon />}
-              onClick={() => navigate("/dashboard/settings")}
-              sx={{
-                ...bannerActionButtonSx,
-                width: { xs: "100%", sm: "auto" },
-                justifyContent: "center",
-                bgcolor: "rgba(255, 248, 238, 0.92)",
-                boxShadow: "0 8px 18px rgba(48, 28, 8, 0.08)",
-                "&:hover": {
-                  ...bannerActionButtonSx["&:hover"],
-                  bgcolor: "#EEDBC0",
-                },
-              }}
-            >
-              Settings
-            </Button>
-          </Stack>
-        </Stack>
-      </Paper>
+      <DashboardHeader
+        user={user}
+        onEditProfile={() => navigate("/dashboard/profile")}
+        onSettings={() => navigate("/dashboard/settings")}
+      />
 
       <Box
         sx={{
@@ -259,7 +151,10 @@ export default function DashboardHome() {
                     justifyContent: "center",
                   }}
                 >
-                  <Typography variant="subtitle1" sx={{ fontWeight: 800, color: BOOKNEST_COLORS.text }}>
+                  <Typography
+                    variant="subtitle1"
+                    sx={{ fontWeight: 800, color: BOOKNEST_COLORS.text }}
+                  >
                     {profileCompletion.percentage}%
                   </Typography>
                 </Box>

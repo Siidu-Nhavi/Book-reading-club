@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useFormik } from "formik";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import usePageTitle from "../hooks/usePageTitle";
 import "./Auth.css";
 
 const validateLogin = ({ email, password }) => {
@@ -34,15 +35,21 @@ const errorTextStyle = {
 };
 
 const Login = () => {
+  usePageTitle("Login — BookNest");
+
   const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { login, isAuthenticated, isReady } = useAuth();
   const [submitError, setSubmitError] = useState("");
+  const redirectTarget =
+    searchParams.get("redirect") || location.state?.from?.pathname || "/dashboard";
 
   useEffect(() => {
     if (isReady && isAuthenticated) {
-      navigate("/dashboard", { replace: true });
+      navigate(redirectTarget, { replace: true });
     }
-  }, [isAuthenticated, isReady, navigate]);
+  }, [isAuthenticated, isReady, navigate, redirectTarget]);
 
   const formik = useFormik({
     initialValues: {
@@ -59,7 +66,7 @@ const Login = () => {
           password: values.password,
         });
 
-        navigate("/dashboard", { replace: true });
+        navigate(redirectTarget, { replace: true });
       } catch (error) {
         setSubmitError(error.message);
       } finally {

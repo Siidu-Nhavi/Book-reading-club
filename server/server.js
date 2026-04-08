@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/auth.js");
+const booksRoutes = require("./routes/books.js");
 const userRoutes = require("./routes/user.js");
 const connectDB = require("./config/db.js");
 const { parseCookies } = require("./utils/security.js");
@@ -52,6 +53,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/books", booksRoutes);
 app.use("/api/user", userRoutes);
 
 async function startServer() {

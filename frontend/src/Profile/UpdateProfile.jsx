@@ -24,6 +24,7 @@ import {
   isValidMobileNumber,
   readImageFileAsDataUrl,
 } from "../utils/profile";
+import usePageTitle from "../hooks/usePageTitle";
 
 function validateProfile(values) {
   const errors = {};
@@ -60,6 +61,8 @@ function validateProfile(values) {
 }
 
 export default function UpdateProfile() {
+  usePageTitle("Edit Profile — BookNest");
+
   const { updateProfile, user } = useAuth();
   const fileInputRef = useRef(null);
 

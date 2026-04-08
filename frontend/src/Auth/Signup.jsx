@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
+import usePageTitle from "../hooks/usePageTitle";
 import "./Auth.css";
 
 const validateSignup = ({ name, email, password }) => {
@@ -42,6 +43,8 @@ const errorTextStyle = {
 };
 
 const Signup = () => {
+  usePageTitle("Sign Up — BookNest");
+
   const navigate = useNavigate();
   const { signup, isAuthenticated, isReady } = useAuth();
   const [submitError, setSubmitError] = useState("");
