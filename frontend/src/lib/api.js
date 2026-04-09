@@ -59,6 +59,15 @@ export const booksApi = {
     const searchParams = new URLSearchParams();
 
     Object.entries(params).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        value
+          .filter((item) => item !== undefined && item !== null && item !== "")
+          .forEach((item) => {
+            searchParams.append(key, String(item));
+          });
+        return;
+      }
+
       if (value !== undefined && value !== null && value !== "") {
         searchParams.set(key, String(value));
       }

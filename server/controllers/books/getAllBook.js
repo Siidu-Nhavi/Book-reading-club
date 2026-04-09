@@ -3,6 +3,33 @@ const Book = require("../../models/Book.js");
 const MAX_LIMIT = 50;
 const DEFAULT_LIMIT = 12;
 
+function toNumber(value) {
+  if (value === undefined || value === null || value === "") {
+    return null;
+  }
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toArray(value) {
+  if (Array.isArray(value)) {
+    return value
+      .flatMap((item) => String(item).split(","))
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
 function toPositiveInteger(value, fallback) {
   const parsed = Number.parseInt(value, 10);
 
@@ -15,14 +42,21 @@ function toPositiveInteger(value, fallback) {
 
 function getSort(sortBy) {
   switch (sortBy) {
+    case "relevance":
+      return { createdAt: -1 };
     case "price_asc":
       return { price: 1, createdAt: -1 };
     case "price_desc":
       return { price: -1, createdAt: -1 };
+    case "popular":
+      return { createdAt: -1 };
+    case "top_rated":
+      return { createdAt: -1 };
     case "title_asc":
       return { title: 1 };
     case "title_desc":
       return { title: -1 };
+    case "newest":
     case "latest":
     default:
       return { createdAt: -1 };
@@ -33,14 +67,37 @@ async function getAllBook(req, res) {
   const page = toPositiveInteger(req.query.page, 1);
   const requestedLimit = toPositiveInteger(req.query.limit, DEFAULT_LIMIT);
   const limit = Math.min(requestedLimit, MAX_LIMIT);
-  const category = req.query.category?.trim();
+  const categories = toArray(req.query.category);
   const search = req.query.search?.trim();
   const sortBy = req.query.sortBy?.trim();
+  const availability = req.query.availability?.trim();
+  const minPrice = toNumber(req.query.minPrice);
+  const maxPrice = toNumber(req.query.maxPrice);
 
   const filters = {};
 
-  if (category) {
-    filters.category = category;
+  if (categories.length > 0) {
+    filters.category = { $in: categories };
+  }
+
+  if (availability === "available") {
+    filters.isAvailable = true;
+  }
+
+  if (availability === "coming_soon" || availability === "rented") {
+    filters.isAvailable = false;
+  }
+
+  if (minPrice !== null || maxPrice !== null) {
+    filters.price = {};
+
+    if (minPrice !== null) {
+      filters.price.$gte = minPrice;
+    }
+
+    if (maxPrice !== null) {
+      filters.price.$lte = maxPrice;
+    }
   }
 
   if (search) {
@@ -48,6 +105,7 @@ async function getAllBook(req, res) {
       { title: { $regex: search, $options: "i" } },
       { author: { $regex: search, $options: "i" } },
       { category: { $regex: search, $options: "i" } },
+      { description: { $regex: search, $options: "i" } },
     ];
   }
 

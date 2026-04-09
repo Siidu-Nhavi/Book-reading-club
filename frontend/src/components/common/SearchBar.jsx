@@ -6,9 +6,11 @@ import { PUBLIC_UI } from "../../utils/publicUi";
 export default function SearchBar({
   value,
   onChange,
+  onSubmit,
   placeholder = "Search by title or author",
   size = "medium",
   fullWidth = true,
+  sx,
 }) {
   return (
     <TextField
@@ -16,6 +18,11 @@ export default function SearchBar({
       size={size}
       value={value}
       onChange={(event) => onChange(event.target.value)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter") {
+          onSubmit?.();
+        }
+      }}
       placeholder={placeholder}
       InputProps={{
         startAdornment: (
@@ -53,6 +60,7 @@ export default function SearchBar({
             boxShadow: "0 0 0 4px rgba(108, 92, 231, 0.1)",
           },
         },
+        ...sx,
       }}
     />
   );

@@ -1,7 +1,8 @@
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
+import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import { Box, Button, Chip, IconButton, Paper, Stack, Typography } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   formatBookPrice,
   formatCategoryLabel,
@@ -27,6 +28,7 @@ export default function BookCard({
   showWishlist = true,
   showRentButton = true,
 }) {
+  const navigate = useNavigate();
   const rating = getBookRating(book);
   const reviewCount = getBookReviewCount(book);
   const featuredVariant = variant === "featured";
@@ -38,46 +40,42 @@ export default function BookCard({
       elevation={0}
       sx={{
         ...PUBLIC_CARD_SX,
-        p: 2,
+        p: 0,
         minWidth: fixedWidthVariant ? PUBLIC_UI.bookCardWidth : "auto",
         width: fixedWidthVariant ? PUBLIC_UI.bookCardWidth : "100%",
         height: "100%",
+        overflow: "hidden",
+        cursor: "pointer",
       }}
+      onClick={() => navigate(`/books/${book._id}`)}
     >
-      <Stack spacing={1.6} sx={{ height: "100%" }}>
+      <Stack spacing={0} sx={{ height: "100%" }}>
         <Box sx={{ position: "relative" }}>
           <Box
             component={Link}
             to={`/books/${book._id}`}
+            onClick={(event) => event.stopPropagation()}
             sx={{
               display: "block",
               position: "relative",
               textDecoration: "none",
-              borderRadius: 4,
             }}
           >
-            <BookMedia book={book} radius={4} titleMaxLength={36} />
+            <BookMedia book={book} radius={0} titleMaxLength={36} aspectRatio="16 / 10" />
           </Box>
 
-          <Chip
-            label={formatCategoryLabel(book?.category)}
-            size="small"
-            sx={{
-              position: "absolute",
-              top: 12,
-              left: 12,
-              bgcolor: "rgba(255, 255, 255, 0.94)",
-              color: PUBLIC_UI.primary,
-              fontWeight: 700,
-              borderRadius: 999,
-            }}
-          />
+          <Box sx={{ position: "absolute", top: 12, right: showWishlist ? 46 : 12 }}>
+            <AvailabilityBadge available={Boolean(book?.isAvailable)} />
+          </Box>
 
           {showWishlist ? (
             <IconButton
               size="small"
               aria-label={wishlistActive ? "Remove from wishlist" : "Add to wishlist"}
-              onClick={() => onWishlistToggle?.(book)}
+              onClick={(event) => {
+                event.stopPropagation();
+                onWishlistToggle?.(book);
+              }}
               sx={{
                 position: "absolute",
                 top: 10,
@@ -97,10 +95,23 @@ export default function BookCard({
           ) : null}
         </Box>
 
-        <Stack spacing={0.9} sx={{ flexGrow: 1 }}>
+        <Stack spacing={0.9} sx={{ flexGrow: 1, p: 2 }}>
+          <Chip
+            label={formatCategoryLabel(book?.category)}
+            size="small"
+            sx={{
+              width: "fit-content",
+              bgcolor: PUBLIC_UI.accentSoft,
+              color: PUBLIC_UI.accent,
+              fontWeight: 700,
+              borderRadius: 999,
+            }}
+          />
+
           <Typography
             component={Link}
             to={`/books/${book._id}`}
+            onClick={(event) => event.stopPropagation()}
             variant="h6"
             sx={{
               textDecoration: "none",
@@ -136,33 +147,59 @@ export default function BookCard({
           <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
             <Typography
               variant="body1"
-              sx={{ color: PUBLIC_UI.primary, fontWeight: 800 }}
+              sx={{ color: PUBLIC_UI.accent, fontWeight: 800, fontFamily: '"Playfair Display", serif' }}
             >
-              {formatBookPrice(book?.price)} / day
+              {formatBookPrice(book?.price)} / week
             </Typography>
-            <AvailabilityBadge available={Boolean(book?.isAvailable)} />
+            <RatingStars rating={rating} count={reviewCount} />
           </Stack>
         </Stack>
 
         {showRentButton ? (
-          <Button
-            variant="contained"
-            disabled={!book?.isAvailable}
-            onClick={() => onRent?.(book)}
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            spacing={1}
             sx={{
-              ...PUBLIC_BUTTON_PRIMARY_SX,
+              borderTop: `1px solid ${PUBLIC_UI.border}`,
+              p: 2,
+              pt: 1.5,
               mt: "auto",
-              borderRadius: 3,
-              textTransform: "none",
-              fontWeight: 700,
-              "&.Mui-disabled": {
-                bgcolor: "rgba(108, 92, 231, 0.12)",
-                color: PUBLIC_UI.muted,
-              },
             }}
           >
-            {book?.isAvailable ? "Rent Now" : "Currently Rented"}
-          </Button>
+            <Typography sx={{ color: PUBLIC_UI.accent, fontWeight: 900, fontFamily: '"Playfair Display", serif' }}>
+              {formatBookPrice(book?.price)} / week
+            </Typography>
+
+            <Button
+              variant="contained"
+              disabled={!book?.isAvailable}
+              endIcon={book?.isAvailable ? <ArrowForwardRoundedIcon /> : null}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRent?.(book);
+              }}
+              sx={{
+                ...PUBLIC_BUTTON_PRIMARY_SX,
+                borderRadius: 999,
+                textTransform: "none",
+                fontWeight: 700,
+                px: 1.7,
+                py: 0.7,
+                bgcolor: PUBLIC_UI.accent,
+                "&:hover": {
+                  bgcolor: "#f1883e",
+                },
+                "&.Mui-disabled": {
+                  bgcolor: "rgba(255, 158, 87, 0.2)",
+                  color: PUBLIC_UI.muted,
+                },
+              }}
+            >
+              {book?.isAvailable ? "Rent Now" : "Rented"}
+            </Button>
+          </Stack>
         ) : null}
       </Stack>
     </Paper>

@@ -1,0 +1,178 @@
+BookNest Project Context (Current State)
+Last Updated: 2026-04-09
+
+1) Product Direction and Design Rules
+- Visual direction:
+  - Public app surfaces use a modern, soft-card UI with lavender-indigo accents.
+  - Landing page has a warmer editorial look (cream/amber palette, serif headings, DM Sans body).
+- UX rules:
+  - Keep routes and navigation data centralized (do not hardcode duplicate nav arrays in components).
+  - Maintain responsive behavior first (desktop + mobile nav, drawer behavior, stacked sections on small screens).
+  - Preserve clear CTA hierarchy:
+    - Primary buttons use solid brand color.
+    - Secondary actions use outlined/ghost styles.
+- Motion and interaction:
+  - Subtle hover lift and shadows; avoid heavy animations.
+  - Keep scroll behavior consistent via global ScrollManager.
+
+2) Styling System and Tokens
+- Global entry:
+  - frontend/src/index.css imports:
+    - frontend/src/styles/tokens.css
+    - frontend/src/styles/global.css
+- Token layer:
+  - frontend/src/styles/tokens.css defines root CSS vars for warm palette, spacing scale, radius scale, and shadows.
+- Global layer:
+  - frontend/src/styles/global.css sets:
+    - smooth scrolling
+    - box-sizing
+    - base body typography/background
+    - transition defaults for links/buttons
+- Public UI runtime tokens (MUI sx helpers):
+  - frontend/src/utils/publicUi.js exports:
+    - PUBLIC_UI
+    - PUBLIC_SURFACE_SX
+    - PUBLIC_CARD_SX
+    - PUBLIC_BUTTON_PRIMARY_SX
+    - PUBLIC_BUTTON_GHOST_SX
+- Landing-specific styles:
+  - frontend/src/components/landing/landingpage.module.css
+  - Includes navbar, hero, categories, testimonial, CTA, and landing footer styles.
+
+3) Navigation Source of Truth (must stay canonical)
+File: frontend/src/data/navLinks.js
+- primaryNavLinks:
+  - Browse -> /books
+  - Features -> /features
+  - Pricing -> /pricing
+- footerLinks object:
+  - Product, Company, Support, Legal sections
+- categoryLinks:
+  - Category label + icon + /books?category=... link
+  - Includes: Engineering, Mathematics, Science, Literature, Management, Philosophy, Biography
+
+Consumers currently wired to this file:
+- frontend/src/components/shared/AppNavbar.jsx (primaryNavLinks)
+- frontend/src/components/shared/AppFooter.jsx (footerLinks)
+- frontend/src/components/landing/LandingNavbar.jsx (primaryNavLinks)
+- frontend/src/components/landing/LandingFooter.jsx (footerLinks)
+- frontend/src/components/landing/CategoriesSection.jsx (categoryLinks)
+- frontend/src/pages/BooksCatalogPage.jsx (categoryLinks-based filtering values)
+
+4) Routing (authoritative)
+File: frontend/src/App.jsx
+- Root route (outside PublicLayout):
+  - / -> LandingPage
+- Public layout routes (inside PublicLayout):
+  - /books
+  - /books/:id
+  - /features
+  - /pricing
+  - /about-us
+  - /careers
+  - /community
+  - /support
+  - /privacy-policy
+  - /terms-of-service
+  - * -> NotFoundPage
+- Auth routes:
+  - /login
+  - /signup
+- Protected routes:
+  - /dashboard (DashboardLayout)
+  - /dashboard/profile
+  - /dashboard/settings
+
+Route composition:
+- PublicLayout: frontend/src/layouts/PublicLayout.jsx
+  - AppNavbar + Outlet + AppFooter
+- DashboardLayout: frontend/src/layouts/DashboardLayout.jsx
+  - DashboardNavbar + Outlet
+- ProtectedRoute guard: frontend/src/components/utils/ProtectedRoute.jsx
+- Scroll behavior: frontend/src/components/utils/ScrollManager.jsx
+
+5) Current Key Page Implementations
+- SupportPage (merged Help + Contact):
+  - frontend/src/pages/SupportPage.jsx
+  - Includes:
+    - Header (Support Center)
+    - Tabs: Get Help (default), Contact Us
+    - Get Help: search bar + FAQ accordions (Rentals, Payments, Account, Returns)
+    - Contact Us: form (name/email/subject/message) + info cards
+- Books catalog:
+  - frontend/src/pages/BooksCatalogPage.jsx
+  - Uses normalized category values and links from categoryLinks
+- Landing sections:
+  - frontend/src/components/landing/*
+  - LandingPage composition in frontend/src/pages/LandingPage.jsx
+
+6) Data and API Contract (Frontend <-> Backend)
+Frontend API wrapper:
+- frontend/src/lib/api.js
+- Uses:
+  - API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ""
+  - credentials: include
+
+Frontend API methods:
+- authApi:
+  - signup -> POST /api/auth/register
+  - login -> POST /api/auth/login
+  - logout -> POST /api/auth/logout
+  - me -> GET /api/user/me
+- userApi:
+  - updateProfile -> PUT /api/user/profile
+- booksApi:
+  - list -> GET /api/books with query params
+  - categories -> GET /api/books/categories
+  - getById -> GET /api/books/:id
+
+Backend route files:
+- server/routes/auth.js
+- server/routes/books.js
+- server/routes/user.js
+
+Auth session model:
+- frontend/src/context/AuthContext.jsx
+- On app load, tries authApi.me() and sets user/isReady.
+- ProtectedRoute waits for isReady before allowing/redirecting.
+
+7) Architecture and Folder Conventions
+- Pages live in frontend/src/pages
+- Shared layout shells live in frontend/src/layouts
+- Shared cross-page components live in frontend/src/components/shared
+- Landing-only components live in frontend/src/components/landing
+- Route helpers/utilities live in frontend/src/components/utils
+- Shared navigation/content lists live in frontend/src/data
+
+When adding new work:
+- Prefer updating source-of-truth files over hardcoded component-local duplicates.
+- Keep route names and nav labels aligned with navLinks.js.
+- Keep support/help/contact enhancements inside SupportPage unless there is a clear need to split components.
+
+8) Build, Tooling, and Validation
+Frontend stack:
+- React 19 + React Router + MUI + Vite + ESLint + Formik
+Key scripts (frontend/package.json):
+- npm run dev
+- npm run lint
+- npm run build
+- npm run preview
+
+Validation expectation after changes:
+1. npm run lint
+2. npm run build
+3. Manual smoke check of nav routes and /support tab behavior
+
+9) Known Constraints and Guardrails
+- Avoid reintroducing old folder structure or wrapper-only files for moved components.
+- Avoid splitting navigation data across components; keep navLinks.js as canonical source.
+- Keep category query values normalized/lowercase when filtering books via URL.
+- Keep public pages under PublicLayout, landing page outside PublicLayout, dashboard pages under ProtectedRoute.
+
+10) Suggested Immediate Next Tasks
+- If SupportPage needs backend submission:
+  - Add a new support endpoint in server routes/controllers and connect form submit to frontend api.js.
+- If FAQ content grows:
+  - Move faqSections from SupportPage into frontend/src/data/supportFaq.js.
+- If bundle size warning needs work:
+  - Add route-level code splitting (lazy + suspense) for heavy pages.

@@ -1,0 +1,17 @@
+export { default as LandingPage } from "./LandingPage";
+export { default as BooksCatalogPage } from "./BooksCatalogPage";
+export { default as BookDetailPage } from "./BookDetailPage";
+export { default as FeaturesPage } from "./FeaturesPage";
+export { default as PricingPage } from "./PricingPage";
+export { default as CommunityPage } from "./CommunityPage";
+export { default as SupportPage } from "./SupportPage";
+export { default as AboutUsPage } from "./company/AboutUsPage";
+export { default as CareersPage } from "./company/CareersPage";
+export { default as PrivacyPolicyPage } from "./legal/PrivacyPolicyPage";
+export { default as TermsOfServicePage } from "./legal/TermsOfServicePage";
+export { default as Login } from "./auth/Login";
+export { default as Signup } from "./auth/Signup";
+export { default as DashboardHome } from "./dashboard/DashboardHome";
+export { default as UpdateProfile } from "./dashboard/UpdateProfile";
+export { default as AccountSettings } from "./dashboard/AccountSettings";
+export { default as NotFoundPage } from "./NotFoundPage";

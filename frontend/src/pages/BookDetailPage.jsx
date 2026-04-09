@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import FavoriteBorderRoundedIcon from "@mui/icons-material/FavoriteBorderRounded";
 import FavoriteRoundedIcon from "@mui/icons-material/FavoriteRounded";
 import {
@@ -11,13 +10,14 @@ import {
   Divider,
   Paper,
   Stack,
-  ToggleButton,
-  ToggleButtonGroup,
+  Link as MuiLink,
   Typography,
 } from "@mui/material";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import BookCard from "../components/books/BookCard";
+import BookDetailColumns from "../components/books/BookDetailColumns";
 import BookMedia from "../components/books/BookMedia";
+import RentalDurationSelector from "../components/books/RentalDurationSelector";
 import EmptyState from "../components/common/EmptyState";
 import LoadingSkeleton from "../components/common/LoadingSkeleton";
 import AvailabilityBadge from "../components/common/AvailabilityBadge";
@@ -41,11 +41,8 @@ import { getUserInitials } from "../utils/profile";
 import {
   PUBLIC_BUTTON_GHOST_SX,
   PUBLIC_BUTTON_PRIMARY_SX,
-  PUBLIC_SURFACE_SX,
   PUBLIC_UI,
 } from "../utils/publicUi";
-
-const rentalDurations = [3, 7, 14, 30];
 
 export default function BookDetailPage() {
   const { id } = useParams();
@@ -124,6 +121,7 @@ export default function BookDetailPage() {
   );
   const reviews = useMemo(() => (book ? getBookReviews(book) : []), [book]);
   const isWishlisted = book ? wishlistIds.includes(book._id) : false;
+  const [showFullDescription, setShowFullDescription] = useState(false);
 
   const handleToggleWishlist = () => {
     if (!book) {
@@ -148,22 +146,8 @@ export default function BookDetailPage() {
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 3, md: 5 } }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 3.5, md: 6 } }}>
       <Stack spacing={4}>
-        <Button
-          component={RouterLink}
-          to="/books"
-          startIcon={<ArrowBackRoundedIcon />}
-          sx={{
-            width: "fit-content",
-            color: PUBLIC_UI.primary,
-            textTransform: "none",
-            fontWeight: 700,
-          }}
-        >
-          Back to Books
-        </Button>
-
         {isLoading ? (
           <LoadingSkeleton variant="page" />
         ) : error ? (
@@ -175,223 +159,209 @@ export default function BookDetailPage() {
           />
         ) : book ? (
           <Stack spacing={4}>
-            <Paper
-              elevation={0}
+            <Box
               sx={{
-                ...PUBLIC_SURFACE_SX,
-                p: { xs: 2.4, md: 3 },
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", lg: "1fr 1.5fr" },
+                gap: { xs: 3, lg: 6 },
+                alignItems: "start",
               }}
             >
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: { xs: "1fr", lg: "380px minmax(0, 1fr)" },
-                  gap: 4,
-                  alignItems: "start",
-                }}
-              >
-                <Stack spacing={2}>
-                  <Paper
-                    elevation={0}
+              <Stack spacing={2.2} sx={{ position: { lg: "sticky" }, top: { lg: 100 } }}>
+                <Paper elevation={0} sx={{ p: 1.8, borderRadius: 4, border: `1px solid ${PUBLIC_UI.border}` }}>
+                  <BookMedia book={book} radius={3} titleMaxLength={44} />
+                </Paper>
+
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                  <AvailabilityBadge available={Boolean(book.isAvailable)} />
+                  <Button
+                    size="small"
+                    variant="outlined"
                     sx={{
-                      p: 2,
-                      borderRadius: 5,
-                      bgcolor: PUBLIC_UI.surfaceSoft,
+                      ...PUBLIC_BUTTON_GHOST_SX,
+                      borderRadius: 999,
+                      py: 0.5,
                     }}
                   >
-                    <BookMedia book={book} radius={5} titleMaxLength={44} />
-                  </Paper>
+                    {formatCategoryLabel(book.category)}
+                  </Button>
+                </Stack>
 
-                  <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-                    <AvailabilityBadge available={Boolean(book.isAvailable)} />
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2.2,
+                    borderRadius: 3,
+                    bgcolor: PUBLIC_UI.surface,
+                    border: `1px solid ${PUBLIC_UI.border}`,
+                  }}
+                >
+                  <Stack spacing={2}>
+                    <Typography sx={{ fontSize: "2rem", fontWeight: 900, color: PUBLIC_UI.accent, fontFamily: '"Playfair Display", serif' }}>
+                      {formatBookPrice(book.price)} / week
+                    </Typography>
+                    <Typography sx={{ color: PUBLIC_UI.muted }}>
+                      Refundable deposit: {formatBookPrice(depositAmount)}
+                    </Typography>
+
+                    <RentalDurationSelector value={selectedDuration} onChange={setSelectedDuration} />
+
+                    <Paper
+                      elevation={0}
+                      sx={{
+                        p: 1.8,
+                        borderRadius: 2,
+                        bgcolor: PUBLIC_UI.surfaceSoft,
+                        border: `1px solid ${PUBLIC_UI.border}`,
+                      }}
+                    >
+                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
+                        Estimated total
+                      </Typography>
+                      <Typography sx={{ mt: 0.3, fontWeight: 900, color: PUBLIC_UI.primary, fontSize: "1.5rem" }}>
+                        {formatBookPrice(totalCost)}
+                      </Typography>
+                    </Paper>
+
                     <Button
-                      size="small"
+                      variant="contained"
+                      disabled={!book.isAvailable}
+                      onClick={handleRent}
+                      sx={{
+                        ...PUBLIC_BUTTON_PRIMARY_SX,
+                        borderRadius: 999,
+                        py: 1.1,
+                        bgcolor: PUBLIC_UI.accent,
+                        "&:hover": { bgcolor: "#f1883e" },
+                      }}
+                    >
+                      Rent This Book
+                    </Button>
+
+                    <Button
                       variant="outlined"
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          navigate(`/login?redirect=${encodeURIComponent(`/books/${book._id}`)}`);
+                          return;
+                        }
+                        handleToggleWishlist();
+                      }}
+                      startIcon={
+                        isWishlisted ? (
+                          <FavoriteRoundedIcon sx={{ color: PUBLIC_UI.danger }} />
+                        ) : (
+                          <FavoriteBorderRoundedIcon />
+                        )
+                      }
                       sx={{
                         ...PUBLIC_BUTTON_GHOST_SX,
                         borderRadius: 999,
-                        py: 0.6,
+                        py: 1.05,
                       }}
                     >
-                      {formatCategoryLabel(book.category)}
+                      Add to Wishlist
                     </Button>
                   </Stack>
+                </Paper>
+              </Stack>
+
+              <Stack spacing={2.2}>
+                <Typography
+                  sx={{
+                    display: "inline-flex",
+                    width: "fit-content",
+                    px: 1.2,
+                    py: 0.45,
+                    borderRadius: 999,
+                    bgcolor: PUBLIC_UI.accentSoft,
+                    color: PUBLIC_UI.accent,
+                    fontWeight: 700,
+                    fontSize: "0.8rem",
+                  }}
+                >
+                  {formatCategoryLabel(book.category)}
+                </Typography>
+
+                <Typography
+                  variant="h2"
+                  sx={{
+                    color: PUBLIC_UI.text,
+                    fontWeight: 900,
+                    fontSize: { xs: "2.1rem", md: "3rem" },
+                    lineHeight: 1.05,
+                    letterSpacing: "-0.04em",
+                    fontFamily: '"Playfair Display", serif',
+                  }}
+                >
+                  {book.title}
+                </Typography>
+
+                <Typography variant="h6" sx={{ color: PUBLIC_UI.muted, fontWeight: 600 }}>
+                  by {book.author}
+                </Typography>
+
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <RatingStars rating={rating} count={reviewCount} size="medium" />
+                  <MuiLink
+                    href="#reviews"
+                    underline="hover"
+                    sx={{ color: PUBLIC_UI.primary, fontWeight: 700, fontSize: "0.9rem" }}
+                  >
+                    ({reviewCount} reviews)
+                  </MuiLink>
                 </Stack>
 
-                <Stack spacing={2.2}>
+                <Divider />
+
+                <Box>
+                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 900, mb: 1.1 }}>About This Book</Typography>
                   <Typography
-                    variant="h2"
                     sx={{
-                      color: PUBLIC_UI.text,
-                      fontWeight: 900,
-                      fontSize: { xs: "2.2rem", md: "3.4rem" },
-                      lineHeight: 1.02,
-                      letterSpacing: "-0.05em",
+                      color: PUBLIC_UI.muted,
+                      lineHeight: 1.85,
+                      display: "-webkit-box",
+                      overflow: "hidden",
+                      WebkitLineClamp: showFullDescription ? "unset" : 4,
+                      WebkitBoxOrient: "vertical",
                     }}
                   >
-                    {book.title}
-                  </Typography>
-
-                  <Typography variant="h6" sx={{ color: PUBLIC_UI.muted, fontWeight: 600 }}>
-                    by {book.author}
-                  </Typography>
-
-                  <RatingStars rating={rating} count={reviewCount} size="medium" />
-
-                  <Typography sx={{ color: PUBLIC_UI.muted, lineHeight: 1.8 }}>
                     {book.description}
                   </Typography>
-
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      p: 3,
-                      borderRadius: 5,
-                      bgcolor: PUBLIC_UI.surfaceSoft,
-                    }}
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={() => setShowFullDescription((current) => !current)}
+                    sx={{ mt: 0.8, px: 0, textTransform: "none", fontWeight: 700 }}
                   >
-                    <Stack spacing={2.25}>
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={1.5}
-                        alignItems={{ xs: "flex-start", sm: "center" }}
-                        justifyContent="space-between"
-                      >
-                        <Box>
-                          <Typography variant="h4" sx={{ fontWeight: 900, color: PUBLIC_UI.primary }}>
-                            {formatBookPrice(book.price)} / day
-                          </Typography>
-                          <Typography sx={{ color: PUBLIC_UI.muted }}>
-                            Refundable deposit: {formatBookPrice(depositAmount)}
-                          </Typography>
-                        </Box>
-
-                        <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                          <Button
-                            variant="contained"
-                            disabled={!book.isAvailable}
-                            onClick={handleRent}
-                            sx={{
-                              ...PUBLIC_BUTTON_PRIMARY_SX,
-                              borderRadius: 3,
-                              px: 3,
-                            }}
-                          >
-                            Rent This Book
-                          </Button>
-                          <Button
-                            variant="outlined"
-                            onClick={handleToggleWishlist}
-                            startIcon={
-                              isWishlisted ? (
-                                <FavoriteRoundedIcon sx={{ color: PUBLIC_UI.danger }} />
-                              ) : (
-                                <FavoriteBorderRoundedIcon />
-                              )
-                            }
-                            sx={{
-                              ...PUBLIC_BUTTON_GHOST_SX,
-                              borderRadius: 3,
-                              px: 2.4,
-                            }}
-                          >
-                            Add to Wishlist
-                          </Button>
-                        </Stack>
-                      </Stack>
-
-                      <Divider />
-
-                      <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
-                          Rental Duration
-                        </Typography>
-                        <ToggleButtonGroup
-                          value={selectedDuration}
-                          exclusive
-                          onChange={(_, value) => {
-                            if (value) {
-                              setSelectedDuration(value);
-                            }
-                          }}
-                          sx={{ mt: 1.25, flexWrap: "wrap", gap: 1 }}
-                        >
-                          {rentalDurations.map((duration) => (
-                            <ToggleButton
-                              key={duration}
-                              value={duration}
-                              sx={{
-                                borderRadius: "12px !important",
-                                border: `1px solid ${PUBLIC_UI.border} !important`,
-                                px: 1.8,
-                                textTransform: "none",
-                                fontWeight: 700,
-                                "&.Mui-selected": {
-                                  bgcolor: PUBLIC_UI.primarySoft,
-                                  color: PUBLIC_UI.primary,
-                                },
-                              }}
-                            >
-                              {duration} days
-                            </ToggleButton>
-                          ))}
-                        </ToggleButtonGroup>
-                      </Box>
-
-                      <Paper
-                        elevation={0}
-                        sx={{
-                          p: 2,
-                          borderRadius: 4,
-                          bgcolor: "#FFFFFF",
-                          border: `1px solid ${PUBLIC_UI.border}`,
-                        }}
-                      >
-                        <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
-                          Estimated total for {selectedDuration} days
-                        </Typography>
-                        <Typography variant="h5" sx={{ mt: 0.6, fontWeight: 900, color: PUBLIC_UI.primary }}>
-                          {formatBookPrice(totalCost)}
-                        </Typography>
-                      </Paper>
-                    </Stack>
-                  </Paper>
-                </Stack>
-              </Box>
-            </Paper>
-
-            <Paper
-              elevation={0}
-              sx={{
-                ...PUBLIC_SURFACE_SX,
-                p: { xs: 2.5, md: 3 },
-              }}
-            >
-              <Stack spacing={3}>
-                <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 900, color: PUBLIC_UI.text }}>
-                    About the Author
-                  </Typography>
-                  <Typography sx={{ mt: 1.2, color: PUBLIC_UI.muted, lineHeight: 1.8 }}>
-                    {getBookAuthorBlurb(book)}
-                  </Typography>
+                    {showFullDescription ? "Read less" : "Read more"}
+                  </Button>
                 </Box>
 
                 <Divider />
 
                 <Box>
-                  <Typography variant="h5" sx={{ fontWeight: 900, color: PUBLIC_UI.text }}>
-                    Reviews & Ratings
+                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 900, mb: 1.1 }}>Book Details</Typography>
+                  <BookDetailColumns book={book} />
+                </Box>
+
+                <Divider />
+
+                <Box id="reviews">
+                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 900 }}>Reviews</Typography>
+                  <Typography sx={{ color: PUBLIC_UI.muted, mt: 0.4 }}>
+                    Reader feedback for this title.
                   </Typography>
-                  <Stack spacing={2} sx={{ mt: 2 }}>
+
+                  <Stack spacing={1.4} sx={{ mt: 1.8 }}>
                     {reviews.map((review) => (
                       <Paper
                         key={review.id}
                         elevation={0}
                         sx={{
-                          p: 2.2,
-                          borderRadius: 4,
-                          bgcolor: PUBLIC_UI.surfaceSoft,
+                          p: 2,
+                          borderRadius: 3,
+                          bgcolor: PUBLIC_UI.surface,
                           border: `1px solid ${PUBLIC_UI.border}`,
                         }}
                       >
@@ -407,41 +377,56 @@ export default function BookDetailPage() {
                               {getUserInitials(review.name)}
                             </Avatar>
                             <Box>
-                              <Typography sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
-                                {review.name}
-                              </Typography>
+                              <Typography sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>{review.name}</Typography>
                               <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
                                 {review.date}
                               </Typography>
                             </Box>
                           </Stack>
                           <RatingStars rating={review.rating} />
-                          <Typography sx={{ color: PUBLIC_UI.muted, lineHeight: 1.75 }}>
-                            {review.quote}
-                          </Typography>
+                          <Typography sx={{ color: PUBLIC_UI.muted, lineHeight: 1.75 }}>{review.quote}</Typography>
                         </Stack>
                       </Paper>
                     ))}
                   </Stack>
+
+                  <Button
+                    variant="text"
+                    sx={{ mt: 1.2, textTransform: "none", px: 0, fontWeight: 700, color: PUBLIC_UI.primary }}
+                  >
+                    View all reviews
+                  </Button>
                 </Box>
               </Stack>
+            </Box>
+
+            <Paper elevation={0} sx={{ p: 2.2, borderRadius: 3, border: `1px solid ${PUBLIC_UI.border}` }}>
+              <Typography variant="h5" sx={{ fontWeight: 900, color: PUBLIC_UI.text, mb: 1.2 }}>
+                About the Author
+              </Typography>
+              <Typography sx={{ color: PUBLIC_UI.muted, lineHeight: 1.8 }}>
+                {getBookAuthorBlurb(book)}
+              </Typography>
             </Paper>
 
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 900, color: PUBLIC_UI.text, mb: 2.2 }}>
-                Similar Books
+              <Typography variant="h5" sx={{ fontWeight: 900, color: PUBLIC_UI.text, mb: 2.2, fontFamily: '"Playfair Display", serif' }}>
+                You Might Also Like
               </Typography>
 
               {similarBooks.length > 0 ? (
                 <Box
                   sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "1fr",
-                      sm: "repeat(2, minmax(0, 1fr))",
-                      xl: "repeat(4, minmax(0, 1fr))",
-                    },
+                    display: "flex",
                     gap: 2.2,
+                    overflowX: "auto",
+                    pb: 0.7,
+                    scrollSnapType: "x proximity",
+                    "& > *": {
+                      minWidth: { xs: 280, sm: 300, lg: 280 },
+                      maxWidth: { xs: 320, sm: 320, lg: 300 },
+                      scrollSnapAlign: "start",
+                    },
                   }}
                 >
                   {similarBooks.map((item) => (
