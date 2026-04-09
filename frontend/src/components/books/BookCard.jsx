@@ -144,7 +144,11 @@ export default function BookCard({
 
           <RatingStars rating={rating} count={reviewCount} />
 
-          <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+          <Stack
+            direction="row"
+            spacing={1}
+            sx={{ alignItems: "center", justifyContent: "space-between" }}
+          >
             <Typography
               variant="body1"
               sx={{ color: PUBLIC_UI.accent, fontWeight: 800, fontFamily: '"Playfair Display", serif' }}
@@ -158,14 +162,14 @@ export default function BookCard({
         {showRentButton ? (
           <Stack
             direction="row"
-            alignItems="center"
-            justifyContent="space-between"
             spacing={1}
             sx={{
               borderTop: `1px solid ${PUBLIC_UI.border}`,
               p: 2,
               pt: 1.5,
               mt: "auto",
+              alignItems: "center",
+              justifyContent: "space-between",
             }}
           >
             <Typography sx={{ color: PUBLIC_UI.accent, fontWeight: 900, fontFamily: '"Playfair Display", serif' }}>

@@ -25,6 +25,7 @@ import {
 	isValidMobileNumber,
 	readImageFileAsDataUrl,
 } from "../../utils/profile";
+import { useNavigate } from "react-router-dom";
 
 function validateProfile(values) {
 	const errors = {};
@@ -63,6 +64,7 @@ function validateProfile(values) {
 export default function UpdateProfile() {
 	usePageTitle("Edit Profile — BookNest");
 
+	const navigate = useNavigate();
 	const { updateProfile, user } = useAuth();
 	const fileInputRef = useRef(null);
 
@@ -161,6 +163,9 @@ export default function UpdateProfile() {
 			setIsSaving(true);
 			await updateProfile(nextValues);
 			setShowSuccessToast(true);
+			window.setTimeout(() => {
+				navigate("/dashboard");
+			}, 900);
 		} catch (error) {
 			setSubmitError(error.message);
 		} finally {
@@ -219,7 +224,7 @@ export default function UpdateProfile() {
 						alignSelf: "start",
 					}}
 				>
-					<Stack spacing={2} alignItems="center" textAlign="center">
+					<Stack spacing={2} textAlign="center" sx={{ alignItems: "center" }}>
 						<Avatar
 							src={formValues.avatarUrl.trim()}
 							sx={{
@@ -401,12 +406,12 @@ export default function UpdateProfile() {
 								}}
 							>
 								{isSaving ? (
-									<Stack direction="row" spacing={1} alignItems="center">
+									<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
 										<CircularProgress size={16} color="inherit" />
 										<span>Saving...</span>
 									</Stack>
 								) : (
-									<Stack direction="row" spacing={1} alignItems="center">
+									<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
 										<SaveRoundedIcon fontSize="small" />
 										<span>Save Profile</span>
 									</Stack>

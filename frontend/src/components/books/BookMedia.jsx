@@ -43,13 +43,13 @@ export default function BookMedia({
       ) : (
         <Stack
           spacing={1.1}
-          alignItems="center"
-          justifyContent="center"
           sx={{
             height: "100%",
             p: 2,
             color: "#fff",
             textAlign: "center",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
           <Avatar

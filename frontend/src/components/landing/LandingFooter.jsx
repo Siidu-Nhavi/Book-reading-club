@@ -8,9 +8,12 @@ export default function LandingFooter() {
 	return (
 		<footer className={styles.footerBar}>
 			<div className={styles["footer-top"]}>
-				<div className={styles["footer-brand"]}>
-					<span aria-hidden="true">📚</span>
-					Book<span>Nest</span>
+				<div>
+					<div className={styles["footer-brand"]}>
+						<span aria-hidden="true">📚</span>
+						Book<span>Nest</span>
+					</div>
+					<p className={styles["footer-tagline"]}>Made for readers, by readers</p>
 				</div>
 				<div className={styles["footer-links-grid"]}>
 					{footerSectionsOrder.map((sectionTitle) => (

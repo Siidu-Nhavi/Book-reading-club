@@ -1,11 +1,14 @@
 import AutoStoriesRoundedIcon from "@mui/icons-material/AutoStoriesRounded";
+import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
 import { AppBar, Box, Button, IconButton, Toolbar } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ProfileAvatarMenu from "../ProfileAvatarMenu";
 import { BOOKNEST_COLORS } from "../../utils/profile";
 
 export default function DashboardNavbar() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const showBackButton = location.pathname !== "/dashboard";
 
   return (
     <AppBar
@@ -28,6 +31,27 @@ export default function DashboardNavbar() {
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+          {showBackButton ? (
+            <Button
+              onClick={() => navigate("/dashboard")}
+              startIcon={<ArrowBackRoundedIcon />}
+              sx={{
+                display: { xs: "none", sm: "inline-flex" },
+                textTransform: "none",
+                fontWeight: 700,
+                color: BOOKNEST_COLORS.primaryBrown,
+                borderRadius: 999,
+                px: 1.2,
+                minWidth: "fit-content",
+                "&:hover": {
+                  bgcolor: "rgba(124, 79, 30, 0.08)",
+                },
+              }}
+            >
+              Back to Dashboard
+            </Button>
+          ) : null}
+
           <IconButton
             onClick={() => navigate("/dashboard")}
             aria-label="Go to dashboard home"

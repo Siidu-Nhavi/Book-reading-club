@@ -173,7 +173,7 @@ export default function HomePage() {
             overflow: "hidden",
           }}
         >
-          <Grid container spacing={{ xs: 4, md: 4 }} alignItems="stretch">
+          <Grid container spacing={{ xs: 4, md: 4 }} sx={{ alignItems: "stretch" }}>
             <Grid item xs={12} md={6.4}>
               <Box
                 sx={{
@@ -183,7 +183,7 @@ export default function HomePage() {
                   background: "linear-gradient(180deg, #F5F3FF 0%, #EEF1FF 100%)",
                 }}
               >
-                <Stack spacing={3} justifyContent="center" sx={{ height: "100%" }}>
+                <Stack spacing={3} sx={{ height: "100%", justifyContent: "center" }}>
                   <Box
                     sx={{
                       display: "inline-flex",
@@ -295,7 +295,7 @@ export default function HomePage() {
                       ...heroCardOffsets[index],
                     }}
                   >
-                    <Stack justifyContent="space-between" sx={{ height: "100%" }}>
+                    <Stack sx={{ height: "100%", justifyContent: "space-between" }}>
                       <Avatar sx={{ bgcolor: "rgba(255,255,255,0.2)", width: 48, height: 48 }}>
                         <MenuBookRoundedIcon />
                       </Avatar>
@@ -331,7 +331,7 @@ export default function HomePage() {
                     height: "100%",
                   }}
                 >
-                  <Stack direction="row" spacing={1.5} alignItems="center">
+                  <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
                     <Avatar sx={{ bgcolor: PUBLIC_UI.primarySoft, color: PUBLIC_UI.primary }}>
                       <IconComponent />
                     </Avatar>
@@ -453,7 +453,10 @@ export default function HomePage() {
                       }}
                     >
                       <Stack spacing={2}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Stack
+                          direction="row"
+                          sx={{ justifyContent: "space-between", alignItems: "center" }}
+                        >
                           <Typography variant="h4" sx={{ fontWeight: 900, color: PUBLIC_UI.primary }}>
                             {step.number}
                           </Typography>
@@ -495,12 +498,16 @@ export default function HomePage() {
                     }}
                   >
                     <Stack spacing={2}>
-                      <Stack direction="row" spacing={1.5} alignItems="center">
+                      <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
                         <Avatar
                           sx={{
                             bgcolor: PUBLIC_UI.primarySoft,
                             color: PUBLIC_UI.primary,
                             fontWeight: 800,
+                            display: "grid",
+                            placeItems: "center",
+                            lineHeight: 1,
+                            textAlign: "center",
                           }}
                         >
                           {getUserInitials(testimonial.name)}
@@ -542,8 +549,10 @@ export default function HomePage() {
             <Stack
               direction={{ xs: "column", md: "row" }}
               spacing={3}
-              alignItems={{ xs: "flex-start", md: "center" }}
-              justifyContent="space-between"
+              sx={{
+                alignItems: { xs: "flex-start", md: "center" },
+                justifyContent: "space-between",
+              }}
             >
               <Box sx={{ maxWidth: 620 }}>
                 <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: "-0.04em" }}>
@@ -557,8 +566,8 @@ export default function HomePage() {
               <Stack
                 direction={{ xs: "column", sm: "row" }}
                 spacing={1.5}
-                alignItems="center"
                 sx={{
+                  alignItems: "center",
                   "& > *": {
                     minHeight: 56,
                     minWidth: { xs: "100%", sm: 176 },

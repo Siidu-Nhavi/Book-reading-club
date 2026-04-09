@@ -28,11 +28,11 @@ export default function ResultsBar({
     <Stack
       direction={{ xs: "column", md: "row" }}
       spacing={1.5}
-      justifyContent="space-between"
-      alignItems={{ xs: "stretch", md: "center" }}
       sx={{
         pb: 2,
         borderBottom: `1px solid ${PUBLIC_UI.border}`,
+        justifyContent: "space-between",
+        alignItems: { xs: "stretch", md: "center" },
       }}
     >
       <Box>
@@ -46,7 +46,7 @@ export default function ResultsBar({
         ) : null}
       </Box>
 
-      <Stack direction="row" spacing={1.2} alignItems="center">
+      <Stack direction="row" spacing={1.2} sx={{ alignItems: "center" }}>
         <Button
           startIcon={<FilterListRoundedIcon />}
           variant="outlined"

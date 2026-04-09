@@ -9,7 +9,11 @@ export default function BooksPagination({ page, totalPages, onChange }) {
   }
 
   return (
-    <Stack direction="row" alignItems="center" justifyContent="center" spacing={1.1} sx={{ mt: 4.5, flexWrap: "wrap" }}>
+    <Stack
+      direction="row"
+      spacing={1.1}
+      sx={{ mt: 4.5, flexWrap: "wrap", alignItems: "center", justifyContent: "center" }}
+    >
       <Button
         onClick={() => onChange(Math.max(1, page - 1))}
         disabled={page <= 1}

@@ -172,7 +172,7 @@ export default function BookDetailPage() {
                   <BookMedia book={book} radius={3} titleMaxLength={44} />
                 </Paper>
 
-                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
+                <Stack direction="row" spacing={1} flexWrap="wrap" sx={{ alignItems: "center" }}>
                   <AvailabilityBadge available={Boolean(book.isAvailable)} />
                   <Button
                     size="small"
@@ -301,7 +301,7 @@ export default function BookDetailPage() {
                   by {book.author}
                 </Typography>
 
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
                   <RatingStars rating={rating} count={reviewCount} size="medium" />
                   <MuiLink
                     href="#reviews"
@@ -366,7 +366,7 @@ export default function BookDetailPage() {
                         }}
                       >
                         <Stack spacing={1.1}>
-                          <Stack direction="row" spacing={1.2} alignItems="center">
+                          <Stack direction="row" spacing={1.2} sx={{ alignItems: "center" }}>
                             <Avatar
                               sx={{
                                 bgcolor: PUBLIC_UI.primarySoft,

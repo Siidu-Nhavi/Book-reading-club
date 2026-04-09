@@ -124,8 +124,11 @@ export default function AppNavbar() {
 		<Stack
 			direction={{ xs: "column", md: "row" }}
 			spacing={{ xs: 0.5, md: 0.75 }}
-			alignItems={{ xs: "stretch", md: "center" }}
 			{...stackProps}
+			sx={{
+				alignItems: { xs: "stretch", md: "center" },
+				...(stackProps.sx || {}),
+			}}
 		>
 			{primaryNavLinks.map((item) => {
 				const selected =
@@ -160,13 +163,16 @@ export default function AppNavbar() {
 	return (
 		<>
 			<AppBar
-				position="sticky"
+				position="fixed"
 				elevation={0}
 				sx={{
 					bgcolor: PUBLIC_UI.surface,
 					color: PUBLIC_UI.text,
 					boxShadow: "none",
 					borderBottom: `1px solid ${PUBLIC_UI.border}`,
+					top: 0,
+					left: 0,
+					right: 0,
 				}}
 			>
 				<Box
@@ -179,7 +185,11 @@ export default function AppNavbar() {
 						gap: 1.2,
 					}}
 				>
-					<Stack direction="row" alignItems="center" spacing={1.1} sx={{ minWidth: 170 }}>
+					<Stack
+						direction="row"
+						spacing={1.1}
+						sx={{ minWidth: 170, alignItems: "center" }}
+					>
 						{isBookDetailRoute ? (
 							<Button
 								onClick={handleBackToBrowse}
@@ -248,7 +258,11 @@ export default function AppNavbar() {
 						</Box>
 					)}
 
-					<Stack direction="row" spacing={1} alignItems="center" sx={{ ml: "auto" }}>
+					<Stack
+						direction="row"
+						spacing={1}
+						sx={{ ml: "auto", alignItems: "center" }}
+					>
 						{isAuthenticated ? (
 							<ProfileAvatarMenu avatarSize={36} colorScheme="public" />
 						) : (
@@ -318,7 +332,10 @@ export default function AppNavbar() {
 				}}
 			>
 				<Stack spacing={2.5} sx={{ height: "100%" }}>
-					<Stack direction="row" justifyContent="space-between" alignItems="center">
+					<Stack
+						direction="row"
+						sx={{ justifyContent: "space-between", alignItems: "center" }}
+					>
 						<Typography variant="h6" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
 							Menu
 						</Typography>

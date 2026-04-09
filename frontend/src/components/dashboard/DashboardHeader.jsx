@@ -45,14 +45,15 @@ export default function DashboardHeader({ user, onEditProfile, onSettings }) {
       <Stack
         direction={{ xs: "column", lg: "row" }}
         spacing={3}
-        alignItems={{ xs: "flex-start", lg: "center" }}
-        justifyContent="space-between"
+        sx={{
+          alignItems: { xs: "flex-start", lg: "center" },
+          justifyContent: "space-between",
+        }}
       >
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
-          alignItems={{ xs: "flex-start", sm: "center" }}
-          sx={{ width: "100%" }}
+          sx={{ width: "100%", alignItems: { xs: "flex-start", sm: "center" } }}
         >
           <Avatar
             src={user?.avatarUrl || ""}
@@ -90,9 +91,9 @@ export default function DashboardHeader({ user, onEditProfile, onSettings }) {
         <Stack
           direction={{ xs: "column", sm: "row" }}
           spacing={2}
-          alignItems="stretch"
           sx={{
             width: { xs: "100%", lg: "auto" },
+            alignItems: "stretch",
             "& > *": {
               width: { xs: "100%", sm: 176 },
             },

@@ -69,7 +69,7 @@ export default function FeaturesSection() {
 					</div>
 					<div className={styles["dashboard-total"]}>
 						<span>Total Saved vs. Buying</span>
-						<strong>₹5,840</strong>
+						<strong>₹250</strong>
 					</div>
 				</aside>
 			</div>

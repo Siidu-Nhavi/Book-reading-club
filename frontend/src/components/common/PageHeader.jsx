@@ -8,8 +8,10 @@ export default function PageHeader({ eyebrow, title, subtitle, ctaLabel, ctaTo }
     <Stack
       direction={{ xs: "column", md: "row" }}
       spacing={2}
-      alignItems={{ xs: "flex-start", md: "flex-end" }}
-      justifyContent="space-between"
+      sx={{
+        alignItems: { xs: "flex-start", md: "flex-end" },
+        justifyContent: "space-between",
+      }}
     >
       <Box sx={{ maxWidth: 680 }}>
         {eyebrow ? (

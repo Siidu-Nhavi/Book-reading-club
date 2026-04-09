@@ -55,9 +55,11 @@ export default function DashboardHome() {
 						<Stack
 							direction="row"
 							spacing={1}
-							alignItems="center"
-							justifyContent={{ xs: "space-between", sm: "flex-start" }}
-							sx={{ width: { xs: "100%", sm: "auto" } }}
+							sx={{
+								width: { xs: "100%", sm: "auto" },
+								alignItems: "center",
+								justifyContent: { xs: "space-between", sm: "flex-start" },
+							}}
 						>
 							<Button
 								size="small"
@@ -118,7 +120,7 @@ export default function DashboardHome() {
 						<Stack
 							direction={{ xs: "column", sm: "row" }}
 							spacing={2}
-							alignItems={{ xs: "flex-start", sm: "center" }}
+							sx={{ alignItems: { xs: "flex-start", sm: "center" } }}
 						>
 							<Box sx={{ position: "relative", display: "inline-flex" }}>
 								<CircularProgress
@@ -173,7 +175,7 @@ export default function DashboardHome() {
 						<Stack spacing={1}>
 							{profileCompletion.missingFields.length > 0 ? (
 								profileCompletion.missingFields.map((field) => (
-									<Stack key={field.key} direction="row" spacing={1} alignItems="center">
+									<Stack key={field.key} direction="row" spacing={1} sx={{ alignItems: "center" }}>
 										<Box
 											sx={{
 												width: 8,
@@ -189,7 +191,7 @@ export default function DashboardHome() {
 									</Stack>
 								))
 							) : (
-								<Stack direction="row" spacing={1} alignItems="center">
+								<Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
 									<CheckCircleRoundedIcon
 										fontSize="small"
 										sx={{ color: BOOKNEST_COLORS.primaryBrown }}

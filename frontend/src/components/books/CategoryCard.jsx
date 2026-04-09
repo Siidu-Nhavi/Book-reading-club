@@ -55,7 +55,7 @@ export default function CategoryCard({
           },
         }}
       >
-        <Stack direction="row" spacing={1.2} alignItems="center">
+        <Stack direction="row" spacing={1.2} sx={{ alignItems: "center" }}>
           <Checkbox
             checked={selected}
             size="small"
@@ -120,7 +120,10 @@ export default function CategoryCard({
             {count} books available in this shelf
           </Typography>
         </Box>
-        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mt: "auto" }}>
+        <Stack
+          direction="row"
+          sx={{ mt: "auto", justifyContent: "space-between", alignItems: "center" }}
+        >
           <Typography variant="body2" sx={{ color: PUBLIC_UI.primary, fontWeight: 800 }}>
             Explore
           </Typography>

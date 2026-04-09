@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import "./footerPages.css";
 
-export default function FooterPageTemplate({ eyebrow, title, intro, sections, note }) {
+export default function FooterPageTemplate({ eyebrow, title, intro, sections }) {
   return (
     <main className="footer-page">
       <div className="footer-page__container">
@@ -32,13 +32,6 @@ export default function FooterPageTemplate({ eyebrow, title, intro, sections, no
             </article>
           ))}
         </section>
-
-        {note ? (
-          <section className="footer-page__note">
-            <h2>Need More Context?</h2>
-            <p>{note}</p>
-          </section>
-        ) : null}
       </div>
     </main>
   );

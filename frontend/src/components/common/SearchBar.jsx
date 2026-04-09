@@ -24,24 +24,26 @@ export default function SearchBar({
         }
       }}
       placeholder={placeholder}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <SearchRoundedIcon sx={{ color: PUBLIC_UI.muted }} />
-          </InputAdornment>
-        ),
-        endAdornment: value ? (
-          <InputAdornment position="end">
-            <IconButton
-              size="small"
-              aria-label="Clear search"
-              onClick={() => onChange("")}
-              edge="end"
-            >
-              <CloseRoundedIcon fontSize="small" />
-            </IconButton>
-          </InputAdornment>
-        ) : null,
+      slotProps={{
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchRoundedIcon sx={{ color: PUBLIC_UI.muted }} />
+            </InputAdornment>
+          ),
+          endAdornment: value ? (
+            <InputAdornment position="end">
+              <IconButton
+                size="small"
+                aria-label="Clear search"
+                onClick={() => onChange("")}
+                edge="end"
+              >
+                <CloseRoundedIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : null,
+        },
       }}
       sx={{
         "& .MuiOutlinedInput-root": {

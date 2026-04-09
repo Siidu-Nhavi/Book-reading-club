@@ -45,7 +45,7 @@ export default function FilterSidebar({
 
   return (
     <Stack spacing={2.75}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
         <Typography variant="h6" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
           Filters
         </Typography>
@@ -127,7 +127,7 @@ export default function FilterSidebar({
             valueLabelFormat={(value) => formatBookPrice(value)}
             sx={{ color: PUBLIC_UI.primary }}
           />
-          <Stack direction="row" justifyContent="space-between">
+          <Stack direction="row" sx={{ justifyContent: "space-between" }}>
             <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
               {formatBookPrice(priceRange[0])}
             </Typography>

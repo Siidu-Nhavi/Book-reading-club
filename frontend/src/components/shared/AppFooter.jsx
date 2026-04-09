@@ -24,15 +24,26 @@ export default function AppFooter() {
 			<Container maxWidth="xl">
 				<Stack
 					direction={{ xs: "column", md: "row" }}
-					justifyContent="space-between"
-					alignItems={{ xs: "flex-start", md: "center" }}
 					spacing={1}
-					sx={{ mb: 3.2 }}
+					sx={{
+						mb: 3.2,
+						justifyContent: "space-between",
+						alignItems: "flex-start",
+					}}
 				>
-					<Typography variant="h5" sx={{ fontWeight: 900, color: "#fff", fontFamily: '"Playfair Display", serif' }}>
+					<Typography
+						variant="h5"
+						sx={{ fontWeight: 900, color: "#fff", fontFamily: '"Playfair Display", serif' }}
+					>
 						BookNest
 					</Typography>
-					<Typography sx={{ color: "rgba(255,255,255,0.82)", fontWeight: 600 }}>
+					<Typography
+						sx={{
+							color: "rgba(255,255,255,0.82)",
+							fontWeight: 600,
+							mt: { xs: 0, md: 0.5 },
+						}}
+					>
 						Made for readers, by readers
 					</Typography>
 				</Stack>
@@ -53,8 +64,7 @@ export default function AppFooter() {
 						<Stack
 							direction="row"
 							spacing={1.1}
-							alignItems="center"
-							sx={{ mt: 2.2, minHeight: 40 }}
+							sx={{ mt: 2.2, minHeight: 40, alignItems: "center" }}
 						>
 							{socialIcons.map((IconComponent, index) => (
 								<IconButton
@@ -119,14 +129,14 @@ export default function AppFooter() {
 
 				<Stack
 					direction={{ xs: "column", md: "row" }}
-					justifyContent="space-between"
-					alignItems={{ xs: "flex-start", md: "center" }}
 					spacing={0.6}
 					sx={{
 						mt: 4,
 						pt: 3,
 						borderTop: "1px solid rgba(255,255,255,0.08)",
 						color: "rgba(255,255,255,0.48)",
+						justifyContent: "space-between",
+						alignItems: { xs: "flex-start", md: "center" },
 					}}
 				>
 					<Typography variant="body2">© 2025-26 BookNest</Typography>

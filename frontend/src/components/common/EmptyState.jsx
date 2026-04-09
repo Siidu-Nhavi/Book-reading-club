@@ -15,12 +15,12 @@ export default function EmptyState({
   return (
     <Stack
       spacing={2}
-      alignItems="center"
-      justifyContent="center"
       sx={{
         minHeight: 280,
         p: 4,
         textAlign: "center",
+        alignItems: "center",
+        justifyContent: "center",
         borderRadius: 5,
         border: `1px dashed ${PUBLIC_UI.borderStrong}`,
         bgcolor: "rgba(255, 255, 255, 0.82)",
