@@ -1,3 +1,7 @@
+const RENT_FILTER_MIN = 49;
+const RENT_FILTER_MAX = 250;
+const RENT_FILTER_MULTIPLIER = 2.65;
+
 export function formatBookPrice(price) {
   if (!Number.isFinite(price)) {
     return "Price unavailable";
@@ -7,7 +11,18 @@ export function formatBookPrice(price) {
     style: "currency",
     currency: "INR",
     maximumFractionDigits: 0,
-  }).format(price * 85);
+  }).format(price);
+}
+
+export function getWeeklyRentFilterValue(price) {
+  if (!Number.isFinite(price)) {
+    return RENT_FILTER_MIN;
+  }
+
+  return Math.min(
+    RENT_FILTER_MAX,
+    Math.max(RENT_FILTER_MIN, Math.round(price * RENT_FILTER_MULTIPLIER)),
+  );
 }
 
 export function formatCategoryLabel(category = "") {
@@ -107,7 +122,7 @@ export function getBookDepositAmount(book = {}) {
     return 0;
   }
 
-  return Math.max(book.price * 3, 2);
+  return Math.max(Math.round(getWeeklyRentFilterValue(book.price) * 0.8), 49);
 }
 
 export function getRentalTotal(price, durationDays) {
@@ -115,7 +130,8 @@ export function getRentalTotal(price, durationDays) {
     return 0;
   }
 
-  return price * durationDays;
+  const weeklyRent = getWeeklyRentFilterValue(price);
+  return Math.round((weeklyRent / 7) * durationDays);
 }
 
 export function getBookAuthorBlurb(book = {}) {
@@ -147,18 +163,10 @@ export function getBookReviews(book = {}) {
   });
 }
 
-export function getPriceBounds(books = []) {
-  const prices = books
-    .map((book) => book?.price)
-    .filter((price) => Number.isFinite(price));
-
-  if (prices.length === 0) {
-    return { min: 0, max: 10 };
-  }
-
+export function getPriceBounds() {
   return {
-    min: Math.min(...prices),
-    max: Math.max(...prices),
+    min: RENT_FILTER_MIN,
+    max: RENT_FILTER_MAX,
   };
 }
 

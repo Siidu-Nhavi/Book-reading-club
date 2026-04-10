@@ -6,8 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   formatBookPrice,
   formatCategoryLabel,
-  getBookRating,
-  getBookReviewCount,
+  getWeeklyRentFilterValue,
   truncateText,
 } from "../../utils/books";
 import {
@@ -16,7 +15,6 @@ import {
   PUBLIC_UI,
 } from "../../utils/publicUi";
 import AvailabilityBadge from "../common/AvailabilityBadge";
-import RatingStars from "../common/RatingStars";
 import BookMedia from "./BookMedia";
 
 export default function BookCard({
@@ -29,11 +27,10 @@ export default function BookCard({
   showRentButton = true,
 }) {
   const navigate = useNavigate();
-  const rating = getBookRating(book);
-  const reviewCount = getBookReviewCount(book);
   const featuredVariant = variant === "featured";
   const similarVariant = variant === "similar";
   const fixedWidthVariant = featuredVariant;
+  const weeklyRent = getWeeklyRentFilterValue(book?.price);
 
   return (
     <Paper
@@ -103,7 +100,7 @@ export default function BookCard({
               width: "fit-content",
               bgcolor: PUBLIC_UI.accentSoft,
               color: PUBLIC_UI.accent,
-              fontWeight: 700,
+              fontWeight: 500,
               borderRadius: 999,
             }}
           />
@@ -116,7 +113,7 @@ export default function BookCard({
             sx={{
               textDecoration: "none",
               color: PUBLIC_UI.text,
-              fontWeight: 800,
+              fontWeight: 600,
               fontSize: similarVariant ? "1rem" : "1.08rem",
               lineHeight: 1.25,
               minHeight: similarVariant ? 48 : 56,
@@ -141,22 +138,6 @@ export default function BookCard({
           >
             by {book?.author || "Unknown Author"}
           </Typography>
-
-          <RatingStars rating={rating} count={reviewCount} />
-
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ alignItems: "center", justifyContent: "space-between" }}
-          >
-            <Typography
-              variant="body1"
-              sx={{ color: PUBLIC_UI.accent, fontWeight: 800, fontFamily: '"Playfair Display", serif' }}
-            >
-              {formatBookPrice(book?.price)} / week
-            </Typography>
-            <RatingStars rating={rating} count={reviewCount} />
-          </Stack>
         </Stack>
 
         {showRentButton ? (
@@ -172,8 +153,8 @@ export default function BookCard({
               justifyContent: "space-between",
             }}
           >
-            <Typography sx={{ color: PUBLIC_UI.accent, fontWeight: 900, fontFamily: '"Playfair Display", serif' }}>
-              {formatBookPrice(book?.price)} / week
+            <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 600 }}>
+              {formatBookPrice(weeklyRent)} / week
             </Typography>
 
             <Button
@@ -188,7 +169,7 @@ export default function BookCard({
                 ...PUBLIC_BUTTON_PRIMARY_SX,
                 borderRadius: 999,
                 textTransform: "none",
-                fontWeight: 700,
+                fontWeight: 500,
                 px: 1.7,
                 py: 0.7,
                 bgcolor: PUBLIC_UI.accent,

@@ -55,9 +55,7 @@
 }
 
 .logo,
-.section-title,
 .hero h1,
-.hero-stat-value,
 .footer-brand,
 .cta-banner h2 {
   font-family: "Playfair Display", Georgia, serif;
@@ -75,8 +73,9 @@
 
 .section-title {
   margin: var(--space-2) 0 0;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: clamp(2rem, 2.8vw, 2.8rem);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.8px;
   color: var(--ink);
@@ -122,7 +121,7 @@
   text-decoration: none;
   color: var(--ink);
   font-size: 1.7rem;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.5px;
 }
 
@@ -163,7 +162,7 @@
   background: var(--ink);
   color: var(--cream);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.3px;
   padding: var(--space-2) var(--space-5);
   cursor: pointer;
@@ -211,7 +210,7 @@
 .hero h1 {
   margin: var(--space-6) 0 var(--space-5);
   font-size: clamp(2.9rem, 6vw, 4.5rem);
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.05;
   letter-spacing: -1.5px;
 }
@@ -230,7 +229,7 @@
   color: var(--amber);
   padding: 5px 14px;
   font-size: 0.75rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 2px;
   text-transform: uppercase;
 }
@@ -303,17 +302,27 @@
 .btn-ghost {
   text-decoration: none;
   color: var(--ink);
-  border-bottom: 1px solid var(--warm-gray);
-  padding-bottom: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border: 1px solid rgba(140, 123, 107, 0.28);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 253, 249, 0.8);
+  padding: 14px 32px;
   font-size: 0.95rem;
-  font-weight: 600;
+  font-weight: 500;
   letter-spacing: 0.3px;
-  transition: color 0.25s ease, border-color 0.25s ease;
+  transition: color 0.25s ease, border-color 0.25s ease, transform 0.25s ease,
+    background 0.25s ease, box-shadow 0.25s ease;
 }
 
 .btn-ghost:hover {
   color: var(--amber);
-  border-color: var(--amber);
+  border-color: rgba(200, 135, 58, 0.36);
+  background: var(--card-bg);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
 }
 
 .hero-stats {
@@ -331,8 +340,9 @@
 }
 
 .hero-stat-value {
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   font-size: 2rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
   color: var(--ink);
 }
@@ -641,9 +651,10 @@
 }
 
 .dashboard-total strong {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "DM Sans", "Segoe UI", sans-serif;
   color: var(--amber);
-  font-size: 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
   line-height: 1;
 }
 

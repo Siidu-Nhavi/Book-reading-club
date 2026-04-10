@@ -50,7 +50,7 @@ export const PUBLIC_BUTTON_PRIMARY_SX = {
   color: "#fff",
   borderRadius: PUBLIC_UI.controlRadius,
   textTransform: "none",
-  fontWeight: 800,
+  fontWeight: 500,
   boxShadow: "0 10px 24px rgba(108, 92, 231, 0.22)",
   cursor: "pointer",
   transition:
@@ -69,7 +69,7 @@ export const PUBLIC_BUTTON_GHOST_SX = {
   backgroundColor: PUBLIC_UI.surface,
   borderRadius: PUBLIC_UI.controlRadius,
   textTransform: "none",
-  fontWeight: 700,
+  fontWeight: 500,
   cursor: "pointer",
   transition:
     "transform 0.3s ease-in-out, background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out, box-shadow 0.3s ease-in-out",

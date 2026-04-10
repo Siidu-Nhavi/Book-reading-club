@@ -9,7 +9,8 @@ html {
 body {
   margin: 0;
   min-width: 320px;
-  font-family: "DM Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-body);
   background: var(--cream);
   color: var(--ink);
   overflow-x: hidden;
@@ -32,6 +33,7 @@ button {
     border-color 0.25s ease,
     box-shadow 0.25s ease,
     transform 0.25s ease;
+  font-weight: var(--font-weight-button);
 }
 
 button:active {
@@ -41,4 +43,35 @@ button:active {
 img {
   max-width: 100%;
   display: block;
+}
+
+/* Typography Utilities */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: var(--font-weight-heading);
+}
+
+.hero-title {
+  font-family: var(--font-serif);
+  font-weight: var(--font-weight-hero);
+}
+
+.brand, .logo {
+  font-family: var(--font-serif);
+  font-weight: var(--font-weight-brand);
+}
+
+.heading-1 {
+  font-weight: var(--font-weight-heading);
+}
+
+.heading-2 {
+  font-weight: var(--font-weight-heading);
+}
+
+.heading-3 {
+  font-weight: var(--font-weight-heading);
+}
+
+.body-text {
+  font-weight: var(--font-weight-body);
 }

@@ -147,7 +147,7 @@ export default function AppNavbar() {
 						sx={{
 							justifyContent: { xs: "flex-start", md: "center" },
 							color: selected ? PUBLIC_UI.primary : PUBLIC_UI.muted,
-							fontWeight: selected ? 800 : 700,
+							fontWeight: selected ? 600 : 500,
 							textTransform: "none",
 							borderRadius: 3,
 							px: 1.25,
@@ -196,7 +196,7 @@ export default function AppNavbar() {
 								startIcon={<ArrowBackRoundedIcon />}
 								sx={{
 									textTransform: "none",
-									fontWeight: 700,
+									fontWeight: 500,
 									color: PUBLIC_UI.primary,
 									display: { xs: "none", md: "inline-flex" },
 									minWidth: "fit-content",
@@ -224,7 +224,7 @@ export default function AppNavbar() {
 							<Typography
 								variant="h6"
 								sx={{
-									fontWeight: 900,
+									fontWeight: 700,
 									fontFamily: '"Playfair Display", serif',
 									letterSpacing: "-0.02em",
 								}}
@@ -275,7 +275,7 @@ export default function AppNavbar() {
 										...PUBLIC_BUTTON_GHOST_SX,
 										borderRadius: 999,
 										textTransform: "none",
-										fontWeight: 700,
+										fontWeight: 500,
 										px: { xs: 1.6, md: 2.2 },
 										display: { xs: isBooksRoute ? "inline-flex" : "none", md: "inline-flex" },
 									}}
@@ -290,7 +290,7 @@ export default function AppNavbar() {
 										...PUBLIC_BUTTON_PRIMARY_SX,
 										borderRadius: 999,
 										textTransform: "none",
-										fontWeight: 700,
+										fontWeight: 500,
 										px: { xs: 1.8, md: 2.4 },
 										bgcolor: PUBLIC_UI.accent,
 										"&:hover": {
@@ -336,7 +336,7 @@ export default function AppNavbar() {
 						direction="row"
 						sx={{ justifyContent: "space-between", alignItems: "center" }}
 					>
-						<Typography variant="h6" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
+						<Typography variant="h6" sx={{ fontWeight: 600, color: PUBLIC_UI.text }}>
 							Menu
 						</Typography>
 						<IconButton onClick={() => setIsDrawerOpen(false)}>

@@ -32,4 +32,15 @@
   --shadow-md: 0 4px 20px rgba(26, 18, 8, 0.1);
   --shadow-lg: 0 8px 32px rgba(26, 18, 8, 0.14);
   --shadow-amber: 0 4px 20px rgba(200, 135, 58, 0.35);
+
+  /* Typography - Font Families */
+  --font-sans: "DM Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+  --font-serif: "Playfair Display", serif;
+
+  /* Typography - Font Weights */
+  --font-weight-body: 400;
+  --font-weight-button: 500;
+  --font-weight-heading: 600;
+  --font-weight-hero: 700;
+  --font-weight-brand: 700;
 }

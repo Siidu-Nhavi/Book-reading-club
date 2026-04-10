@@ -38,7 +38,7 @@ export default function DashboardNavbar() {
               sx={{
                 display: { xs: "none", sm: "inline-flex" },
                 textTransform: "none",
-                fontWeight: 700,
+                fontWeight: 500,
                 color: BOOKNEST_COLORS.primaryBrown,
                 borderRadius: 999,
                 px: 1.2,
@@ -73,7 +73,7 @@ export default function DashboardNavbar() {
               px: 0.5,
               minWidth: 0,
               textTransform: "none",
-              fontWeight: 800,
+              fontWeight: 700,
               fontSize: { xs: "1rem", sm: "1.15rem" },
               letterSpacing: "-0.02em",
               "&:hover": { bgcolor: "transparent" },

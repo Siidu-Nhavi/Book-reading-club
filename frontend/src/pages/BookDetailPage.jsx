@@ -34,6 +34,7 @@ import {
   getBookReviewCount,
   getBookReviews,
   getRentalTotal,
+  getWeeklyRentFilterValue,
   getWishlistIds,
   toggleWishlistBook,
 } from "../utils/books";
@@ -115,6 +116,7 @@ export default function BookDetailPage() {
   const rating = useMemo(() => (book ? getBookRating(book) : 0), [book]);
   const reviewCount = useMemo(() => (book ? getBookReviewCount(book) : 0), [book]);
   const depositAmount = useMemo(() => (book ? getBookDepositAmount(book) : 0), [book]);
+  const weeklyRent = useMemo(() => (book ? getWeeklyRentFilterValue(book.price) : 0), [book]);
   const totalCost = useMemo(
     () => (book ? getRentalTotal(book.price, selectedDuration) : 0),
     [book, selectedDuration],
@@ -197,8 +199,15 @@ export default function BookDetailPage() {
                   }}
                 >
                   <Stack spacing={2}>
-                    <Typography sx={{ fontSize: "2rem", fontWeight: 900, color: PUBLIC_UI.accent, fontFamily: '"Playfair Display", serif' }}>
-                      {formatBookPrice(book.price)} / week
+                    <Typography
+                      sx={{
+                        fontSize: "1.6rem",
+                        fontWeight: 600,
+                        color: PUBLIC_UI.text,
+                        fontFamily: '"DM Sans", "Segoe UI", sans-serif',
+                      }}
+                    >
+                      {formatBookPrice(weeklyRent)} / week
                     </Typography>
                     <Typography sx={{ color: PUBLIC_UI.muted }}>
                       Refundable deposit: {formatBookPrice(depositAmount)}
@@ -215,10 +224,10 @@ export default function BookDetailPage() {
                         border: `1px solid ${PUBLIC_UI.border}`,
                       }}
                     >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 600, color: PUBLIC_UI.text }}>
                         Estimated total
                       </Typography>
-                      <Typography sx={{ mt: 0.3, fontWeight: 900, color: PUBLIC_UI.primary, fontSize: "1.5rem" }}>
+                      <Typography sx={{ mt: 0.3, fontWeight: 600, color: PUBLIC_UI.primary, fontSize: "1.25rem" }}>
                         {formatBookPrice(totalCost)}
                       </Typography>
                     </Paper>
@@ -287,7 +296,7 @@ export default function BookDetailPage() {
                   variant="h2"
                   sx={{
                     color: PUBLIC_UI.text,
-                    fontWeight: 900,
+                    fontWeight: 700,
                     fontSize: { xs: "2.1rem", md: "3rem" },
                     lineHeight: 1.05,
                     letterSpacing: "-0.04em",
@@ -306,7 +315,7 @@ export default function BookDetailPage() {
                   <MuiLink
                     href="#reviews"
                     underline="hover"
-                    sx={{ color: PUBLIC_UI.primary, fontWeight: 700, fontSize: "0.9rem" }}
+                    sx={{ color: PUBLIC_UI.primary, fontWeight: 500, fontSize: "0.9rem" }}
                   >
                     ({reviewCount} reviews)
                   </MuiLink>
@@ -315,7 +324,7 @@ export default function BookDetailPage() {
                 <Divider />
 
                 <Box>
-                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 900, mb: 1.1 }}>About This Book</Typography>
+                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 600, mb: 1.1 }}>About This Book</Typography>
                   <Typography
                     sx={{
                       color: PUBLIC_UI.muted,
@@ -332,7 +341,7 @@ export default function BookDetailPage() {
                     size="small"
                     variant="text"
                     onClick={() => setShowFullDescription((current) => !current)}
-                    sx={{ mt: 0.8, px: 0, textTransform: "none", fontWeight: 700 }}
+                    sx={{ mt: 0.8, px: 0, textTransform: "none", fontWeight: 500 }}
                   >
                     {showFullDescription ? "Read less" : "Read more"}
                   </Button>
@@ -341,14 +350,14 @@ export default function BookDetailPage() {
                 <Divider />
 
                 <Box>
-                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 900, mb: 1.1 }}>Book Details</Typography>
+                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 600, mb: 1.1 }}>Book Details</Typography>
                   <BookDetailColumns book={book} />
                 </Box>
 
                 <Divider />
 
                 <Box id="reviews">
-                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 900 }}>Reviews</Typography>
+                  <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 600 }}>Reviews</Typography>
                   <Typography sx={{ color: PUBLIC_UI.muted, mt: 0.4 }}>
                     Reader feedback for this title.
                   </Typography>
@@ -371,13 +380,13 @@ export default function BookDetailPage() {
                               sx={{
                                 bgcolor: PUBLIC_UI.primarySoft,
                                 color: PUBLIC_UI.primary,
-                                fontWeight: 800,
+                                fontWeight: 600,
                               }}
                             >
                               {getUserInitials(review.name)}
                             </Avatar>
                             <Box>
-                              <Typography sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>{review.name}</Typography>
+                              <Typography sx={{ fontWeight: 600, color: PUBLIC_UI.text }}>{review.name}</Typography>
                               <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
                                 {review.date}
                               </Typography>
@@ -392,7 +401,7 @@ export default function BookDetailPage() {
 
                   <Button
                     variant="text"
-                    sx={{ mt: 1.2, textTransform: "none", px: 0, fontWeight: 700, color: PUBLIC_UI.primary }}
+                    sx={{ mt: 1.2, textTransform: "none", px: 0, fontWeight: 500, color: PUBLIC_UI.primary }}
                   >
                     View all reviews
                   </Button>
@@ -401,7 +410,7 @@ export default function BookDetailPage() {
             </Box>
 
             <Paper elevation={0} sx={{ p: 2.2, borderRadius: 3, border: `1px solid ${PUBLIC_UI.border}` }}>
-              <Typography variant="h5" sx={{ fontWeight: 900, color: PUBLIC_UI.text, mb: 1.2 }}>
+              <Typography variant="h5" sx={{ fontWeight: 600, color: PUBLIC_UI.text, mb: 1.2 }}>
                 About the Author
               </Typography>
               <Typography sx={{ color: PUBLIC_UI.muted, lineHeight: 1.8 }}>
@@ -410,7 +419,7 @@ export default function BookDetailPage() {
             </Paper>
 
             <Box>
-              <Typography variant="h5" sx={{ fontWeight: 900, color: PUBLIC_UI.text, mb: 2.2, fontFamily: '"Playfair Display", serif' }}>
+              <Typography variant="h5" sx={{ fontWeight: 600, color: PUBLIC_UI.text, mb: 2.2 }}>
                 You Might Also Like
               </Typography>
 

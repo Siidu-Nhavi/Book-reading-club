@@ -60,7 +60,7 @@
   background: rgba(200, 154, 79, 0.14);
   color: var(--auth-brown);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -75,7 +75,7 @@
   line-height: 1.05;
   letter-spacing: -0.03em;
   color: var(--auth-text);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .auth-header p {
@@ -94,7 +94,7 @@
   color: var(--auth-brown-light);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .auth-form {
@@ -156,7 +156,7 @@
 .primary {
   background: linear-gradient(135deg, var(--auth-brown) 0%, var(--auth-brown-light) 100%);
   color: #fff;
-  font-weight: 700;
+  font-weight: 500;
   box-shadow: 0 14px 28px rgba(124, 79, 30, 0.22);
 }
 
@@ -174,7 +174,7 @@
 .auth-footer a {
   color: var(--auth-brown);
   text-decoration: none;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .auth-footer a:hover {
@@ -234,7 +234,8 @@
   font-size: clamp(2rem, 4vw, 2.8rem);
   line-height: 1.05;
   letter-spacing: -0.03em;
-  font-weight: 800;
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 700;
 }
 
 .auth-aside-inner p {

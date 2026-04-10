@@ -15,6 +15,7 @@ import {
   getBookPopularityScore,
   getBookRating,
   getPriceBounds,
+  getWeeklyRentFilterValue,
   getWishlistIds,
   toggleWishlistBook,
 } from "../utils/books";
@@ -227,7 +228,10 @@ export default function BooksCatalogPage() {
 
         return true;
       })
-      .filter((book) => book.price >= priceRange[0] && book.price <= priceRange[1])
+      .filter((book) => {
+        const weeklyRent = getWeeklyRentFilterValue(book.price);
+        return weeklyRent >= priceRange[0] && weeklyRent <= priceRange[1];
+      })
       .filter((book) => getBookRating(book) >= minRating)
       .sort((left, right) => compareBooks(left, right, sortBy, searchTerm));
   }, [allBooks, availability, minRating, priceRange, searchTerm, selectedCategories, sortBy]);

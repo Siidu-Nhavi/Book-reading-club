@@ -33,7 +33,7 @@ export default function AppFooter() {
 				>
 					<Typography
 						variant="h5"
-						sx={{ fontWeight: 900, color: "#fff", fontFamily: '"Playfair Display", serif' }}
+						sx={{ fontWeight: 700, color: "#fff", fontFamily: '"Playfair Display", serif' }}
 					>
 						BookNest
 					</Typography>
@@ -97,7 +97,7 @@ export default function AppFooter() {
 						<Box key={sectionTitle}>
 							<Typography
 								variant="subtitle1"
-								sx={{ fontWeight: 800, color: "#fff", mb: 1.4 }}
+								sx={{ fontWeight: 600, color: "#fff", mb: 1.4 }}
 							>
 								{sectionTitle}
 							</Typography>

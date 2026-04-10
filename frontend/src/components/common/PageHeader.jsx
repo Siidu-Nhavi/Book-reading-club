@@ -19,7 +19,7 @@ export default function PageHeader({ eyebrow, title, subtitle, ctaLabel, ctaTo }
             variant="overline"
             sx={{
               color: PUBLIC_UI.primary,
-              fontWeight: 800,
+              fontWeight: 600,
               letterSpacing: "0.14em",
             }}
           >
@@ -30,7 +30,8 @@ export default function PageHeader({ eyebrow, title, subtitle, ctaLabel, ctaTo }
           variant="h3"
           sx={{
             color: PUBLIC_UI.text,
-            fontWeight: 900,
+            fontFamily: '"DM Sans", "Segoe UI", sans-serif',
+            fontWeight: 600,
             fontSize: { xs: "2rem", md: "2.8rem" },
             lineHeight: 1.08,
             letterSpacing: "-0.04em",
@@ -63,7 +64,7 @@ export default function PageHeader({ eyebrow, title, subtitle, ctaLabel, ctaTo }
             alignItems: "center",
             gap: 0.5,
             color: PUBLIC_UI.primary,
-            fontWeight: 800,
+            fontWeight: 500,
             whiteSpace: "nowrap",
           }}
         >
