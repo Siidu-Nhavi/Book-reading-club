@@ -36,15 +36,15 @@ export default function DashboardHome() {
     <Stack spacing={3}>
       {showCompletionBanner ? (
         <Alert
-          severity="warning"
+          severity="info"
           sx={{
             borderRadius: 3,
             alignItems: "center",
-            backgroundColor: "rgba(200, 154, 79, 0.15)",
+            backgroundColor: "rgba(37, 99, 235, 0.1)",
             color: BOOKNEST_COLORS.text,
             border: `1px solid ${BOOKNEST_COLORS.border}`,
             "& .MuiAlert-icon": {
-              color: BOOKNEST_COLORS.primaryBrown,
+              color: "#2563eb",
             },
             "& .MuiAlert-action": {
               pt: { xs: 1.5, sm: 0.75 },
@@ -66,7 +66,7 @@ export default function DashboardHome() {
                 size="small"
                 onClick={() => navigate("/dashboard/profile")}
                 sx={{
-                  color: BOOKNEST_COLORS.primaryBrown,
+                  color: "#1d4ed8",
                   borderRadius: 2,
                   textTransform: "none",
                   fontWeight: 700,
@@ -90,78 +90,6 @@ export default function DashboardHome() {
           a more polished dashboard experience.
         </Alert>
       ) : null}
-
-      <Box
-        sx={{
-          p: { xs: 2.25, md: 3 },
-          borderRadius: 4,
-          border: `1px solid ${BOOKNEST_COLORS.border}`,
-          background:
-            "linear-gradient(135deg, rgba(124,79,30,0.95) 0%, rgba(139,94,46,0.92) 58%, rgba(200,154,79,0.82) 100%)",
-          color: "#fff",
-        }}
-      >
-        <Stack
-          direction={{ xs: "column", xl: "row" }}
-          spacing={2.5}
-          sx={{ justifyContent: "space-between", alignItems: { xl: "center" } }}
-        >
-          <Box sx={{ maxWidth: 620 }}>
-            <Typography variant="overline" sx={{ letterSpacing: "0.18em", opacity: 0.9 }}>
-              Reader Dashboard
-            </Typography>
-            <Typography sx={{ fontWeight: 700, fontSize: { xs: "2rem", md: "2.5rem" }, lineHeight: 1.05 }}>
-              Everything you need to manage your BookNest activity in one place
-            </Typography>
-            <Typography sx={{ mt: 1.35, maxWidth: 560, opacity: 0.9 }}>
-              Track profile progress, discover catalog-ready books, keep an eye on wishlist picks,
-              and move quickly between the parts of your reader workspace that matter most.
-            </Typography>
-          </Box>
-
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1.25}
-            sx={{ minWidth: { xl: 300 } }}
-          >
-            <Button
-              onClick={() => navigate("/dashboard/profile")}
-              variant="contained"
-              sx={{
-                minHeight: 48,
-                borderRadius: 999,
-                textTransform: "none",
-                fontWeight: 600,
-                bgcolor: "#fff",
-                color: BOOKNEST_COLORS.primaryBrown,
-                px: 2.5,
-                "&:hover": { bgcolor: "rgba(255,255,255,0.92)" },
-              }}
-            >
-              Edit Profile
-            </Button>
-            <Button
-              onClick={() => navigate("/books")}
-              variant="outlined"
-              sx={{
-                minHeight: 48,
-                borderRadius: 999,
-                textTransform: "none",
-                fontWeight: 600,
-                color: "#fff",
-                borderColor: "rgba(255,255,255,0.45)",
-                px: 2.5,
-                "&:hover": {
-                  borderColor: "#fff",
-                  bgcolor: "rgba(255,255,255,0.08)",
-                },
-              }}
-            >
-              Browse Catalog
-            </Button>
-          </Stack>
-        </Stack>
-      </Box>
 
       {loading ? (
         <Typography variant="body2" sx={{ color: BOOKNEST_COLORS.muted }}>

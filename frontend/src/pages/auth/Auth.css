@@ -1,15 +1,15 @@
 .auth-page {
-  --auth-cream: #f5f0e8;
-  --auth-cream-soft: #fbf7f1;
+  --auth-cream: #f5f3ef;
+  --auth-cream-soft: #fafaf9;
   --auth-card: #ffffff;
-  --auth-brown: #7c4f1e;
-  --auth-brown-dark: #5e3912;
-  --auth-brown-light: #8b5e2e;
-  --auth-gold: #c89a4f;
-  --auth-gold-soft: #f1dec0;
-  --auth-text: #2f2418;
-  --auth-muted: #776551;
-  --auth-border: rgba(124, 79, 30, 0.14);
+  --auth-brown: #2563eb;
+  --auth-brown-dark: #1e40af;
+  --auth-brown-light: #1d4ed8;
+  --auth-gold: #93c5fd;
+  --auth-gold-soft: #dbeafe;
+  --auth-text: #1a1917;
+  --auth-muted: #6b6963;
+  --auth-border: rgba(37, 99, 235, 0.16);
   --auth-danger: #c55353;
   min-height: 100vh;
   display: flex;
@@ -17,8 +17,8 @@
   justify-content: center;
   padding: 32px 20px;
   background:
-    radial-gradient(circle at top left, rgba(200, 154, 79, 0.22), transparent 32%),
-    radial-gradient(circle at bottom right, rgba(124, 79, 30, 0.14), transparent 28%),
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.14), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(29, 78, 216, 0.1), transparent 30%),
     linear-gradient(180deg, var(--auth-cream-soft) 0%, var(--auth-cream) 100%);
 }
 
@@ -57,7 +57,7 @@
   left: 56px;
   padding: 0.45rem 0.9rem;
   border-radius: 999px;
-  background: rgba(200, 154, 79, 0.14);
+  background: rgba(37, 99, 235, 0.12);
   color: var(--auth-brown);
   font-size: 0.78rem;
   font-weight: 600;
@@ -123,8 +123,8 @@
 }
 
 .auth-form input:focus {
-  border-color: rgba(200, 154, 79, 0.95);
-  box-shadow: 0 0 0 4px rgba(200, 154, 79, 0.14);
+  border-color: rgba(37, 99, 235, 0.9);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
   transform: translateY(-1px);
 }
 
@@ -157,12 +157,12 @@
   background: linear-gradient(135deg, var(--auth-brown) 0%, var(--auth-brown-light) 100%);
   color: #fff;
   font-weight: 500;
-  box-shadow: 0 14px 28px rgba(124, 79, 30, 0.22);
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.24);
 }
 
 .primary:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 18px 32px rgba(124, 79, 30, 0.28);
+  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.3);
 }
 
 .auth-footer {
@@ -206,7 +206,7 @@
   height: 260px;
   top: -90px;
   right: -70px;
-  background: rgba(200, 154, 79, 0.18);
+  background: rgba(147, 197, 253, 0.18);
 }
 
 .auth-aside::after {

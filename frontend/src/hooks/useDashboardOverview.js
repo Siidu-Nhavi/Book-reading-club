@@ -15,13 +15,14 @@ export default function useDashboardOverview(user) {
 
   useEffect(() => {
     let isMounted = true;
+    const useRealRentals = import.meta.env.VITE_USE_REAL_DASHBOARD_RENTALS === "true";
 
     const loadOverview = async () => {
       setLoading(true);
       setError("");
 
       try {
-        const response = await getDashboardOverview(user);
+        const response = await getDashboardOverview(user, { useRealRentals });
 
         if (!isMounted) {
           return;

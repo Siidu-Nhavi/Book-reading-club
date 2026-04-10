@@ -3,6 +3,10 @@ const Book = require("../../models/Book.js");
 const MAX_LIMIT = 50;
 const DEFAULT_LIMIT = 12;
 
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function toNumber(value) {
   if (value === undefined || value === null || value === "") {
     return null;
@@ -42,24 +46,14 @@ function toPositiveInteger(value, fallback) {
 
 function getSort(sortBy) {
   switch (sortBy) {
-    case "relevance":
-      return { createdAt: -1 };
-    case "price_asc":
-      return { price: 1, createdAt: -1 };
-    case "price_desc":
-      return { price: -1, createdAt: -1 };
-    case "popular":
-      return { createdAt: -1 };
-    case "top_rated":
-      return { createdAt: -1 };
-    case "title_asc":
-      return { title: 1 };
-    case "title_desc":
-      return { title: -1 };
-    case "newest":
-    case "latest":
+    case "rentPrice":
+      return "rentPrice";
+    case "averageRating":
+      return "averageRating";
+    case "title":
+      return "title";
     default:
-      return { createdAt: -1 };
+      return "createdAt";
   }
 }
 
@@ -70,68 +64,58 @@ async function getAllBook(req, res) {
   const categories = toArray(req.query.category);
   const search = req.query.search?.trim();
   const sortBy = req.query.sortBy?.trim();
-  const availability = req.query.availability?.trim();
-  const minPrice = toNumber(req.query.minPrice);
-  const maxPrice = toNumber(req.query.maxPrice);
+  const order = req.query.order?.trim().toLowerCase() === "asc" ? 1 : -1;
+  const available = req.query.available;
 
   const filters = {};
 
   if (categories.length > 0) {
-    filters.category = { $in: categories };
+    filters.category = {
+      $in: categories.map((category) => new RegExp(`^${escapeRegex(category)}$`, "i")),
+    };
   }
 
-  if (availability === "available") {
+  if (available === "true") {
     filters.isAvailable = true;
-  }
-
-  if (availability === "coming_soon" || availability === "rented") {
+  } else if (available === "false") {
     filters.isAvailable = false;
   }
 
-  if (minPrice !== null || maxPrice !== null) {
-    filters.price = {};
-
-    if (minPrice !== null) {
-      filters.price.$gte = minPrice;
-    }
-
-    if (maxPrice !== null) {
-      filters.price.$lte = maxPrice;
-    }
-  }
-
   if (search) {
+    const safeSearch = escapeRegex(search);
+
     filters.$or = [
-      { title: { $regex: search, $options: "i" } },
-      { author: { $regex: search, $options: "i" } },
-      { category: { $regex: search, $options: "i" } },
-      { description: { $regex: search, $options: "i" } },
+      { title: { $regex: safeSearch, $options: "i" } },
+      { author: { $regex: safeSearch, $options: "i" } },
     ];
   }
 
   try {
+    const sortField = getSort(sortBy);
+    const sort = { [sortField]: order };
+
+    if (sortField !== "createdAt") {
+      sort.createdAt = -1;
+    }
+
     const [books, totalBooks] = await Promise.all([
       Book.find(filters)
-        .sort(getSort(sortBy))
+        .sort(sort)
+        .select("_id title author category rentPrice isAvailable averageRating")
         .skip((page - 1) * limit)
         .limit(limit),
       Book.countDocuments(filters),
     ]);
 
     return res.status(200).json({
+      total: totalBooks,
+      page,
+      limit,
       books,
-      pagination: {
-        page,
-        limit,
-        totalBooks,
-        totalPages: Math.ceil(totalBooks / limit) || 1,
-        hasNextPage: page * limit < totalBooks,
-        hasPreviousPage: page > 1,
-      },
     });
   } catch (error) {
     console.error("Get all books error:", error);
-    return res.status(500).json({ message: "Unable to fetch books" });
+    return res.status(500).json({ error: "Unable to fetch books" });
   }
 }
 

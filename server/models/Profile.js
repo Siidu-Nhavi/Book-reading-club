@@ -24,6 +24,16 @@ const profileSchema = new mongoose.Schema(
       default: "",
       maxlength: 400,
     },
+    city: {
+      type: String,
+      trim: true,
+      default: "",
+      maxlength: 120,
+    },
+    dateOfBirth: {
+      type: Date,
+      default: null,
+    },
   },
   { _id: false },
 );

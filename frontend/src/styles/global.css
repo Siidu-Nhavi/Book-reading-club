@@ -1,77 +1,66 @@
-html {
-  scroll-behavior: smooth;
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-* {
-  box-sizing: border-box;
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  margin: 0;
   min-width: 320px;
   font-family: var(--font-sans);
-  font-weight: var(--font-weight-body);
-  background: var(--cream);
-  color: var(--ink);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-normal);
+  color: var(--color-text-primary);
+  background-color: var(--color-bg);
   overflow-x: hidden;
 }
 
 a {
   color: inherit;
-  transition:
-    color 0.25s ease,
-    background-color 0.25s ease,
-    border-color 0.25s ease,
-    box-shadow 0.25s ease,
-    transform 0.25s ease;
+  text-decoration: none;
 }
 
 button {
-  transition:
-    color 0.25s ease,
-    background-color 0.25s ease,
-    border-color 0.25s ease,
-    box-shadow 0.25s ease,
-    transform 0.25s ease;
-  font-weight: var(--font-weight-button);
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
 }
 
-button:active {
-  transform: scale(0.98);
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
 }
 
-img {
-  max-width: 100%;
+img,
+video {
   display: block;
+  max-width: 100%;
 }
 
-/* Typography Utilities */
-h1, h2, h3, h4, h5, h6 {
-  font-weight: var(--font-weight-heading);
+ul,
+ol {
+  list-style: none;
 }
 
-.hero-title {
-  font-family: var(--font-serif);
-  font-weight: var(--font-weight-hero);
-}
-
-.brand, .logo {
-  font-family: var(--font-serif);
-  font-weight: var(--font-weight-brand);
-}
-
-.heading-1 {
-  font-weight: var(--font-weight-heading);
-}
-
-.heading-2 {
-  font-weight: var(--font-weight-heading);
-}
-
-.heading-3 {
-  font-weight: var(--font-weight-heading);
-}
-
-.body-text {
-  font-weight: var(--font-weight-body);
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
 }

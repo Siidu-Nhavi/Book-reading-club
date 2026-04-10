@@ -43,21 +43,21 @@ export default function AppNavbar() {
     [location.pathname],
   );
 
-	useEffect(() => {
-		const nextSearch = searchParams.get("search") || "";
+	// useEffect(() => {
+	// 	const nextSearch = searchParams.get("search") || "";
 
-		if (nextSearch === searchInput) {
-			return;
-		}
+	// 	if (nextSearch === searchInput) {
+	// 		return;
+	// 	}
 
-		const timeoutId = window.setTimeout(() => {
-			setSearchInput(nextSearch);
-		}, 0);
+	// 	const timeoutId = window.setTimeout(() => {
+	// 		setSearchInput(nextSearch);
+	// 	}, 0);
 
-		return () => {
-			window.clearTimeout(timeoutId);
-		};
-	}, [searchInput, searchParams]);
+	// 	return () => {
+	// 		window.clearTimeout(timeoutId);
+	// 	};
+	// }, [searchInput, searchParams]);
 
 	useEffect(() => {
 		if (!isBooksRoute) {
@@ -79,6 +79,7 @@ export default function AppNavbar() {
 			nextParams.delete("search");
 		}
 
+		
 		nextParams.set("page", "1");
 		setSearchParams(nextParams, { replace: true });
 	}, [debouncedSearch, isBooksRoute, searchParams, setSearchParams]);
@@ -96,7 +97,7 @@ export default function AppNavbar() {
 		nextParams.set("page", "1");
 
 		if (isBookDetailRoute) {
-			navigate(`/books${nextParams.toString() ? `?${nextParams.toString()}` : ""}`);
+			navigate(`/books?${nextParams.toString()}`);
 			return;
 		}
 
@@ -123,7 +124,7 @@ export default function AppNavbar() {
 	const renderNavLinks = (stackProps = {}) => (
 		<Stack
 			direction={{ xs: "column", md: "row" }}
-			spacing={{ xs: 0.5, md: 0.75 }}
+			spacing={{ xs: 0.5, md: 1 }}
 			{...stackProps}
 			sx={{
 				alignItems: { xs: "stretch", md: "center" },
@@ -146,11 +147,14 @@ export default function AppNavbar() {
 						onClick={() => setIsDrawerOpen(false)}
 						sx={{
 							justifyContent: { xs: "flex-start", md: "center" },
-							color: selected ? PUBLIC_UI.primary : PUBLIC_UI.muted,
+							color: selected ? PUBLIC_UI.text : PUBLIC_UI.muted,
 							fontWeight: selected ? 600 : 500,
 							textTransform: "none",
-							borderRadius: 3,
-							px: 1.25,
+							borderRadius: 2,
+							px: 1.35,
+							"&:hover": {
+								backgroundColor: PUBLIC_UI.surfaceSoft,
+							},
 						}}
 					>
 						{item.label}
@@ -166,9 +170,10 @@ export default function AppNavbar() {
 				position="fixed"
 				elevation={0}
 				sx={{
-					bgcolor: PUBLIC_UI.surface,
+					bgcolor: "rgba(255, 255, 255, 0.96)",
 					color: PUBLIC_UI.text,
-					boxShadow: "none",
+					boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+					backdropFilter: "blur(12px)",
 					borderBottom: `1px solid ${PUBLIC_UI.border}`,
 					top: 0,
 					left: 0,
@@ -177,18 +182,20 @@ export default function AppNavbar() {
 			>
 				<Box
 					sx={{
-						height: 64,
+						height: 72,
 						display: "flex",
 						alignItems: "center",
 						justifyContent: "space-between",
-						px: { xs: 2, md: "5%" },
-						gap: 1.2,
+						px: { xs: 2, md: 3 },
+						maxWidth: "var(--max-width-page)",
+						mx: "auto",
+						gap: 2,
 					}}
 				>
 					<Stack
 						direction="row"
-						spacing={1.1}
-						sx={{ minWidth: 170, alignItems: "center" }}
+						spacing={1.3}
+						sx={{ minWidth: { xs: "auto", md: 210 }, alignItems: "center" }}
 					>
 						{isBookDetailRoute ? (
 							<Button
@@ -208,13 +215,13 @@ export default function AppNavbar() {
 						) : null}
 						<Avatar
 							sx={{
-								width: 36,
-								height: 36,
+								width: 42,
+								height: 42,
 								bgcolor: PUBLIC_UI.primary,
 								color: "#fff",
 							}}
 						>
-							<AutoStoriesRoundedIcon sx={{ fontSize: 20 }} />
+							<AutoStoriesRoundedIcon sx={{ fontSize: 24 }} />
 						</Avatar>
 						<Box
 							component={RouterLink}
@@ -222,11 +229,10 @@ export default function AppNavbar() {
 							sx={{ textDecoration: "none", color: "inherit" }}
 						>
 							<Typography
-								variant="h6"
+								variant="subtitle1"
 								sx={{
 									fontWeight: 700,
-									fontFamily: '"Playfair Display", serif',
-									letterSpacing: "-0.02em",
+									fontSize: "1.12rem",
 								}}
 							>
 								BookNest
@@ -235,19 +241,19 @@ export default function AppNavbar() {
 					</Stack>
 
 					{isBooksRoute ? (
-						<Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", px: { xs: 0.5, md: 2 } }}>
+						<Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center", px: { xs: 0.5, md: 2.4 } }}>
 							<SearchBar
 								value={searchInput}
 								onChange={setSearchInput}
 								onSubmit={updateSearchNow}
 								placeholder="Search by title, author, or ISBN..."
-								size="small"
+								size="medium"
 								sx={{
-									maxWidth: 520,
+									maxWidth: 680,
 									width: "100%",
 									"& .MuiOutlinedInput-root": {
 										borderRadius: 999,
-										minHeight: 42,
+										minHeight: 48,
 									},
 								}}
 							/>
@@ -261,10 +267,10 @@ export default function AppNavbar() {
 					<Stack
 						direction="row"
 						spacing={1}
-						sx={{ ml: "auto", alignItems: "center" }}
+						sx={{ minWidth: { xs: "auto", md: 210 }, justifyContent: "flex-end", alignItems: "center" }}
 					>
 						{isAuthenticated ? (
-							<ProfileAvatarMenu avatarSize={36} colorScheme="public" />
+							<ProfileAvatarMenu avatarSize={44} colorScheme="public" />
 						) : (
 							<>
 								<Button
@@ -273,7 +279,7 @@ export default function AppNavbar() {
 									variant="outlined"
 									sx={{
 										...PUBLIC_BUTTON_GHOST_SX,
-										borderRadius: 999,
+										borderRadius: 2,
 										textTransform: "none",
 										fontWeight: 500,
 										px: { xs: 1.6, md: 2.2 },
@@ -288,14 +294,10 @@ export default function AppNavbar() {
 									variant="contained"
 									sx={{
 										...PUBLIC_BUTTON_PRIMARY_SX,
-										borderRadius: 999,
+										borderRadius: 2,
 										textTransform: "none",
 										fontWeight: 500,
 										px: { xs: 1.8, md: 2.4 },
-										bgcolor: PUBLIC_UI.accent,
-										"&:hover": {
-											bgcolor: "#f1883e",
-										},
 										display: { xs: "none", md: "inline-flex" },
 									}}
 								>
@@ -325,8 +327,8 @@ export default function AppNavbar() {
 				onClose={() => setIsDrawerOpen(false)}
 				PaperProps={{
 					sx: {
-						width: "min(88vw, 340px)",
-						bgcolor: PUBLIC_UI.pageBackground,
+						width: "min(88vw, 320px)",
+						bgcolor: PUBLIC_UI.surface,
 						p: 2.5,
 					},
 				}}

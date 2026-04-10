@@ -28,6 +28,30 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    depositAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    depositStatus: {
+      type: String,
+      enum: ["pending", "paid", "refunded"],
+      default: "pending",
+    },
+    activeRentalsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    maxRentalsAllowed: {
+      type: Number,
+      default: 3,
+      min: 1,
+    },
+    isSuspended: {
+      type: Boolean,
+      default: false,
+    },
     profile: {
       type: profileSchema,
       default: () => ({}),

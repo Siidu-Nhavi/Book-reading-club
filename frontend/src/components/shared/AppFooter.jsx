@@ -4,61 +4,50 @@ import XIcon from "@mui/icons-material/X";
 import { Box, Container, IconButton, Link as MuiLink, Stack, Typography } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import { PUBLIC_UI } from "../../utils/publicUi";
-import { footerLinks } from "../../data/navLinks";
 
 const socialIcons = [InstagramIcon, XIcon, LinkedInIcon];
-const footerSectionsOrder = ["Product", "Company", "Support", "Legal"];
+
+const navigationLinks = [
+  { label: "Books", to: "/books" },
+  { label: "Features", to: "/features" },
+  { label: "Pricing", to: "/pricing" },
+  { label: "About", to: "/about-us" },
+];
+
+const legalLinks = [
+  { label: "Privacy", to: "/privacy-policy" },
+  { label: "Terms", to: "/terms-of-service" },
+  { label: "Support", to: "/support" },
+];
 
 export default function AppFooter() {
 	return (
 		<Box
 			component="footer"
 			sx={{
-				mt: 8,
+				mt: 10,
 				pt: { xs: 6, md: 8 },
-				pb: { xs: 3.5, md: 4 },
-				backgroundColor: "#1A1208",
-				color: "rgba(255,255,255,0.74)",
+				pb: { xs: 5, md: 5 },
+				backgroundColor: "#000000",
+				borderTop: "1px solid rgba(255, 255, 255, 0.16)",
+				color: "rgba(255, 255, 255, 0.72)",
 			}}
 		>
 			<Container maxWidth="xl">
-				<Stack
-					direction={{ xs: "column", md: "row" }}
-					spacing={1}
-					sx={{
-						mb: 3.2,
-						justifyContent: "space-between",
-						alignItems: "flex-start",
-					}}
-				>
-					<Typography
-						variant="h5"
-						sx={{ fontWeight: 700, color: "#fff", fontFamily: '"Playfair Display", serif' }}
-					>
-						BookNest
-					</Typography>
-					<Typography
-						sx={{
-							color: "rgba(255,255,255,0.82)",
-							fontWeight: 600,
-							mt: { xs: 0, md: 0.5 },
-						}}
-					>
-						Made for readers, by readers
-					</Typography>
-				</Stack>
-
 				<Box
 					sx={{
 						display: "grid",
-						gridTemplateColumns: { xs: "1fr", md: "minmax(260px, 1.2fr) repeat(4, 1fr)" },
+						gridTemplateColumns: { xs: "1fr", md: "minmax(320px, 1.3fr) 1fr 1fr" },
 						gap: { xs: 3, md: 4 },
 						alignItems: "start",
 					}}
 				>
 					<Box sx={{ maxWidth: 360 }}>
-						<Typography sx={{ mt: 1.2, lineHeight: 1.75 }}>
-							Your gateway to endless stories and knowledge across public pages and reader workflows.
+						<Typography sx={{ fontSize: "1.1rem", fontWeight: 600, color: "#ffffff" }}>
+							BookNest
+						</Typography>
+						<Typography sx={{ mt: 1, lineHeight: 1.7 }}>
+							A calm and practical place to discover, rent, and manage your reading journey.
 						</Typography>
 
 						<Stack
@@ -72,18 +61,16 @@ export default function AppFooter() {
 									sx={{
 										width: 40,
 										height: 40,
-										color: "#fff",
-										bgcolor: "rgba(255,255,255,0.08)",
+										color: "#ffffff",
+										bgcolor: "rgba(255, 255, 255, 0.08)",
+										border: "1px solid rgba(255, 255, 255, 0.18)",
 										display: "inline-flex",
 										alignItems: "center",
 										justifyContent: "center",
 										transition: "all 0.25s ease",
 										"&:hover": {
-											bgcolor: PUBLIC_UI.primary,
+											bgcolor: "rgba(255, 255, 255, 0.16)",
 											transform: "translateY(-2px)",
-										},
-										"&:active": {
-											transform: "scale(0.96)",
 										},
 									}}
 								>
@@ -93,48 +80,62 @@ export default function AppFooter() {
 						</Stack>
 					</Box>
 
-					{footerSectionsOrder.map((sectionTitle) => (
-						<Box key={sectionTitle}>
-							<Typography
-								variant="subtitle1"
-								sx={{ fontWeight: 600, color: "#fff", mb: 1.4 }}
-							>
-								{sectionTitle}
-							</Typography>
-							<Stack spacing={1.05}>
-								{(footerLinks[sectionTitle] || []).map((link) => (
-									<MuiLink
-										key={link.label}
-										component={RouterLink}
-										to={link.to}
-										underline="none"
-										sx={{
-											color: "rgba(255,255,255,0.74)",
-											fontWeight: 600,
-											width: "fit-content",
-											transition: "color 0.25s ease, transform 0.2s ease",
-											"&:hover": {
-												color: "#fff",
-												transform: "translateX(2px)",
-											},
-										}}
-									>
-										{link.label}
-									</MuiLink>
-								))}
-							</Stack>
-						</Box>
-					))}
+					<Box>
+						<Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#ffffff", mb: 1.2 }}>
+							Navigation
+						</Typography>
+						<Stack spacing={0.9}>
+							{navigationLinks.map((link) => (
+								<MuiLink
+									key={link.label}
+									component={RouterLink}
+									to={link.to}
+									underline="none"
+									sx={{
+										fontWeight: 500,
+										color: "rgba(255, 255, 255, 0.72)",
+										width: "fit-content",
+										"&:hover": { color: "#ffffff" },
+									}}
+								>
+									{link.label}
+								</MuiLink>
+							))}
+						</Stack>
+					</Box>
+
+					<Box>
+						<Typography variant="subtitle2" sx={{ fontWeight: 600, color: "#ffffff", mb: 1.2 }}>
+							Legal
+						</Typography>
+						<Stack spacing={0.9}>
+							{legalLinks.map((link) => (
+								<MuiLink
+									key={link.label}
+									component={RouterLink}
+									to={link.to}
+									underline="none"
+									sx={{
+										fontWeight: 500,
+										color: "rgba(255, 255, 255, 0.72)",
+										width: "fit-content",
+										"&:hover": { color: "#ffffff" },
+									}}
+								>
+									{link.label}
+								</MuiLink>
+							))}
+						</Stack>
+					</Box>
 				</Box>
 
 				<Stack
 					direction={{ xs: "column", md: "row" }}
 					spacing={0.6}
 					sx={{
-						mt: 4,
+						mt: 5,
 						pt: 3,
-						borderTop: "1px solid rgba(255,255,255,0.08)",
-						color: "rgba(255,255,255,0.48)",
+						borderTop: "1px solid rgba(255, 255, 255, 0.16)",
 						justifyContent: "space-between",
 						alignItems: { xs: "flex-start", md: "center" },
 					}}

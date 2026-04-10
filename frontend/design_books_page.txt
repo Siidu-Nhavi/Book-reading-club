@@ -1,364 +1,378 @@
-## /books PAGE DESIGN — BooksCatalogPage
+## Design Philosophy
+
+The redesign follows three principles: maximum whitespace, clear visual hierarchy, and every page having a single clear purpose. No cramped sidebars, no information overload. Think of it as a library — calm, organized, intentional.
 
 ---
 
-### LAYOUT OVERVIEW
+## Spacing & Layout System
 
-```
-AppNavbar (fixed top)
-  └── Logo (left) → /books
-  └── Center: search bar (inline in navbar on this page)
-  └── Right: Sign In button
+Use an 8px base unit throughout. This means all padding, margin, and gap values are multiples of 8: 8, 16, 24, 32, 48, 64, 96. Never use arbitrary values like 13px or 22px.
 
-PageShell
-  └── FilterSidebar (left, sticky)
-  └── CatalogMain (right, scrollable)
-        └── ResultsBar (count + sort dropdown)
-        └── BookGrid (responsive cards)
-        └── Pagination
+Page max-width is 1200px, centered, with 24px horizontal padding on mobile and 48px on desktop. The reading column (for detail pages and text-heavy content) is capped at 720px. The dashboard content area is capped at 960px.
 
-AppFooter
-```
-
-The search bar moves **into the navbar** on the /books page specifically. This is a common pattern used by Amazon, Airbnb, and similar platforms — the navbar becomes the command center when you're inside a browsing experience. On all other public pages the navbar stays minimal.
+Grid system uses CSS Grid exclusively — no Bootstrap columns. Standard layouts are 12-column on desktop, 4-column on tablet, 1-column on mobile. Component grids use auto-fill with minmax so they reflow naturally.
 
 ---
 
-### APPNAVBAR — ON /books
+## Color & Typography
 
-```
-Layout: fixed top, full width, height 64px
-display: flex, justify-content: space-between, align-items: center
-padding: 0 5%
-background: --card-bg, border-bottom: 1px solid --border
+One neutral palette. Background is near-white (#FAFAF9). Surface (cards, inputs) is white (#FFFFFF). Border is a very light gray (#E8E6E1). Text primary is near-black (#1A1917). Text secondary is medium gray (#6B6963). Accent is a single brand color — use one, not five.
 
-Left:
-  Logo — "BookNest" serif + icon
-  clicking logo → /books (on catalog page, logo stays within browse context)
-
-Center (grows to fill space, max-width 520px):
-  Search bar — rounded pill input
-  placeholder: "Search by title, author, or ISBN..."
-  left icon: magnifier (inside input)
-  right: clear (×) button appears when input has value
-  behavior: debounced 300ms, updates URL ?search=query
-             pressing Enter submits, results update live
-
-Right:
-  "Sign In" → ghost pill button → /login
-  "Get Started" → filled amber pill button → /signup
-```
-
-Detect current route via `useLocation()` in AppNavbar. If pathname is `/books` or `/books/:id`, render the search bar in center. Otherwise render primary nav links (Browse, Features, Pricing).
+Typography scale: display 48px / 500 weight, heading 32px / 500, subheading 20px / 500, body 16px / 400 / line-height 1.7, small 13px / 400. Font is Inter or system-ui. Never bold anything at 700 inside body copy.
 
 ---
 
-### FILTER SIDEBAR
+## Page Inventory (Restructured)
 
-```
-Position: sticky top 80px (clears navbar)
-Width: 260px, flex-shrink: 0
-Height: calc(100vh - 80px), overflow-y: auto
-padding: 24px 0
-border-right: 1px solid --border
-background: --light-cream
+The current structure has too many things in PublicLayout with no clear information architecture. Here is the cleaned-up page map:
 
-Sections (each collapsible via accordion, open by default):
+**Public zone** — Navbar + Footer shell, full bleed sections, no sidebars.
 
-1. CATEGORIES
-   label: "Category"
-   list of checkboxes, one per category:
-     All Books (default checked)
-     Engineering, Mathematics, Science,
-     Literature, Management, Philosophy, Biography
-   selecting one updates URL: ?category=engineering
-   selecting multiple: ?category=engineering&category=mathematics
-   (BooksCatalogPage reads array from searchParams)
+**Catalog zone** — Navbar only, no footer clutter, focused on browsing.
 
-2. AVAILABILITY
-   label: "Availability"
-   Radio group:
-     ● All
-     ○ Available Now
-     ○ Coming Soon
+**Detail zone** — Navbar only, wide reading layout, no distractions.
 
-3. RENTAL PRICE
-   label: "Rental Price (per week)"
-   Two text inputs: Min ₹ — Max ₹
-   OR a range slider component
-   updates URL: ?minPrice=49&maxPrice=200
+**Auth zone** — Completely standalone, no navbar, no footer, just the form.
 
-4. RATING
-   label: "Minimum Rating"
-   Five clickable stars — click 3rd star = show 3★ and above
-   updates URL: ?rating=3
-
-5. SORT (mobile: moves into ResultsBar, desktop: bottom of sidebar)
-   label: "Sort By"
-   Radio group:
-     ● Relevance
-     ○ Newest First
-     ○ Price: Low to High
-     ○ Price: High to Low
-     ○ Most Popular
-     ○ Top Rated
-
-CLEAR ALL FILTERS button at bottom
-  only visible when any filter is active
-  resets URL to /books
-```
-
-On mobile (< 900px): sidebar becomes a slide-in drawer from the left. A "Filters" button appears in the ResultsBar. Drawer has an overlay backdrop and close button.
+**Dashboard zone** — Sidebar navigation, no public navbar, completely separate shell.
 
 ---
 
-### URL STATE PATTERN
+## Navbar
 
-All filter and search state lives in the URL via `useSearchParams`. No separate useState for filters. This gives shareable URLs, browser back/forward support, and deep linking from category cards on landing page.
+The current AppNavbar stays but gets slimmed down. Logo left, three nav links center (Browse, Pricing, About), auth buttons right. On mobile it collapses to a hamburger that opens a full-height drawer. No mega-menus, no dropdowns. Height is 64px fixed. Border-bottom 1px solid var(--border). Background white with backdrop-filter blur so it feels elevated on scroll.
 
-```javascript
-// Reading all params in BooksCatalogPage
-const [searchParams, setSearchParams] = useSearchParams()
-
-const search     = searchParams.get('search') || ''
-const categories = searchParams.getAll('category')   // array
-const minPrice   = searchParams.get('minPrice') || ''
-const maxPrice   = searchParams.get('maxPrice') || ''
-const rating     = searchParams.get('rating') || ''
-const sort       = searchParams.get('sort') || 'relevance'
-const page       = parseInt(searchParams.get('page') || '1')
-
-// Updating a param without losing others
-function updateParam(key, value) {
-  const next = new URLSearchParams(searchParams)
-  if (value) next.set(key, value)
-  else next.delete(key)
-  next.set('page', '1')   // reset to page 1 on filter change
-  setSearchParams(next)
-}
-```
+Remove the following from the navbar entirely: community link, support link, careers link. These go in the footer only.
 
 ---
 
-### RESULTS BAR
+## Footer
 
-```
-Layout: flex row, justify-content: space-between, align-items: center
-padding: 0 0 16px 0
-border-bottom: 1px solid --border
-margin-bottom: 24px
-
-Left:
-  "Showing 1–12 of 248 books"
-  if search active: `Results for "database systems"`
-  muted text, 0.88rem
-
-Right (desktop):
-  Sort dropdown — styled select or custom dropdown
-  "Sort by: Relevance ▾"
-
-Right (mobile):
-  two buttons side by side:
-  [ 🔽 Filters ] [ Sort ▾ ]
-  Filters button opens sidebar drawer
-```
+Three columns: Brand (logo + one-line description + social icons), Navigation (Books, Features, Pricing, About), Legal (Privacy, Terms, Support). Bottom bar with copyright. Padding 64px top, 40px bottom. Background #F5F3EF (slightly warmer than page background to feel grounded).
 
 ---
 
-### BOOK GRID
+## Page Designs
 
-```
-Layout: CSS grid
-  desktop:  grid-template-columns: repeat(3, 1fr), gap: 24px
-  tablet:   repeat(2, 1fr)
-  mobile:   repeat(1, 1fr)  OR  repeat(2, 1fr) for small cards
+### Landing Page (`/`)
 
-Empty state (no results):
-  centered illustration (SVG books graphic)
-  heading: "No books found"
-  subtext: "Try adjusting your filters or search term"
-  button: "Clear All Filters" → resets to /books
+Currently HomePage.jsx exists but is not routed. Route it. This page should be the primary conversion surface.
 
-Loading state:
-  same grid, but each cell is a BookCardSkeleton
-  skeleton uses shimmer animation (CSS gradient sweep)
-  show 12 skeleton cards while fetching
-```
+Structure from top to bottom: Hero section, Social proof strip, Feature highlights (3 cards), How it works (3 steps), CTA section. No sidebar. No catalog preview on this page — that belongs at `/books`.
+
+Hero section occupies 80vh minimum. Heading is large (48px display), subtext is 20px, two buttons side by side (primary: Browse Books, secondary: Learn More). Hero background is white with a subtle geometric pattern or just clean whitespace — no stock photos, no gradients.
+
+Social proof strip is a horizontal scrolling marquee of 5–6 stats or logos. Height 64px. Background is the accent color at 5% opacity.
+
+Feature highlights: 3-column grid of cards. Each card has an icon (24px, not 48px), a short heading (18px), and 2 sentences of body text. Cards have no shadow — just a 1px border and 32px padding.
+
+How it works: numbered steps 01, 02, 03 displayed horizontally on desktop, stacked on mobile. Each step has a large muted number, a heading, and one sentence. No icons needed here — the numbers are the visual element.
+
+CTA section: centered, 96px vertical padding, heading + two buttons. Background is the accent color at full saturation with white text.
 
 ---
 
-### BOOK CARD — BookCard.jsx
+### Books Catalog (`/books`)
 
-```
-Layout: vertical flex column
-background: --card-bg
-border: 1px solid --border
-border-radius: --radius-lg (16px)
-overflow: hidden
-transition: transform 0.25s, box-shadow 0.25s
-hover: translateY(-4px), --shadow-lg
-cursor: pointer → navigate to /books/:id
+This is the most important public page. Redesign it significantly.
 
-Structure:
+Remove the BooksHeroStrip — it wastes vertical space. Start immediately with the filter bar at the top, then the results grid.
 
-  [Cover Image Area]
-    height: 200px
-    background: colored placeholder if no image
-    object-fit: cover, width: 100%
-    top-right corner: availability badge
-      "Available" → --sage badge
-      "Rented"    → --rust badge
+**Filter bar** sits below the navbar. It is a horizontal row (not a sidebar) containing: a search input (takes 40% of width), category pills (scrollable row, not a sidebar list), a sort dropdown, and an availability toggle. Height is 72px. Background white, border-bottom 1px. This bar is sticky on desktop.
 
-  [Card Body] padding: 16px
-    Category tag — small amber pill (e.g. "Engineering")
-    Book title — Playfair Display, 1rem, weight 700, 2 line clamp
-    Author name — DM Sans, 0.82rem, --warm-gray
-    Star rating row — amber stars + numeric score (0.78rem)
+**Results grid** below the filter bar. BookCard grid uses `auto-fill, minmax(260px, 1fr)` — 4 columns on wide desktop, 3 on medium, 2 on tablet, 1 on mobile. Page padding 48px top.
 
-  [Card Footer] padding: 12px 16px
-    border-top: 1px solid --border
-    flex row, justify-content: space-between
-    Left:  "₹49 / week" — amber, Playfair, 1.05rem bold
-    Right: "Rent Now →" — small filled amber button
-           if not logged in: clicking → /login
+**BookCard** redesign: no shadow. 1px border, 8px radius. Cover image takes the full card width at 3:4 aspect ratio. Below the image: category chip (small pill), title (16px 500), author (13px secondary), rating row (stars + count), price row (rentPrice/day). Card height is determined by content, not fixed. Hover state: border color darkens, subtle translateY(-2px) transform only — no box-shadow on hover.
+
+**Pagination** stays at the bottom. Simple numbered pagination, not infinite scroll.
+
+**Empty state** and **loading skeleton** remain but are redesigned to match the new card shape.
+
+On mobile, the filter bar collapses into a single "Filter & Sort" button that opens a bottom sheet.
+
+---
+
+### Book Detail (`/books/:id`)
+
+Remove the left sticky rail design. It creates a cramped reading experience.
+
+New layout: single column, 960px max-width, centered.
+
+Top section: breadcrumb (Books › Category › Title), then a 2-column row — left is the book cover (fixed 320px wide), right is the key info block (title, author, rating, category chip, about text, availability badge, price/deposit info, RentalDurationSelector, and the rent button). This 2-column row is only at the top — everything below is full-width single column.
+
+Below the top section: tabs. Tabs are: Details, Reviews, Similar Books. This avoids scrolling through all content at once. Tab content area has 48px top padding.
+
+Details tab: BookDetailColumns (publication info, genre, language etc).
+
+Reviews tab: review list cards + a "Write a Review" prompt if the user has a qualifying returned rental.
+
+Similar Books tab: horizontal scrolling row of BookCards — or a 2-column grid on desktop.
+
+This structure makes the page breathable and organized. No more "everything stacked vertically forever."
+
+---
+
+### Auth Pages (`/login`, `/signup`)
+
+Remove the two-column split with the marketing aside panel. Replace with a centered single-column card.
+
+Page background is #F5F3EF. Card is white, 480px max-width, 48px padding, 12px border-radius. Logo at top of card, form below, footer link at bottom. No marketing copy on this page — people clicking login already decided to use the app.
+
+---
+
+### Dashboard Home (`/dashboard`)
+
+Current design has too many card types crammed together. Simplify.
+
+Dashboard uses a left sidebar (240px fixed width on desktop) + main content area. Sidebar collapses to a drawer on tablet/mobile. The topbar is removed — the sidebar header takes its place (avatar + name + role).
+
+**Sidebar links**: Home, My Rentals, Browse Books, Wishlist, Settings. That's it. Five links maximum. No nested groups at this stage.
+
+**Dashboard Home content** (960px max-width): Welcome heading (personalized), then a stats row (3 stat cards in a row: Active Rentals, Books Returned, Pending Fines — each card is minimal: large number, label, small trend). Below the stats: two sections side by side — Current Rentals (list, max 3 items, "View all" link) and Recent Activity (timeline list, max 5 items).
+
+Remove: Listed Books card, Profile Progress card, Wishlist Picks card from home. These belong on their own dedicated pages.
+
+---
+
+### New Dedicated Dashboard Pages
+
+Add these pages that currently don't exist:
+
+`/dashboard/rentals` — full rental history table with status filter tabs (All, Active, Returned, Overdue). Table columns: Book, Rented On, Due Date, Status, Action.
+
+`/dashboard/wishlist` — grid of saved BookCards with a remove button on each.
+
+`/dashboard/fines` — list of outstanding fines with amount, book name, overdue days, and pay button (for future payment integration).
+
+These are simple pages that replace the cramped dashboard home cards.
+
+---
+
+### Support Page (`/support`)
+
+Keep but simplify. Remove the tab system. Stack sections vertically: FAQ section (accordion), then Contact section (simple form card + email/phone side info). Single column, 720px max-width reading layout.
+
+---
+
+### Footer Pages (`/features`, `/pricing`, etc.)
+
+The FooterPageTemplate approach is fine but the 3-card grid feels generic. Keep the template but add a content section below the hero+cards that is specific to each page. Pricing page should have actual pricing tiers (even if placeholder). About page should have a team section. Careers page should have a job listings section (even if empty state).
+
+---
+
+## Component Restructure
+
+Components that should be deleted or merged: BooksHeroStrip (deleted), auth aside panel (deleted), DashboardTopbar (merged into sidebar header).
+
+Components that should be added: FilterBar.jsx (horizontal filter row replacing FilterSidebar), BottomSheet.jsx (mobile filter drawer), StatCard.jsx (dashboard stats), RentalTable.jsx, TabBar.jsx (for book detail and other tabbed views), PageHeader.jsx (reusable page title + breadcrumb block used across dashboard pages).
+
+Components that stay but get restyled: BookCard, Pagination, EmptyState, BookCardSkeleton, RentalDurationSelector, RatingStars, AvailabilityBadge.
+
+---
+
+## API Layer (Frontend — Backend Compatible)
+
+Create a single `src/api/` folder. Every file in it talks to one resource. All files import from one base client.
+
+### `src/api/client.js`
+
+```js
+import axios from 'axios';
+
+const client = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
+  timeout: 10000,
+});
+
+client.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+client.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    // Normalize error shape — backend may return { error } or { message }
+    const message =
+      err.response?.data?.error ||
+      err.response?.data?.message ||
+      'Something went wrong';
+    return Promise.reject(new Error(message));
+  }
+);
+
+export default client;
 ```
 
 ---
 
-### PAGINATION
+### `src/api/auth.api.js`
 
-```
-Position: below book grid, margin-top: 48px
-Layout: flex row, justify-content: center, gap: 8px
+```js
+import client from './client';
 
-Elements:
-  ← Prev   (disabled on page 1, grayed out)
-  [1] [2] [3] ... [8] [9]
-  Next →   (disabled on last page)
+export const register = (data) =>
+  client.post('/api/auth/register', data).then((r) => r.data);
+// returns { token, user: { _id, name, email, role } }
 
-Current page: filled --ink background, --cream text, same border-radius
-Other pages: ghost — border: 1px solid --border, --ink text
-Hover: --amber border, --amber text
-
-Dots (...) appear when total pages > 7
-  show first 3, dots, last 2  (or similar windowing logic)
-
-Clicking page N:
-  updateParam('page', N)
-  scroll to top of catalog grid (not top of page)
-
-Show per page: 12 books (standard, matches common pagination APIs)
+export const login = (data) =>
+  client.post('/api/auth/login', data).then((r) => r.data);
+// returns { token, user: { _id, name, role, isSuspended } }
 ```
 
 ---
 
-### BOOK DETAIL PAGE — /books/:id
+### `src/api/profile.api.js`
 
-```
-AppNavbar (search bar visible, back arrow added: "← Back to Browse" left of logo)
-  back arrow: browser history.back() OR navigate('/books') as fallback
+```js
+import client from './client';
 
-PAGE LAYOUT: two-column grid (1fr 1.5fr), gap 64px, padding 6rem 5%
+export const getMyProfile = () =>
+  client.get('/api/profile/me').then((r) => r.data);
+// returns { _id, user: { _id, name, email }, phone, city, bio, avatar, dateOfBirth }
 
-LEFT COLUMN (sticky top 100px):
-  Book cover image — large, rounded 16px, full width of column
-  below image:
-    Availability badge (large)
-    "₹49 / week" price — large amber Playfair
-    Rental duration selector:
-      segmented control: [ 1 Week ] [ 2 Weeks ] [ 1 Month ]
-      price updates dynamically based on selection
-    "Rent This Book" CTA button — full width, primary amber
-      if not logged in → /login with redirect param: /login?redirect=/books/:id
-    "Add to Wishlist" ghost button — full width, below CTA
-      if not logged in → /login
-
-RIGHT COLUMN:
-  Category tag pill
-  Book title — Playfair, 2.2rem, weight 700
-  Author — 1rem, --warm-gray
-  Star rating row + "(124 reviews)" link → scrolls to reviews
-  Divider line
-  About This Book — section label
-    Description text, 1rem, line-height 1.75
-    "Read more / Read less" toggle if description > 4 lines
-  Divider
-  Book Details grid (2 columns of label:value pairs):
-    Publisher, Edition, Language, Pages, ISBN, Subject
-  Divider
-  Reviews section:
-    average star display (large)
-    review count
-    3 review cards: avatar initials + name + stars + comment
-    "View all reviews" ghost link (future feature)
-
-BELOW TWO COLUMNS (full width):
-  "You Might Also Like" section
-    horizontal scroll row of BookCards filtered by same category
-    4 cards visible on desktop, scrollable on mobile
+export const updateMyProfile = (data) =>
+  client.put('/api/profile/me', data).then((r) => r.data);
+// returns { message, profile: { ...updatedFields } }
 ```
 
 ---
 
-### APPFOOTER — ON PUBLIC PAGES
+### `src/api/books.api.js`
 
-```
-Layout: dark background (--ink), 4-column link grid + bottom bar
-padding: 64px 5% 32px
+```js
+import client from './client';
 
-Top row: Logo left, tagline right
+// Query params: page, limit, category, available, search, sortBy, order
+export const getBooks = (params = {}) =>
+  client.get('/api/books', { params }).then((r) => {
+    const { books, total, page, limit } = r.data;
+    // Normalize to frontend pagination shape
+    const totalPages = Math.ceil(total / limit);
+    return {
+      books,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1,
+      },
+    };
+  });
 
-Link grid (4 columns):
-  Product:  Browse Books, Features, Pricing
-  Company:  About Us, Careers, Community
-  Support:  Support & Contact
-  Legal:    Privacy Policy, Terms of Service
-
-Bottom bar (border-top: 1px solid rgba(255,255,255,0.08)):
-  Left:  "© 2025–26 BookNest"
-  Right: "Made for readers, by readers"
-```
-
----
-
-### FILES TO CREATE
-
-```
-src/
-  pages/
-    books/
-      BooksCatalogPage.jsx    (main grid + pagination + URL state)
-      BookDetailPage.jsx      (detail view)
-  components/
-    shared/
-      AppNavbar.jsx           (search bar logic via useLocation)
-      AppFooter.jsx
-    books/
-      BookCard.jsx
-      BookCardSkeleton.jsx
-      FilterSidebar.jsx
-      ResultsBar.jsx
-      Pagination.jsx
-      RentalDurationSelector.jsx
-      BookDetailColumns.jsx
-    molecules/
-      StarRating.jsx          (reusable, accepts value + readonly/interactive)
-      EmptyState.jsx          (reusable empty state with icon + message + action)
-  hooks/
-    useBooks.js               (calls GET /books with all params, returns {data, loading, error})
-    useBookById.js            (calls GET /books/:id)
-    useDebounce.js            (300ms debounce for search input)
+export const getBookById = (id) =>
+  client.get(`/api/books/${id}`).then((r) => {
+    // Normalize: backend returns book directly, wrap in { book }
+    const raw = r.data;
+    const book = raw.book ?? raw;
+    // Normalize price field: backend uses rentPrice, frontend uses price
+    return { book: { ...book, price: book.rentPrice ?? book.price } };
+  });
 ```
 
 ---
 
-### DATA FLOW SUMMARY
+### `src/api/rentals.api.js`
 
+```js
+import client from './client';
+
+export const rentBook = (bookId, durationDays) =>
+  client.post('/api/rentals/rent', { bookId, durationDays }).then((r) => r.data);
+// returns { message, rental: { _id, book, startDate, dueDate, status } }
+
+export const returnBook = (rentalId) =>
+  client.post('/api/rentals/return', { rentalId }).then((r) => r.data);
+// returns { message, rental: { status, returnedDate, overdueDays, penaltyAmount } }
+
+export const getMyRentals = (params = {}) =>
+  client.get('/api/rentals/my', { params }).then((r) => r.data);
+// params: status, page, limit
+// returns { total, rentals: [...] }
+
+export const getAllRentals = (params = {}) =>
+  client.get('/api/rentals/all', { params }).then((r) => r.data);
+// admin only — params: status, userId, bookId, page, limit
 ```
-URL params (useSearchParams)
-  → passed into useBooks(params) custom hook
-  → hook calls GET /api/books?search=X&category=Y&page=Z
-  → returns { books, totalCount, totalPages, loading, error }
-  → BooksCatalogPage renders FilterSidebar + ResultsBar + BookGrid + Pagination
-  → any filter/search/page change updates URL → hook re-fires → grid updates
+
+---
+
+### `src/api/reviews.api.js`
+
+```js
+import client from './client';
+
+export const submitReview = (data) =>
+  client.post('/api/reviews', data).then((r) => r.data);
+// data: { bookId, rentalId, rating, reviewText }
+
+export const getBookReviews = (bookId, params = {}) =>
+  client.get(`/api/reviews/book/${bookId}`, { params }).then((r) => r.data);
+// params: page, limit, sortBy
+// returns { averageRating, total, reviews: [...] }
+
+export const deleteReview = (reviewId) =>
+  client.delete(`/api/reviews/${reviewId}`).then((r) => r.data);
 ```
+
+---
+
+### `src/api/admin.api.js`
+
+```js
+import client from './client';
+
+export const addBook = (data) =>
+  client.post('/api/books', data).then((r) => r.data);
+
+export const updateBook = (id, data) =>
+  client.put(`/api/books/${id}`, data).then((r) => r.data);
+
+export const deleteBook = (id) =>
+  client.delete(`/api/books/${id}`).then((r) => r.data);
+
+export const getAllUsers = (params = {}) =>
+  client.get('/api/admin/users', { params }).then((r) => r.data);
+// params: search, suspended, page, limit
+
+export const suspendUser = (id, isSuspended) =>
+  client.patch(`/api/admin/users/${id}/suspend`, { isSuspended }).then((r) => r.data);
+
+export const setMaxRentals = (id, maxRentalsAllowed) =>
+  client.patch(`/api/admin/users/${id}/max-rentals`, { maxRentalsAllowed }).then((r) => r.data);
+
+export const getAllRentalsAdmin = (params = {}) =>
+  client.get('/api/rentals/all', { params }).then((r) => r.data);
+```
+
+---
+
+### `src/api/index.js`
+
+```js
+export * as authApi from './auth.api';
+export * as profileApi from './profile.api';
+export * as booksApi from './books.api';
+export * as rentalsApi from './rentals.api';
+export * as reviewsApi from './reviews.api';
+export * as adminApi from './admin.api';
+```
+
+Usage anywhere in the app: `import { booksApi } from '../api'` then `booksApi.getBooks({ page: 1, category: 'Fiction' })`.
+
+---
+
+## Mismatch Fixes Summary
+
+Every mismatch from the doc is handled in the API layer without touching the backend:
+
+The `/api/user/me` vs `/api/profile/me` mismatch is fixed by updating all frontend calls to use `profileApi.getMyProfile()` which calls the correct path. 
+The profile update response shape (`data.user` vs `{ message, profile }`) is handled in AuthContext by reading `r.profile` instead of `r.user` after a profile update.
+ The book detail envelope mismatch is normalized in `getBookById` — it accepts both a direct object and a `{ book }` envelope. The pagination shape mismatch is normalized inside `getBooks` — the frontend always gets a `pagination` object with `hasNextPage`, `totalPages`, etc. The `price` vs `rentPrice` mismatch is normalized in `getBookById` by mapping `rentPrice` to `price` at the adapter layer. Sort alias mismatches (`newest`/`latest`) should be fixed on the backend by mapping them to `createdAt desc` — or temporarily add a client-side map in `getBooks` that converts `newest` to `createdAt` before sending. The error shape mismatch is handled in the axios interceptor which checks both `data.error` and `data.message` and returns a normalized `Error` object.

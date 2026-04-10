@@ -67,7 +67,11 @@ export function AuthProvider({ children }) {
 
   const updateProfile = async (payload) => {
     const data = await userApi.updateProfile(payload);
-    setUser(data.user);
+    setUser((current) => ({
+      ...(current || {}),
+      ...(data.user || {}),
+    }));
+
     return data.user;
   };
 

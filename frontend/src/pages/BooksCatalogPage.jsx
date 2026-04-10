@@ -1,15 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Box, Chip, Container, Drawer, Paper, Stack, Typography } from "@mui/material";
+import { Alert, Box, Chip, Container, Paper, Stack, Typography } from "@mui/material";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import BookCard from "../components/books/BookCard";
 import BookCardSkeleton from "../components/books/BookCardSkeleton";
+import FilterBar from "../components/books/FilterBar";
 import FilterSidebar from "../components/books/FilterSidebar";
 import BooksPagination from "../components/books/Pagination";
 import ResultsBar from "../components/books/ResultsBar";
+import BottomSheet from "../components/common/BottomSheet";
 import EmptyState from "../components/common/EmptyState";
 import { categoryLinks } from "../data/navLinks";
 import { useAuth } from "../context/useAuth";
 import usePageTitle from "../hooks/usePageTitle";
+import { booksApi } from "../lib/api";
 import { fetchAllBooks } from "../utils/bookCatalog";
 import {
   getBookPopularityScore,
@@ -22,6 +25,7 @@ import {
 import { PUBLIC_SURFACE_SX, PUBLIC_UI } from "../utils/publicUi";
 
 const PAGE_SIZE = 12;
+const NAVBAR_HEIGHT = 72;
 
 const sortOptions = [
   { value: "relevance", label: "Relevance" },
@@ -108,6 +112,7 @@ export default function BooksCatalogPage() {
   const [error, setError] = useState("");
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
   const catalogRef = useRef(null);
+  const hydratedImageIdsRef = useRef(new Set());
 
   const searchTerm = (searchParams.get("search") || "").trim();
   const selectedCategories = parseCategoryParams(searchParams);
@@ -117,7 +122,13 @@ export default function BooksCatalogPage() {
   const currentPage = Math.max(1, Number.parseInt(searchParams.get("page") || "1", 10));
 
   useEffect(() => {
-    setWishlistIds(getWishlistIds());
+    const handleUpdate = () => {
+      setWishlistIds(getWishlistIds());
+    };
+
+    handleUpdate();
+    window.addEventListener("wishlist-updated", handleUpdate);
+    return () => window.removeEventListener("wishlist-updated", handleUpdate);
   }, []);
 
   useEffect(() => {
@@ -210,7 +221,7 @@ export default function BooksCatalogPage() {
         }
 
         const haystack = `${book.title} ${book.author} ${book.category} ${book.description || ""}`.toLowerCase();
-        return haystack.includes(normalizedQuery);
+        return haystack.split(/\s+/).some(word => word.includes(normalizedQuery)) || haystack.includes(normalizedQuery);
       })
       .filter((book) =>
         selectedCategories.length > 0
@@ -239,6 +250,70 @@ export default function BooksCatalogPage() {
   const totalPages = Math.max(1, Math.ceil(filteredBooks.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
   const paginatedBooks = filteredBooks.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const hydrateVisibleBookImages = async () => {
+      if (isLoading || paginatedBooks.length === 0) {
+        return;
+      }
+
+      const idsToHydrate = paginatedBooks
+        .filter((book) => !book?.image && book?._id && !hydratedImageIdsRef.current.has(book._id))
+        .map((book) => book._id);
+
+      if (idsToHydrate.length === 0) {
+        return;
+      }
+
+      idsToHydrate.forEach((id) => hydratedImageIdsRef.current.add(id));
+
+      const resolved = await Promise.all(
+        idsToHydrate.map(async (bookId) => {
+          try {
+            const response = await booksApi.getById(bookId);
+            const image = response?.book?.image || "";
+            return image ? { _id: bookId, image } : null;
+          } catch {
+            return null;
+          }
+        }),
+      );
+
+      if (!isMounted) {
+        return;
+      }
+
+      const imageMap = resolved
+        .filter(Boolean)
+        .reduce((acc, item) => {
+          acc[item._id] = item.image;
+          return acc;
+        }, {});
+
+      if (Object.keys(imageMap).length === 0) {
+        return;
+      }
+
+      setAllBooks((currentBooks) =>
+        currentBooks.map((book) =>
+          imageMap[book._id]
+            ? {
+                ...book,
+                image: imageMap[book._id],
+              }
+            : book,
+        ),
+      );
+    };
+
+    hydrateVisibleBookImages();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoading, paginatedBooks]);
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -282,6 +357,15 @@ export default function BooksCatalogPage() {
     }
 
     setCategoryValues([...selectedCategories, category]);
+  };
+
+  const handleCategorySelect = (value) => {
+    if (!value) {
+      setCategoryValues([]);
+      return;
+    }
+
+    setCategoryValues([value]);
   };
 
   const handleAvailabilityChange = (value) => {
@@ -392,6 +476,7 @@ export default function BooksCatalogPage() {
   const handleToggleWishlist = (book) => {
     const nextIds = toggleWishlistBook(book._id);
     setWishlistIds(nextIds);
+    window.dispatchEvent(new Event("wishlist-updated"));
   };
 
   const filterPanel = (
@@ -415,80 +500,82 @@ export default function BooksCatalogPage() {
   );
 
   return (
-    <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
-      <Stack spacing={3} ref={catalogRef}>
-        {error ? (
-          <Alert severity="error" sx={{ borderRadius: 3 }}>
-            {error}
-          </Alert>
-        ) : null}
+    <Box sx={{ pt: `${NAVBAR_HEIGHT}px` }}>
+      <FilterBar
+        searchValue={searchTerm}
+        onSearchChange={(value) => {
+          updateParams((next) => {
+            if (!value.trim()) {
+              next.delete("search");
+            } else {
+              next.set("search", value.trim());
+            }
+          });
+        }}
+        onSearchSubmit={() => null}
+        categoryOptions={categoryOptions}
+        selectedCategories={selectedCategories}
+        onCategorySelect={handleCategorySelect}
+        availability={availability}
+        onAvailabilityChange={handleAvailabilityChange}
+        sortBy={sortBy}
+        sortOptions={sortOptions}
+        onSortChange={handleSortChange}
+        onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
+        onClearFilters={handleClearFilters}
+      />
 
-        <Paper
-          elevation={0}
-          sx={{
-            ...PUBLIC_SURFACE_SX,
-            p: { xs: 2.2, md: 2.8 },
-          }}
-        >
-          <Stack spacing={2.4}>
-            <ResultsBar
-              totalCount={filteredBooks.length}
-              page={safePage}
-              pageSize={PAGE_SIZE}
-              search={searchTerm}
-              sortBy={sortBy}
-              sortOptions={sortOptions}
-              onSortChange={handleSortChange}
-              onOpenFilters={() => setIsMobileFiltersOpen(true)}
-            />
+      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
+        <Stack spacing={3} ref={catalogRef}>
+          {error ? (
+            <Alert severity="error" sx={{ borderRadius: 3 }}>
+              {error}
+            </Alert>
+          ) : null}
 
-            {activeFilters.length > 0 ? (
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {activeFilters.map((filter) => (
-                  <Chip
-                    key={filter.key}
-                    label={filter.label}
-                    onDelete={filter.onDelete}
-                    sx={{
-                      bgcolor: PUBLIC_UI.primarySoft,
-                      color: PUBLIC_UI.primary,
-                      fontWeight: 700,
-                      borderRadius: 999,
-                    }}
-                  />
-                ))}
-              </Stack>
-            ) : null}
+          <Paper
+            elevation={0}
+            sx={{
+              ...PUBLIC_SURFACE_SX,
+              p: { xs: 2.1, md: 2.8 },
+            }}
+          >
+            <Stack spacing={2.4}>
+              <ResultsBar
+                totalCount={filteredBooks.length}
+                page={safePage}
+                pageSize={PAGE_SIZE}
+                search={searchTerm}
+                sortBy={sortBy}
+                sortOptions={sortOptions}
+                onSortChange={handleSortChange}
+                onOpenFilters={() => setIsMobileFiltersOpen(true)}
+              />
 
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "280px minmax(0, 1fr)" },
-                gap: 3,
-                alignItems: "start",
-              }}
-            >
-              <Paper
-                elevation={0}
-                sx={{
-                  ...PUBLIC_SURFACE_SX,
-                  display: { xs: "none", lg: "block" },
-                  p: 2.5,
-                  position: "sticky",
-                  top: 80,
-                  maxHeight: "calc(100vh - 80px)",
-                  overflowY: "auto",
-                }}
-              >
-                {filterPanel}
-              </Paper>
+              {activeFilters.length > 0 ? (
+                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                  {activeFilters.map((filter) => (
+                    <Chip
+                      key={filter.key}
+                      label={filter.label}
+                      onDelete={filter.onDelete}
+                      sx={{
+                        bgcolor: PUBLIC_UI.primarySoft,
+                        color: PUBLIC_UI.primary,
+                        fontWeight: 600,
+                        borderRadius: 999,
+                      }}
+                    />
+                  ))}
+                </Stack>
+              ) : null}
 
               <Box>
                 {isLoading ? (
                   <Box
                     sx={{
                       display: "grid",
-                      gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
                       gap: 2.2,
                     }}
                   >
@@ -501,11 +588,7 @@ export default function BooksCatalogPage() {
                     <Box
                       sx={{
                         display: "grid",
-                        gridTemplateColumns: {
-                          xs: "1fr",
-                          sm: "repeat(2, minmax(0, 1fr))",
-                          lg: "repeat(3, minmax(0, 1fr))",
-                        },
+                        gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
                         gap: 2.2,
                       }}
                     >
@@ -537,30 +620,18 @@ export default function BooksCatalogPage() {
                   />
                 )}
               </Box>
-            </Box>
-          </Stack>
-        </Paper>
-      </Stack>
-
-      <Drawer
-        anchor="left"
-        open={isMobileFiltersOpen}
-        onClose={() => setIsMobileFiltersOpen(false)}
-        PaperProps={{
-          sx: {
-            width: "min(92vw, 360px)",
-            p: 2.2,
-            bgcolor: PUBLIC_UI.pageBackground,
-          },
-        }}
-      >
-        <Stack spacing={2.2}>
-          <Typography variant="h6" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
-            Refine Results
-          </Typography>
-          {filterPanel}
+            </Stack>
+          </Paper>
         </Stack>
-      </Drawer>
-    </Container>
+
+        <BottomSheet
+          open={isMobileFiltersOpen}
+          onClose={() => setIsMobileFiltersOpen(false)}
+          title="Filter & Sort"
+        >
+          <Box>{filterPanel}</Box>
+        </BottomSheet>
+      </Container>
+    </Box>
   );
 }

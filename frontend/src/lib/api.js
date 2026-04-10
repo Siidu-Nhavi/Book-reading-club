@@ -1,85 +1,71 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
+import {
+  authApi as authApiV2,
+  booksApi as booksApiV2,
+  profileApi,
+} from "../api";
 
-async function apiRequest(path, options = {}) {
-  const headers = new Headers(options.headers || {});
+function mapSessionProfileToUser(profile = {}) {
+  return {
+    _id: profile?.user?._id || profile?._id || "",
+    name: profile?.user?.name || "",
+    email: profile?.user?.email || "",
+    role: profile?.user?.role || "user",
+    isSuspended: Boolean(profile?.user?.isSuspended),
+    bio: profile?.bio || "",
+    mobileNumber: profile?.phone || "",
+    address: profile?.address || "",
+    city: profile?.city || "",
+    avatarUrl: profile?.avatar || "",
+    dateOfBirth: profile?.dateOfBirth || null,
+  };
+}
 
-  if (options.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    credentials: "include",
-    headers,
-  });
-
-  const data = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    throw new Error(data?.message || "Request failed");
-  }
-
-  return data;
+function mapProfilePatchToUser(profile = {}) {
+  return {
+    bio: profile?.bio || "",
+    mobileNumber: profile?.phone || "",
+    address: profile?.address || "",
+    city: profile?.city || "",
+    avatarUrl: profile?.avatar || "",
+    dateOfBirth: profile?.dateOfBirth || null,
+  };
 }
 
 export const authApi = {
   signup(payload) {
-    return apiRequest("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    return authApiV2.register(payload);
   },
   login(payload) {
-    return apiRequest("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
+    return authApiV2.login(payload);
   },
   logout() {
-    return apiRequest("/api/auth/logout", {
-      method: "POST",
-    });
+    return authApiV2.logout();
   },
-  me() {
-    return apiRequest("/api/user/me");
+  async me() {
+    const profile = await profileApi.getMyProfile();
+    return { user: mapSessionProfileToUser(profile) };
   },
 };
 
 export const userApi = {
-  updateProfile(payload) {
-    return apiRequest("/api/user/profile", {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    });
+  async updateProfile(payload) {
+    const data = await profileApi.updateMyProfile(payload);
+
+    return {
+      message: data?.message || "Profile updated",
+      user: mapProfilePatchToUser(data?.profile || {}),
+    };
   },
 };
 
 export const booksApi = {
   list(params = {}) {
-    const searchParams = new URLSearchParams();
-
-    Object.entries(params).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value
-          .filter((item) => item !== undefined && item !== null && item !== "")
-          .forEach((item) => {
-            searchParams.append(key, String(item));
-          });
-        return;
-      }
-
-      if (value !== undefined && value !== null && value !== "") {
-        searchParams.set(key, String(value));
-      }
-    });
-
-    const queryString = searchParams.toString();
-    return apiRequest(`/api/books${queryString ? `?${queryString}` : ""}`);
+    return booksApiV2.getBooks(params);
   },
   categories() {
-    return apiRequest("/api/books/categories");
+    return booksApiV2.getBookCategories();
   },
   getById(id) {
-    return apiRequest(`/api/books/${id}`);
+    return booksApiV2.getBookById(id);
   },
 };

@@ -1,4 +1,5 @@
 import { booksApi } from "./api";
+import { rentalsApi } from "../api";
 import {
   formatBookPrice,
   formatCategoryLabel,
@@ -148,6 +149,73 @@ function buildFallbackWishlist(catalogBooks) {
   );
 }
 
+function getRentalStatusLabel(status = "") {
+  const normalized = String(status).toLowerCase();
+
+  if (normalized === "active") {
+    return "Active";
+  }
+
+  if (normalized === "returned") {
+    return "Returned";
+  }
+
+  if (normalized === "overdue") {
+    return "Overdue";
+  }
+
+  if (normalized === "penalised") {
+    return "Penalised";
+  }
+
+  return "Unknown";
+}
+
+function buildLiveRentals(rentals = []) {
+  return safeArray(rentals).map((rental, index) => {
+    const title = safeString(rental?.book?.title, "Rented Book");
+    const author = safeString(rental?.book?.author, "Unknown Author");
+    const status = String(rental?.status || "active").toLowerCase();
+    const dueDate = rental?.dueDate ? new Date(rental.dueDate) : null;
+    const returnedDate = rental?.returnedDate ? new Date(rental.returnedDate) : null;
+    const hasPenalty = Number(rental?.penaltyAmount || 0) > 0;
+    const bookId = rental?.book?._id;
+
+    let meta = "Rental in progress";
+
+    if (status === "active" && dueDate) {
+      meta = `Due ${formatDateLabel(dueDate)}`;
+    } else if ((status === "returned" || status === "penalised") && returnedDate) {
+      meta = `Returned ${formatDateLabel(returnedDate)}`;
+    } else if (status === "overdue" && dueDate) {
+      meta = `Overdue since ${formatDateLabel(dueDate)}`;
+    }
+
+    if (hasPenalty) {
+      meta = `${meta} • Penalty ${formatBookPrice(Number(rental.penaltyAmount))}`;
+    }
+
+    return {
+      id: String(rental?._id || `rental-${index + 1}`),
+      title,
+      author,
+      category: "Rental",
+      weeklyRent: 0,
+      priceLabel: getRentalStatusLabel(status),
+      availability: status === "active" ? "active" : "paused",
+      availabilityLabel: getRentalStatusLabel(status),
+      cover: {
+        image: "",
+        gradient: getBookGradient(title),
+        initials: getBookInitials(title),
+      },
+      meta,
+      ctaLabel: bookId ? "Open book" : "Browse",
+      ctaTo: bookId ? `/books/${bookId}` : "/books",
+    };
+  });
+}
+
 function buildStats(userSummary, rentals, listedBooks, wishlist) {
   return [
     {
@@ -202,10 +270,30 @@ export function normalizeDashboardOverview(raw = {}, user = {}) {
   };
 }
 
-export async function getDashboardOverview(user) {
+export async function getDashboardOverview(user, options = {}) {
+  const useRealRentals = Boolean(options?.useRealRentals);
+
   try {
     const response = await booksApi.list({ limit: 12, sortBy: "newest" });
-    return normalizeDashboardOverview({ books: response?.books || [] }, user);
+    const normalized = normalizeDashboardOverview({ books: response?.books || [] }, user);
+
+    if (!useRealRentals) {
+      return normalized;
+    }
+
+    try {
+      const rentalsResponse = await rentalsApi.getMyRentals({ page: 1, limit: 6 });
+      const liveRentals = buildLiveRentals(rentalsResponse?.rentals || []);
+      const rentals = liveRentals.length > 0 ? liveRentals : normalized.rentals;
+
+      return {
+        ...normalized,
+        rentals,
+        stats: buildStats(normalized.userSummary, rentals, normalized.listedBooks, normalized.wishlist),
+      };
+    } catch {
+      return normalized;
+    }
   } catch {
     return normalizeDashboardOverview({ books: [] }, user);
   }

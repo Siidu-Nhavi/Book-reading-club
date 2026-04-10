@@ -24,6 +24,7 @@ import AvailabilityBadge from "../components/common/AvailabilityBadge";
 import RatingStars from "../components/common/RatingStars";
 import { useAuth } from "../context/useAuth";
 import usePageTitle from "../hooks/usePageTitle";
+import { rentalsApi, reviewsApi } from "../api";
 import { booksApi } from "../lib/api";
 import {
   formatBookPrice,
@@ -42,6 +43,7 @@ import { getUserInitials } from "../utils/profile";
 import {
   PUBLIC_BUTTON_GHOST_SX,
   PUBLIC_BUTTON_PRIMARY_SX,
+  PUBLIC_SURFACE_SX,
   PUBLIC_UI,
 } from "../utils/publicUi";
 
@@ -55,11 +57,22 @@ export default function BookDetailPage() {
   const [selectedDuration, setSelectedDuration] = useState(7);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [reviews, setReviews] = useState([]);
+  const [isReviewsLoading, setIsReviewsLoading] = useState(false);
+  const [reviewsError, setReviewsError] = useState("");
+  const [isRenting, setIsRenting] = useState(false);
+  const [rentError, setRentError] = useState("");
 
   usePageTitle(book ? `${book.title} - BookNest` : "Book Details - BookNest");
 
   useEffect(() => {
-    setWishlistIds(getWishlistIds());
+    const handleUpdate = () => {
+      setWishlistIds(getWishlistIds());
+    };
+
+    handleUpdate();
+    window.addEventListener("wishlist-updated", handleUpdate);
+    return () => window.removeEventListener("wishlist-updated", handleUpdate);
   }, []);
 
   useEffect(() => {
@@ -121,9 +134,65 @@ export default function BookDetailPage() {
     () => (book ? getRentalTotal(book.price, selectedDuration) : 0),
     [book, selectedDuration],
   );
-  const reviews = useMemo(() => (book ? getBookReviews(book) : []), [book]);
+  const fallbackReviews = useMemo(() => (book ? getBookReviews(book) : []), [book]);
+  const displayedReviews = reviews.length > 0 ? reviews : fallbackReviews;
+  const effectiveReviewCount = reviews.length > 0 ? reviews.length : reviewCount;
   const isWishlisted = book ? wishlistIds.includes(book._id) : false;
   const [showFullDescription, setShowFullDescription] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadReviews = async () => {
+      if (!id) {
+        return;
+      }
+
+      setIsReviewsLoading(true);
+      setReviewsError("");
+
+      try {
+        const response = await reviewsApi.getBookReviews(id, {
+          page: 1,
+          limit: 6,
+          sortBy: "createdAt",
+        });
+
+        if (!isMounted) {
+          return;
+        }
+
+        const normalized = (response?.reviews || []).map((review, index) => ({
+          id: review?._id || review?.id || `review-${index + 1}`,
+          name: review?.user?.name || "Reader",
+          rating: Number(review?.rating || 0),
+          quote: review?.reviewText || "",
+          date: review?.createdAt
+            ? new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(review.createdAt))
+            : "Recently",
+        }));
+
+        setReviews(normalized);
+      } catch (requestError) {
+        if (!isMounted) {
+          return;
+        }
+
+        setReviews([]);
+        setReviewsError(requestError.message || "Unable to load live reviews right now.");
+      } finally {
+        if (isMounted) {
+          setIsReviewsLoading(false);
+        }
+      }
+    };
+
+    loadReviews();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
 
   const handleToggleWishlist = () => {
     if (!book) {
@@ -132,9 +201,10 @@ export default function BookDetailPage() {
 
     const nextIds = toggleWishlistBook(book._id);
     setWishlistIds(nextIds);
+    window.dispatchEvent(new Event("wishlist-updated"));
   };
 
-  const handleRent = () => {
+  const handleRent = async () => {
     if (!book) {
       return;
     }
@@ -144,7 +214,23 @@ export default function BookDetailPage() {
       return;
     }
 
-    navigate("/dashboard", { state: { selectedBookId: book._id, rentalDays: selectedDuration } });
+    setRentError("");
+    setIsRenting(true);
+
+    try {
+      await rentalsApi.rentBook(book._id, selectedDuration);
+      navigate("/dashboard", {
+        state: {
+          selectedBookId: book._id,
+          rentalDays: selectedDuration,
+          rentalSuccess: true,
+        },
+      });
+    } catch (requestError) {
+      setRentError(requestError.message || "Unable to rent this book right now.");
+    } finally {
+      setIsRenting(false);
+    }
   };
 
   return (
@@ -170,7 +256,7 @@ export default function BookDetailPage() {
               }}
             >
               <Stack spacing={2.2} sx={{ position: { lg: "sticky" }, top: { lg: 100 } }}>
-                <Paper elevation={0} sx={{ p: 1.8, borderRadius: 4, border: `1px solid ${PUBLIC_UI.border}` }}>
+                <Paper elevation={0} sx={{ ...PUBLIC_SURFACE_SX, p: 1.8, borderRadius: 4 }}>
                   <BookMedia book={book} radius={3} titleMaxLength={44} />
                 </Paper>
 
@@ -192,10 +278,9 @@ export default function BookDetailPage() {
                 <Paper
                   elevation={0}
                   sx={{
+                    ...PUBLIC_SURFACE_SX,
                     p: 2.2,
                     borderRadius: 3,
-                    bgcolor: PUBLIC_UI.surface,
-                    border: `1px solid ${PUBLIC_UI.border}`,
                   }}
                 >
                   <Stack spacing={2}>
@@ -218,10 +303,10 @@ export default function BookDetailPage() {
                     <Paper
                       elevation={0}
                       sx={{
+                        ...PUBLIC_SURFACE_SX,
                         p: 1.8,
                         borderRadius: 2,
                         bgcolor: PUBLIC_UI.surfaceSoft,
-                        border: `1px solid ${PUBLIC_UI.border}`,
                       }}
                     >
                       <Typography variant="subtitle2" sx={{ fontWeight: 600, color: PUBLIC_UI.text }}>
@@ -234,18 +319,24 @@ export default function BookDetailPage() {
 
                     <Button
                       variant="contained"
-                      disabled={!book.isAvailable}
+                      disabled={!book.isAvailable || isRenting}
                       onClick={handleRent}
                       sx={{
                         ...PUBLIC_BUTTON_PRIMARY_SX,
                         borderRadius: 999,
                         py: 1.1,
-                        bgcolor: PUBLIC_UI.accent,
-                        "&:hover": { bgcolor: "#f1883e" },
+                        bgcolor: PUBLIC_UI.primary,
+                        "&:hover": { bgcolor: PUBLIC_UI.primaryDark },
                       }}
                     >
-                      Rent This Book
+                      {isRenting ? "Processing..." : "Rent This Book"}
                     </Button>
+
+                    {rentError ? (
+                      <Alert severity="error" sx={{ borderRadius: 2.5 }}>
+                        {rentError}
+                      </Alert>
+                    ) : null}
 
                     <Button
                       variant="outlined"
@@ -269,7 +360,7 @@ export default function BookDetailPage() {
                         py: 1.05,
                       }}
                     >
-                      Add to Wishlist
+                      {isWishlisted ? "In Wishlist" : "Add to Wishlist"}
                     </Button>
                   </Stack>
                 </Paper>
@@ -311,13 +402,13 @@ export default function BookDetailPage() {
                 </Typography>
 
                 <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                  <RatingStars rating={rating} count={reviewCount} size="medium" />
+                  <RatingStars rating={rating} count={effectiveReviewCount} size="medium" />
                   <MuiLink
                     href="#reviews"
                     underline="hover"
                     sx={{ color: PUBLIC_UI.primary, fontWeight: 500, fontSize: "0.9rem" }}
                   >
-                    ({reviewCount} reviews)
+                    ({effectiveReviewCount} reviews)
                   </MuiLink>
                 </Stack>
 
@@ -362,8 +453,20 @@ export default function BookDetailPage() {
                     Reader feedback for this title.
                   </Typography>
 
+                  {reviewsError ? (
+                    <Alert severity="info" sx={{ mt: 1.5, borderRadius: 2.5 }}>
+                      {reviewsError} Showing curated reader highlights instead.
+                    </Alert>
+                  ) : null}
+
                   <Stack spacing={1.4} sx={{ mt: 1.8 }}>
-                    {reviews.map((review) => (
+                    {isReviewsLoading ? (
+                      <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
+                        Loading reviews...
+                      </Typography>
+                    ) : null}
+
+                    {displayedReviews.map((review) => (
                       <Paper
                         key={review.id}
                         elevation={0}
@@ -409,7 +512,7 @@ export default function BookDetailPage() {
               </Stack>
             </Box>
 
-            <Paper elevation={0} sx={{ p: 2.2, borderRadius: 3, border: `1px solid ${PUBLIC_UI.border}` }}>
+            <Paper elevation={0} sx={{ ...PUBLIC_SURFACE_SX, p: 2.2, borderRadius: 3 }}>
               <Typography variant="h5" sx={{ fontWeight: 600, color: PUBLIC_UI.text, mb: 1.2 }}>
                 About the Author
               </Typography>

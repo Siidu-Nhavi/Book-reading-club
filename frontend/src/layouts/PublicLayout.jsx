@@ -9,11 +9,11 @@ export default function PublicLayout() {
 		<Box
 			sx={{
 				minHeight: "100vh",
-				background: `linear-gradient(180deg, ${PUBLIC_UI.pageTop} 0px, ${PUBLIC_UI.pageTopDark} 340px, ${PUBLIC_UI.pageBackground} 340px, ${PUBLIC_UI.pageBackground} 100%)`,
+				backgroundColor: PUBLIC_UI.pageBackground,
 			}}
 		>
 			<AppNavbar />
-			<Box sx={{ height: 64 }} />
+			<Box sx={{ height: 72 }} />
 			<Outlet />
 			<AppFooter />
 		</Box>

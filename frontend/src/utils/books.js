@@ -104,11 +104,19 @@ export function getBookGradient(seedValue = "") {
 }
 
 export function getBookRating(book = {}) {
+  if (Number.isFinite(book?.averageRating)) {
+    return Number(book.averageRating);
+  }
+
   const seed = getBookSeed(book);
   return Number((4 + (seed % 9) / 10).toFixed(1));
 }
 
 export function getBookReviewCount(book = {}) {
+  if (Number.isFinite(book?.totalReviews)) {
+    return Number(book.totalReviews);
+  }
+
   const seed = getBookSeed(book);
   return 48 + (seed % 420);
 }
@@ -118,6 +126,10 @@ export function getBookPopularityScore(book = {}) {
 }
 
 export function getBookDepositAmount(book = {}) {
+  if (Number.isFinite(book?.depositRequired)) {
+    return Number(book.depositRequired);
+  }
+
   if (!Number.isFinite(book?.price)) {
     return 0;
   }

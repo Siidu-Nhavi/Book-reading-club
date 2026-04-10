@@ -5,7 +5,6 @@ const {
   generateSalt,
   setAuthCookie,
 } = require("../../utils/security.js");
-const { serializeUser } = require("../../utils/user.js");
 
 async function register(req, res) {
   const name = req.body.name?.trim();
@@ -13,18 +12,18 @@ async function register(req, res) {
   const password = req.body.password;
 
   if (!name || !email || !password) {
-    return res.status(400).json({ message: "Name, email, and password are required" });
+    return res.status(400).json({ error: "Name, email, and password are required" });
   }
 
   if (password.length < 6) {
-    return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    return res.status(400).json({ error: "Password must be at least 6 characters long" });
   }
 
   try {
     const existingUser = await User.findOne({ email });
 
     if (existingUser) {
-      return res.status(400).json({ message: "Email already in use" });
+      return res.status(400).json({ error: "Email already in use" });
     }
 
     const salt = await generateSalt();
@@ -44,12 +43,17 @@ async function register(req, res) {
     setAuthCookie(res, token);
 
     return res.status(201).json({
-      message: "User registered successfully",
-      user: serializeUser(newUser),
+      token,
+      user: {
+        _id: newUser._id,
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+      },
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    return res.status(500).json({ error: "Server error" });
   }
 }
 

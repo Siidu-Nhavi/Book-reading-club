@@ -18,9 +18,15 @@ const bookSchema = new mongoose.Schema(
       trim: true,
       required: true,
     },
-    price: {
+    rentPrice: {
       type: Number,
       required: true,
+      min: 0,
+    },
+    depositRequired: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     image: {
       type: String,
@@ -36,6 +42,22 @@ const bookSchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: true,
+    },
+    averageRating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5,
+    },
+    totalReviews: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    penaltyPerDay: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
   },
   { timestamps: true },
