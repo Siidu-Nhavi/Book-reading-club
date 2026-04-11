@@ -23,11 +23,16 @@ export const footerLinks = {
 };
 
 export const categoryLinks = [
-  { label: "Engineering", to: "/books?category=engineering", icon: "🖥️" },
-  { label: "Mathematics", to: "/books?category=mathematics", icon: "📐" },
-  { label: "Science", to: "/books?category=science", icon: "🧬" },
-  { label: "Literature", to: "/books?category=literature", icon: "📖" },
-  { label: "Management", to: "/books?category=management", icon: "💼" },
-  { label: "Philosophy", to: "/books?category=philosophy", icon: "🧠" },
-  { label: "Biography", to: "/books?category=biography", icon: "🧑‍🎨" },
+  { label: "Medical", to: "/books?category=Medical", icon: "🏥" },
+  { label: "Science & Geography", to: "/books?category=Science-Geography", icon: "🌍" },
+  { label: "Art & Photography", to: "/books?category=Art-Photography", icon: "🎨" },
+  { label: "Biography", to: "/books?category=Biography", icon: "🧑‍🎨" },
+  { label: "Business & Finance", to: "/books?category=Business-Finance-Law", icon: "💼" },
+  { label: "Children's Books", to: "/books?category=Childrens-Books", icon: "👶" },
+  { label: "Computing", to: "/books?category=Computing", icon: "💻" },
+  { label: "Crafts & Hobbies", to: "/books?category=Crafts-Hobbies", icon: "🎭" },
+  { label: "Crime & Thriller", to: "/books?category=Crime-Thriller", icon: "🔪" },
+  { label: "Languages", to: "/books?category=Dictionaries-Languages", icon: "📚" },
+  { label: "Entertainment", to: "/books?category=Entertainment", icon: "🎬" },
+  { label: "Food & Drink", to: "/books?category=Food-Drink", icon: "🍽️" },
 ];

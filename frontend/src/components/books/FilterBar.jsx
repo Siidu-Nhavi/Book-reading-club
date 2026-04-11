@@ -49,7 +49,7 @@ export default function FilterBar({
           alignItems: "center",
         }}
       >
-        <SearchBar
+        {/* <SearchBar
           value={searchValue}
           onChange={onSearchChange}
           onSubmit={onSearchSubmit}
@@ -61,7 +61,7 @@ export default function FilterBar({
               borderRadius: 2,
             },
           }}
-        />
+        /> */}
 
         <FormControl size="small" sx={{ minWidth: 190, display: { xs: "none", md: "flex" } }}>
           <Select
