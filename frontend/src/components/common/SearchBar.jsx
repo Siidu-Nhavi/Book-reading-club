@@ -39,7 +39,7 @@ export default function SearchBar({
                 onClick={() => onChange("")}
                 edge="end"
               >
-                <CloseRoundedIcon fontSize="small" />
+                <CloseRoundedIcon fontSize="inherit" sx={{ fontSize: "1rem" }} />
               </IconButton>
             </InputAdornment>
           ) : null,
