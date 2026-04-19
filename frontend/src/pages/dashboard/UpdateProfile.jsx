@@ -23,9 +23,9 @@ import {
 	isValidAddress,
 	isValidAvatarUrl,
 	isValidMobileNumber,
-	readImageFileAsDataUrl,
 } from "../../utils/profile";
 import { useNavigate } from "react-router-dom";
+import { profileApi } from "../../api";
 
 function validateProfile(values) {
 	const errors = {};
@@ -55,7 +55,7 @@ function validateProfile(values) {
 	}
 
 	if (!isValidAvatarUrl(values.avatarUrl.trim())) {
-		errors.avatarUrl = "Use an image http(s) URL or upload a local image.";
+		errors.avatarUrl = "Use a valid http(s) image URL.";
 	}
 
 	return errors;
@@ -115,11 +115,11 @@ export default function UpdateProfile() {
 		try {
 			setIsUploading(true);
 			setSubmitError("");
-			const dataUrl = await readImageFileAsDataUrl(file);
+			const response = await profileApi.uploadAvatar(file);
 
 			setFormValues((current) => ({
 				...current,
-				avatarUrl: dataUrl,
+				avatarUrl: response.avatar || "",
 			}));
 			setErrors((current) => ({ ...current, avatarUrl: "" }));
 		} catch (error) {
@@ -203,7 +203,7 @@ export default function UpdateProfile() {
 					Update Profile
 				</Typography>
 				<Typography variant="body1" color="text.secondary">
-					Edit your reader details, choose a profile image, and keep the dashboard navbar in sync.
+					Edit your reader details, upload your profile image to the server, and keep the dashboard navbar in sync.
 				</Typography>
 			</Box>
 
@@ -305,7 +305,7 @@ export default function UpdateProfile() {
 						</Stack>
 
 						<Typography variant="caption" color="text.secondary">
-							Upload a local image or paste a hosted image URL in the form.
+							Upload a local image to save it on the backend, or paste a hosted image URL in the form.
 						</Typography>
 					</Stack>
 				</Paper>
@@ -351,7 +351,7 @@ export default function UpdateProfile() {
 							value={formValues.avatarUrl}
 							onChange={handleChange}
 							error={Boolean(errors.avatarUrl)}
-							helperText={errors.avatarUrl || "Accepts http(s) image URLs and uploaded data URLs."}
+							helperText={errors.avatarUrl || "Accepts only hosted http(s) image URLs."}
 							fullWidth
 						/>
 

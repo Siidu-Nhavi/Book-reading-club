@@ -1,5 +1,25 @@
 import { apiRequest } from "./client";
 
+function normalizeAvatarUrl(value = "") {
+  const avatar = String(value || "").trim();
+
+  if (!avatar) {
+    return "";
+  }
+
+  if (/^(https?:|blob:|data:)/i.test(avatar)) {
+    return avatar;
+  }
+
+  const base = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
+
+  if (avatar.startsWith("/")) {
+    return base ? `${base}${avatar}` : avatar;
+  }
+
+  return avatar;
+}
+
 function toFrontendProfile(profile) {
   return {
     _id: profile?._id || "",
@@ -14,7 +34,7 @@ function toFrontendProfile(profile) {
     address: profile?.address || "",
     city: profile?.city || "",
     bio: profile?.bio || "",
-    avatar: profile?.avatar || "",
+    avatar: normalizeAvatarUrl(profile?.avatar || ""),
     dateOfBirth: profile?.dateOfBirth || null,
   };
 }
@@ -44,6 +64,20 @@ export const profileApi = {
     return {
       ...data,
       profile: toFrontendProfile(data?.profile || {}),
+    };
+  },
+  async uploadAvatar(file) {
+    const body = new FormData();
+    body.append("avatar", file);
+
+    const data = await apiRequest("/api/profile/avatar", {
+      method: "POST",
+      body,
+    });
+
+    return {
+      ...data,
+      avatar: normalizeAvatarUrl(data?.avatar || ""),
     };
   },
 };

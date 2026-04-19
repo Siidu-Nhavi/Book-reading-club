@@ -15,6 +15,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const HOST = process.env.HOST;
 const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const uploadsDirectory = path.join(__dirname, "uploads");
 
 
 // Allow the React app to send cookies with auth requests.
@@ -44,6 +45,7 @@ app.use((req, _res, next) => {
   req.cookies = parseCookies(req.headers.cookie);
   next();
 });
+app.use("/uploads", express.static(uploadsDirectory));
 
 // app.use((req, res, next) => {
 //   console.log(`${req.body}`);

@@ -1,11 +1,10 @@
 const User = require("../../models/User.js");
 
-const dataImagePattern = /^data:image\/[a-zA-Z0-9.+-]+;base64,/i;
 const httpUrlPattern = /^https?:\/\/\S+$/i;
 const indianMobilePattern = /^(91)?\d{10}$/;
 
 function isValidAvatarUrl(value) {
-  return !value || dataImagePattern.test(value) || httpUrlPattern.test(value);
+  return !value || httpUrlPattern.test(value);
 }
 
 function isValidMobileNumber(value) {
@@ -42,7 +41,7 @@ async function updateProfile(req, res) {
 
   if (typeof avatar !== "undefined" && !isValidAvatarUrl(avatar)) {
     return res.status(400).json({
-      error: "Avatar must be a valid http(s) URL or an uploaded image data URL",
+      error: "Avatar must be a valid http(s) URL",
     });
   }
 

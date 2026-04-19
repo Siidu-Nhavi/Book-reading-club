@@ -30,7 +30,7 @@ export function isValidAvatarUrl(value = "") {
     return true;
   }
 
-  return /^https?:\/\/\S+$/i.test(value) || /^data:image\/[a-zA-Z0-9.+-]+;base64,/i.test(value);
+  return /^https?:\/\/\S+$/i.test(value);
 }
 
 export function isValidEmail(value = "") {
@@ -124,22 +124,3 @@ export function formatUpdatedAt(value) {
   }).format(parsed);
 }
 
-export function readImageFileAsDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    if (!file) {
-      reject(new Error("Please choose an image file."));
-      return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-      reject(new Error("Only image files are supported."));
-      return;
-    }
-
-    const reader = new FileReader();
-
-    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
-    reader.onerror = () => reject(new Error("Unable to read the selected image."));
-    reader.readAsDataURL(file);
-  });
-}
