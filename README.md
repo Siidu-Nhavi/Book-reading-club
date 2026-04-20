@@ -554,4 +554,4 @@ For support, email support@bookreadingclub.com or open an issue in the repositor
 
 ---
 
-**Happy Reading! 📖✨**
+
