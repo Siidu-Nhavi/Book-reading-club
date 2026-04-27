@@ -1,6 +1,5 @@
 const RENT_FILTER_MIN = 49;
-const RENT_FILTER_MAX = 250;
-const RENT_FILTER_MULTIPLIER = 2.65;
+const RENT_FILTER_MAX = 2500;
 
 export function formatBookPrice(price) {
   if (!Number.isFinite(price)) {
@@ -14,15 +13,60 @@ export function formatBookPrice(price) {
   }).format(price);
 }
 
-export function getWeeklyRentFilterValue(price) {
-  if (!Number.isFinite(price)) {
+export function getBookDailyPrice(book = {}) {
+  return Number.isFinite(book?.pricePerDay) ? Number(book.pricePerDay) : 0;
+}
+
+export function getBookWeeklyPrice(book = {}) {
+  return Number.isFinite(book?.pricePerWeek) ? Number(book.pricePerWeek) : 0;
+}
+
+export function getBookMonthlyPrice(book = {}) {
+  return Number.isFinite(book?.pricePerMonth) ? Number(book.pricePerMonth) : 0;
+}
+
+export function getBookDepositAmount(book = {}) {
+  return Number.isFinite(book?.depositAmount) ? Number(book.depositAmount) : 0;
+}
+
+export function getBookReplacementCost(book = {}) {
+  return Number.isFinite(book?.replacementCost) ? Number(book.replacementCost) : 0;
+}
+
+export function getWeeklyRentFilterValue(bookOrPrice) {
+  if (typeof bookOrPrice === "object" && bookOrPrice !== null) {
+    return getBookWeeklyPrice(bookOrPrice);
+  }
+
+  if (!Number.isFinite(bookOrPrice)) {
     return RENT_FILTER_MIN;
   }
 
-  return Math.min(
-    RENT_FILTER_MAX,
-    Math.max(RENT_FILTER_MIN, Math.round(price * RENT_FILTER_MULTIPLIER)),
-  );
+  return Math.min(RENT_FILTER_MAX, Math.max(RENT_FILTER_MIN, Math.round(bookOrPrice)));
+}
+
+export function getRentalFee(book = {}, rentalType = "daily", rentalDuration = 1) {
+  if (!Number.isFinite(rentalDuration) || rentalDuration < 1) {
+    return 0;
+  }
+
+  if (rentalType === "weekly") {
+    return getBookWeeklyPrice(book) * rentalDuration;
+  }
+
+  if (rentalType === "monthly") {
+    return getBookMonthlyPrice(book) * rentalDuration;
+  }
+
+  return getBookDailyPrice(book) * rentalDuration;
+}
+
+export function getRentalTotal(book = {}, rentalType = "daily", rentalDuration = 1) {
+  return getRentalFee(book, rentalType, rentalDuration) + getBookDepositAmount(book);
+}
+
+export function getWalletAfterBalance(walletBalance = 0, total = 0) {
+  return Number(walletBalance || 0) - Number(total || 0);
 }
 
 export function formatCategoryLabel(category = "") {
@@ -125,27 +169,6 @@ export function getBookPopularityScore(book = {}) {
   return getBookRating(book) * 100 + getBookReviewCount(book);
 }
 
-export function getBookDepositAmount(book = {}) {
-  if (Number.isFinite(book?.depositRequired)) {
-    return Number(book.depositRequired);
-  }
-
-  if (!Number.isFinite(book?.price)) {
-    return 0;
-  }
-
-  return Math.max(Math.round(getWeeklyRentFilterValue(book.price) * 0.8), 49);
-}
-
-export function getRentalTotal(price, durationDays) {
-  if (!Number.isFinite(price) || !Number.isFinite(durationDays)) {
-    return 0;
-  }
-
-  const weeklyRent = getWeeklyRentFilterValue(price);
-  return Math.round((weeklyRent / 7) * durationDays);
-}
-
 export function getBookAuthorBlurb(book = {}) {
   const category = formatCategoryLabel(book?.category || "general fiction").toLowerCase();
 
@@ -175,10 +198,19 @@ export function getBookReviews(book = {}) {
   });
 }
 
-export function getPriceBounds() {
+export function getPriceBounds(books = []) {
+  if (!Array.isArray(books) || books.length === 0) {
+    return {
+      min: RENT_FILTER_MIN,
+      max: 999,
+    };
+  }
+
+  const weeklyPrices = books.map((book) => getWeeklyRentFilterValue(book)).filter(Number.isFinite);
+
   return {
-    min: RENT_FILTER_MIN,
-    max: RENT_FILTER_MAX,
+    min: Math.min(...weeklyPrices, RENT_FILTER_MIN),
+    max: Math.max(...weeklyPrices, 999),
   };
 }
 
@@ -217,9 +249,7 @@ export function isBookWishlisted(bookId) {
 
 export function toggleWishlistBook(bookId) {
   const ids = readWishlistIds();
-  const nextIds = ids.includes(bookId)
-    ? ids.filter((id) => id !== bookId)
-    : [...ids, bookId];
+  const nextIds = ids.includes(bookId) ? ids.filter((id) => id !== bookId) : [...ids, bookId];
 
   writeWishlistIds(nextIds);
   return nextIds;

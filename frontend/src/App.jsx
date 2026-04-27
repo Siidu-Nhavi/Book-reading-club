@@ -7,6 +7,10 @@ import {
   CareersPage,
   CommunityPage,
   DashboardHome,
+  MyRentalsPage,
+  WalletPage,
+  AdminWalletPage,
+  AdminReturnsPage,
   FeaturesPage,
   LandingPage,
   Login,
@@ -49,6 +53,10 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
+            <Route path="rentals" element={<MyRentalsPage />} />
+            <Route path="wallet" element={<WalletPage />} />
+            <Route path="admin/wallets" element={<AdminWalletPage />} />
+            <Route path="admin/returns" element={<AdminReturnsPage />} />
             <Route path="profile" element={<UpdateProfile />} />
             <Route path="settings" element={<AccountSettings />} />
           </Route>

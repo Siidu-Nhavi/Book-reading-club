@@ -56,6 +56,9 @@ export default function DashboardSidebar({ compact = false, onNavigate }) {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
   const initials = getUserInitials(user?.name, user?.email);
+  const visibleItems = dashboardNavItems.filter(
+    (item) => !Array.isArray(item.roles) || item.roles.includes(user?.role || "user"),
+  );
 
   const handleLogout = async () => {
     await logout();
@@ -107,7 +110,7 @@ export default function DashboardSidebar({ compact = false, onNavigate }) {
       <Divider />
 
       <Stack spacing={1} sx={{ px: compact ? 1 : 1.5, py: 2, flex: 1 }}>
-        {dashboardNavItems.map((item) => (
+        {visibleItems.map((item) => (
           <Box key={item.to} onClick={onNavigate}>
             <DashboardNavButton item={item} compact={compact} />
           </Box>

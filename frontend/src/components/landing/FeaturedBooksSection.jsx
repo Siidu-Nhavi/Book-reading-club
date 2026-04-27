@@ -1,8 +1,8 @@
 import { Link as RouterLink } from "react-router-dom";
 import styles from "./landingpage.module.css";
 
-function formatPrice(price) {
-  const numericPrice = Number(price);
+function formatPrice(book = {}) {
+  const numericPrice = Number(book?.pricePerWeek || book?.price);
 
   if (!Number.isFinite(numericPrice)) {
     return "Price unavailable";
@@ -46,7 +46,7 @@ export default function FeaturedBooksSection({ books = [], isLoading = false }) 
                   <h3>{book.title}</h3>
                   <p className={styles["featured-author"]}>by {book.author}</p>
                   <div className={styles["featured-bottom"]}>
-                    <span>{formatPrice(book.price)}</span>
+                    <span>{formatPrice(book)}</span>
                     <RouterLink to={`/books/${book._id}`}>View Book</RouterLink>
                   </div>
                 </div>

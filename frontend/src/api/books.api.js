@@ -27,7 +27,7 @@ function normalizeImageUrl(value = "") {
 function normalizeBook(book = {}) {
   return {
     ...book,
-    price: Number.isFinite(book?.rentPrice) ? book.rentPrice : book?.price,
+    price: Number.isFinite(book?.pricePerWeek) ? book.pricePerWeek : book?.price,
     image: normalizeImageUrl(book?.image || book?.coverImage || book?.thumbnail || book?.coverUrl || ""),
   };
 }
@@ -65,8 +65,11 @@ async function hydrateBooksWithDetails(books = []) {
     return {
       ...book,
       image: hydrated.image || book.image || "",
-      depositRequired: hydrated.depositRequired ?? book.depositRequired,
-      penaltyPerDay: hydrated.penaltyPerDay ?? book.penaltyPerDay,
+      depositAmount: hydrated.depositAmount ?? book.depositAmount,
+      replacementCost: hydrated.replacementCost ?? book.replacementCost,
+      pricePerDay: hydrated.pricePerDay ?? book.pricePerDay,
+      pricePerWeek: hydrated.pricePerWeek ?? book.pricePerWeek,
+      pricePerMonth: hydrated.pricePerMonth ?? book.pricePerMonth,
       totalReviews: hydrated.totalReviews ?? book.totalReviews,
     };
   });
@@ -108,10 +111,10 @@ function normalizeParams(params = {}) {
   }
 
   if (normalized.sortBy === "price_asc") {
-    normalized.sortBy = "rentPrice";
+    normalized.sortBy = "pricePerDay";
     normalized.order = "asc";
   } else if (normalized.sortBy === "price_desc") {
-    normalized.sortBy = "rentPrice";
+    normalized.sortBy = "pricePerDay";
     normalized.order = "desc";
   } else if (normalized.sortBy === "top_rated") {
     normalized.sortBy = "averageRating";

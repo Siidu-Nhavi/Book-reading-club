@@ -5,8 +5,10 @@ import { Box, Button, Chip, IconButton, Paper, Stack, Typography } from "@mui/ma
 import { Link, useNavigate } from "react-router-dom";
 import {
   formatBookPrice,
+  getBookDepositAmount,
+  getBookMonthlyPrice,
+  getBookWeeklyPrice,
   formatCategoryLabel,
-  getWeeklyRentFilterValue,
   truncateText,
 } from "../../utils/books";
 import {
@@ -25,12 +27,17 @@ export default function BookCard({
   onRent,
   showWishlist = true,
   showRentButton = true,
+  rentDisabledReason = "",
 }) {
   const navigate = useNavigate();
   const featuredVariant = variant === "featured";
   const similarVariant = variant === "similar";
   const fixedWidthVariant = featuredVariant;
-  const weeklyRent = getWeeklyRentFilterValue(book?.price);
+  const weeklyRent = getBookWeeklyPrice(book);
+  const dailyRent = Number(book?.pricePerDay || 0);
+  const monthlyRent = getBookMonthlyPrice(book);
+  const depositAmount = getBookDepositAmount(book);
+  const isRentDisabled = !book?.isAvailable || Boolean(rentDisabledReason);
 
   return (
     <Paper
@@ -153,14 +160,22 @@ export default function BookCard({
               justifyContent: "space-between",
             }}
           >
-            <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 600 }}>
-              {formatBookPrice(weeklyRent)} / week
-            </Typography>
+            <Stack spacing={0.4}>
+              <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 600 }}>
+                {formatBookPrice(dailyRent)} / day
+              </Typography>
+              <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
+                {formatBookPrice(weeklyRent)} / week • {formatBookPrice(monthlyRent)} / month
+              </Typography>
+              <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
+                Deposit: {formatBookPrice(depositAmount)}
+              </Typography>
+            </Stack>
 
             <Button
               variant="contained"
-              disabled={!book?.isAvailable}
-              endIcon={book?.isAvailable ? <ArrowForwardRoundedIcon /> : null}
+              disabled={isRentDisabled}
+              endIcon={!isRentDisabled ? <ArrowForwardRoundedIcon /> : null}
               onClick={(event) => {
                 event.stopPropagation();
                 onRent?.(book);
@@ -182,9 +197,14 @@ export default function BookCard({
                 },
               }}
             >
-              {book?.isAvailable ? "Rent Now" : "Rented"}
+              {book?.isAvailable ? (rentDisabledReason ? "Unavailable" : "Rent Now") : "Rented"}
             </Button>
           </Stack>
+        ) : null}
+        {rentDisabledReason ? (
+          <Typography sx={{ px: 2, pb: 2, color: PUBLIC_UI.muted, fontSize: "0.8rem" }}>
+            {rentDisabledReason}
+          </Typography>
         ) : null}
       </Stack>
     </Paper>

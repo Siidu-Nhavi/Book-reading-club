@@ -1,28 +1,50 @@
-import { Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
+import {
+  MenuItem,
+  Stack,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+} from "@mui/material";
 import { PUBLIC_UI } from "../../utils/publicUi";
 
-const DEFAULT_OPTIONS = [
-  { label: "1 Week", value: 7 },
-  { label: "2 Weeks", value: 14 },
-  { label: "1 Month", value: 30 },
+const TYPE_OPTIONS = [
+  { label: "Daily", value: "daily" },
+  { label: "Weekly", value: "weekly" },
+  { label: "Monthly", value: "monthly" },
 ];
 
-export default function RentalDurationSelector({ value, onChange, options = DEFAULT_OPTIONS }) {
+const DURATION_OPTIONS = {
+  daily: Array.from({ length: 30 }, (_, index) => index + 1),
+  weekly: [1, 2, 3, 4],
+  monthly: [1, 2, 3],
+};
+
+export default function RentalDurationSelector({
+  rentalType,
+  rentalDuration,
+  onTypeChange,
+  onDurationChange,
+}) {
+  const options = DURATION_OPTIONS[rentalType] || DURATION_OPTIONS.daily;
+
   return (
-    <Stack spacing={1.1}>
-      <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 800 }}>Rental Duration</Typography>
+    <Stack spacing={1.3}>
+      <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 800 }}>
+        Rental duration
+      </Typography>
+
       <ToggleButtonGroup
-        value={value}
+        value={rentalType}
         exclusive
         onChange={(_, nextValue) => {
-          if (!nextValue) {
-            return;
+          if (nextValue) {
+            onTypeChange(nextValue);
           }
-          onChange(nextValue);
         }}
         sx={{ flexWrap: "wrap", gap: 1 }}
       >
-        {options.map((option) => (
+        {TYPE_OPTIONS.map((option) => (
           <ToggleButton
             key={option.value}
             value={option.value}
@@ -42,6 +64,21 @@ export default function RentalDurationSelector({ value, onChange, options = DEFA
           </ToggleButton>
         ))}
       </ToggleButtonGroup>
+
+      <TextField
+        select
+        label="Duration"
+        value={rentalDuration}
+        onChange={(event) => onDurationChange(Number(event.target.value))}
+        fullWidth
+      >
+        {options.map((option) => (
+          <MenuItem key={option} value={option}>
+            {option} {rentalType === "daily" ? "day" : rentalType === "weekly" ? "week" : "month"}
+            {option > 1 ? "s" : ""}
+          </MenuItem>
+        ))}
+      </TextField>
     </Stack>
   );
 }

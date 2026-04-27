@@ -5,7 +5,7 @@ import {
   formatCategoryLabel,
   getBookGradient,
   getBookInitials,
-  getWeeklyRentFilterValue,
+  getBookWeeklyPrice,
   getWishlistIds,
 } from "../utils/books";
 import { getProfileCompletion, getUserInitials } from "../utils/profile";
@@ -34,7 +34,7 @@ function createBookCover(book) {
 }
 
 function normalizeDashboardBook(book = {}, overrides = {}) {
-  const weeklyRent = getWeeklyRentFilterValue(Number(book?.price));
+  const weeklyRent = getBookWeeklyPrice(book);
   const availability = book?.available === false ? "paused" : "active";
 
   return {
@@ -164,8 +164,8 @@ function getRentalStatusLabel(status = "") {
     return "Overdue";
   }
 
-  if (normalized === "penalised") {
-    return "Penalised";
+  if (normalized === "flagged") {
+    return "Flagged";
   }
 
   return "Unknown";
@@ -177,22 +177,22 @@ function buildLiveRentals(rentals = []) {
     const author = safeString(rental?.book?.author, "Unknown Author");
     const status = String(rental?.status || "active").toLowerCase();
     const dueDate = rental?.dueDate ? new Date(rental.dueDate) : null;
-    const returnedDate = rental?.returnedDate ? new Date(rental.returnedDate) : null;
-    const hasPenalty = Number(rental?.penaltyAmount || 0) > 0;
+    const returnedDate = rental?.returnedAt ? new Date(rental.returnedAt) : null;
+    const hasPenalty = Number(rental?.overdueCharge || 0) > 0;
     const bookId = rental?.book?._id;
 
     let meta = "Rental in progress";
 
     if (status === "active" && dueDate) {
       meta = `Due ${formatDateLabel(dueDate)}`;
-    } else if ((status === "returned" || status === "penalised") && returnedDate) {
+    } else if ((status === "returned" || status === "flagged") && returnedDate) {
       meta = `Returned ${formatDateLabel(returnedDate)}`;
     } else if (status === "overdue" && dueDate) {
       meta = `Overdue since ${formatDateLabel(dueDate)}`;
     }
 
     if (hasPenalty) {
-      meta = `${meta} • Penalty ${formatBookPrice(Number(rental.penaltyAmount))}`;
+      meta = `${meta} • Overdue ${formatBookPrice(Number(rental.overdueCharge))}`;
     }
 
     return {
