@@ -1,20 +1,30 @@
 const mongoose = require("mongoose");
-const Book = require("../../models/Book.js");
-const Rental = require("../../models/Rental.js");
-const User = require("../../models/User.js");
+const { createRental, evaluateRentalEligibility } = require("../../services/rentalFinanceService.js");
 
-const DAY_IN_MS = 24 * 60 * 60 * 1000;
-const DEFAULT_RENTAL_DAYS = 7;
-const MAX_RENTAL_DAYS = 30;
+const DURATION_LIMITS = {
+  daily: { min: 1, max: 30 },
+  weekly: { min: 1, max: 4 },
+  monthly: { min: 1, max: 3 },
+};
 
-function toPositiveInteger(value, fallback) {
-  const parsed = Number.parseInt(value, 10);
+function normalizeRentalInput(body = {}) {
+  const rentalType = String(body.rentalType || "daily").trim().toLowerCase();
+  const rentalDuration = Number.parseInt(body.rentalDuration, 10);
+  return { rentalType, rentalDuration };
+}
 
-  if (!Number.isFinite(parsed) || parsed < 1) {
-    return fallback;
+function validateRentalInput({ rentalType, rentalDuration }) {
+  if (!DURATION_LIMITS[rentalType]) {
+    return "rentalType must be daily, weekly, or monthly";
   }
 
-  return parsed;
+  const bounds = DURATION_LIMITS[rentalType];
+
+  if (!Number.isInteger(rentalDuration) || rentalDuration < bounds.min || rentalDuration > bounds.max) {
+    return `rentalDuration must be between ${bounds.min} and ${bounds.max} for ${rentalType} rentals`;
+  }
+
+  return "";
 }
 
 async function rentBook(req, res) {
@@ -24,90 +34,94 @@ async function rentBook(req, res) {
     return res.status(400).json({ error: "A valid bookId is required" });
   }
 
-  const requestedDays = toPositiveInteger(req.body.durationDays, DEFAULT_RENTAL_DAYS);
+  const rentalInput = normalizeRentalInput(req.body);
+  const validationError = validateRentalInput(rentalInput);
 
-  if (requestedDays > MAX_RENTAL_DAYS) {
-    return res.status(400).json({
-      error: `durationDays cannot be more than ${MAX_RENTAL_DAYS}`,
-    });
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
   }
 
-  const startDate = new Date();
-  const dueDate = new Date(Date.now() + requestedDays * DAY_IN_MS);
-
-  let didLockBook = false;
-  let didIncrementUserRentals = false;
-
   try {
-    const book = await Book.findOneAndUpdate(
-      { _id: bookId, isAvailable: true },
-      { $set: { isAvailable: false } },
-      { new: true },
-    );
-
-    if (!book) {
-      const bookExists = await Book.exists({ _id: bookId });
-
-      return res.status(bookExists ? 400 : 404).json({
-        error: bookExists ? "Book is currently unavailable" : "Book not found",
-      });
-    }
-
-    didLockBook = true;
-
-    const user = await User.findOneAndUpdate(
-      {
-        _id: req.user._id,
-        isSuspended: false,
-        $expr: { $lt: ["$activeRentalsCount", "$maxRentalsAllowed"] },
-      },
-      { $inc: { activeRentalsCount: 1 } },
-      { new: true },
-    );
-
-    if (!user) {
-      await Book.updateOne({ _id: book._id }, { $set: { isAvailable: true } });
-
-      return res.status(400).json({ error: "Rental limit reached or account is suspended" });
-    }
-
-    didIncrementUserRentals = true;
-
-    const rental = await Rental.create({
-      user: user._id,
-      book: book._id,
-      startDate,
-      dueDate,
-      status: "active",
+    const rentalResult = await createRental({
+      userId: req.user._id,
+      bookId,
+      rentalType: rentalInput.rentalType,
+      rentalDuration: rentalInput.rentalDuration,
     });
+
+    if (!rentalResult.allowed) {
+      return res.status(rentalResult.status || 400).json({ error: rentalResult.message });
+    }
 
     return res.status(201).json({
       message: "Book rented successfully",
       rental: {
-        _id: rental._id,
-        book: rental.book,
-        startDate: rental.startDate,
-        dueDate: rental.dueDate,
-        status: rental.status,
+        _id: rentalResult.rental._id,
+        book: rentalResult.rental.book,
+        rentalType: rentalResult.rental.rentalType,
+        rentalDuration: rentalResult.rental.rentalDuration,
+        rentalFee: rentalResult.rental.rentalFee,
+        depositAmount: rentalResult.rental.depositAmount,
+        rentedAt: rentalResult.rental.rentedAt,
+        dueDate: rentalResult.rental.dueDate,
+        status: rentalResult.rental.status,
+      },
+      wallet: {
+        chargedAmount: rentalResult.chargedAmount,
+        balance: rentalResult.walletBalance,
       },
     });
   } catch (error) {
-    if (didLockBook && !didIncrementUserRentals) {
-      await Book.updateOne({ _id: bookId }, { $set: { isAvailable: true } });
-    }
-
-    if (didIncrementUserRentals) {
-      await User.updateOne(
-        { _id: req.user._id, activeRentalsCount: { $gt: 0 } },
-        { $inc: { activeRentalsCount: -1 } },
-      );
-
-      await Book.updateOne({ _id: bookId }, { $set: { isAvailable: true } });
-    }
-
     console.error("Rent book error:", error);
     return res.status(500).json({ error: "Unable to rent book" });
   }
 }
 
-module.exports = { rentBook };
+async function previewRental(req, res) {
+  const { bookId } = req.query;
+
+  if (!bookId || !mongoose.Types.ObjectId.isValid(bookId)) {
+    return res.status(400).json({ error: "A valid bookId is required" });
+  }
+
+  const rentalInput = normalizeRentalInput(req.query);
+  const validationError = validateRentalInput(rentalInput);
+
+  if (validationError) {
+    return res.status(400).json({ error: validationError });
+  }
+
+  try {
+    const eligibility = await evaluateRentalEligibility({
+      userId: req.user._id,
+      bookId,
+      rentalType: rentalInput.rentalType,
+      rentalDuration: rentalInput.rentalDuration,
+    });
+
+    return res.status(200).json({
+      allowed: Boolean(eligibility.allowed),
+      message: eligibility.message || "",
+      pricing: eligibility.allowed
+        ? {
+            rentalFee: eligibility.rentalFee,
+            depositAmount: eligibility.depositAmount,
+            total: eligibility.total,
+            walletBalance: eligibility.wallet.balance,
+            walletAfter: eligibility.wallet.balance - eligibility.total,
+          }
+        : {
+            rentalFee: eligibility.rentalFee || 0,
+            depositAmount: eligibility.depositAmount || 0,
+            total: eligibility.total || 0,
+            walletBalance: eligibility.walletBalance || 0,
+            walletAfter: Math.max(0, (eligibility.walletBalance || 0) - (eligibility.total || 0)),
+          },
+    });
+  } catch (error) {
+    console.error("Preview rental error:", error);
+    return res.status(500).json({ error: "Unable to preview rental" });
+  }
+}
+
+module.exports = { rentBook, previewRental };

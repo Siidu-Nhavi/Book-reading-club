@@ -1,485 +1,317 @@
 # Book Reading Club API Structure
 
-This document reflects the current backend contract in the server app.
+This file reflects the rental + wallet system now implemented in the server app.
 
-## Base Notes
-
-- Base route prefix for all APIs: `/api`
-- Authenticated routes use the cookie/session JWT flow already implemented in middleware.
-- All error responses for touched routes follow:
-
-```json
-{ "error": "Human readable message" }
-```
-
-- Success responses use the exact shapes documented below.
-- Admin routes are listed separately for future implementation status. They are not currently mounted.
-
----
-
-## Auth - `/api/auth`
-
-### `POST /api/auth/register`
-Request:
-```json
-{ "name": "Alice", "email": "alice@example.com", "password": "secret123" }
-```
-Response `201`:
-```json
-{
-  "token": "jwt-token-string",
-  "user": {
-    "_id": "...",
-    "name": "Alice",
-    "email": "alice@example.com",
-    "role": "user"
-  }
-}
-```
-Errors:
-- `400` if fields are missing
-- `400` if email already exists
-
-### `POST /api/auth/login`
-Request:
-```json
-{ "email": "alice@example.com", "password": "secret123" }
-```
-Response `200`:
-```json
-{
-  "token": "jwt-token-string",
-  "user": {
-    "_id": "...",
-    "name": "Alice",
-    "role": "user",
-    "isSuspended": false
-  }
-}
-```
-Errors:
-- `400` if email is not found
-- `400` if password is wrong
-- `400` if fields are missing
-
-### `POST /api/auth/logout`
-Request: none
-Response `200`:
-```json
-{ "message": "Logged out successfully" }
-```
-Notes:
-- Clears the auth cookie.
-- This route is currently implemented and protected by auth middleware.
-
----
-
-## Profile - `/api/profile`
-
-### `GET /api/profile/me`
-Requires auth.
-Response `200`:
-```json
-{
-  "_id": "...",
-  "user": {
-    "_id": "...",
-    "name": "Alice",
-    "email": "alice@example.com"
-  },
-  "phone": "",
-  "address": "",
-  "city": "",
-  "bio": "",
-  "avatar": "",
-  "dateOfBirth": null
-}
-```
-
-### `PUT /api/profile/me`
-Requires auth.
-Request body: any subset of
-```json
-{ "phone": "", "address": "", "city": "", "bio": "", "avatar": "", "dateOfBirth": "" }
-```
-Response `200`:
-```json
-{
-  "message": "Profile updated",
-  "profile": {
-    "phone": "",
-    "address": "",
-    "city": "",
-    "bio": "",
-    "avatar": "",
-    "dateOfBirth": null
-  }
-}
-```
-
----
+Base notes:
+- Base API prefix: `/api`
+- Auth uses the existing cookie/JWT session flow
+- Error shape: `{ "error": "Human readable message" }`
 
 ## Books - `/api/books`
 
 ### `GET /api/books`
 Public.
 
-Supported query params:
+Query params:
 - `page`
 - `limit`
 - `category`
-- `available` (`true` / `false`)
-- `search` (title or author)
-- `sortBy` (`rentPrice` / `averageRating` / `title`)
-- `order` (`asc` / `desc`)
+- `available`
+- `search`
+- `sortBy` = `pricePerDay | pricePerWeek | pricePerMonth | averageRating | title`
+- `order` = `asc | desc`
 
-Response `200`:
-```json
-{
-  "total": 200,
-  "page": 1,
-  "limit": 12,
-  "books": [
-    {
-      "_id": "...",
-      "title": "Book Title",
-      "author": "Author Name",
-      "category": "Fiction",
-      "rentPrice": 12.5,
-      "isAvailable": true,
-      "averageRating": 4.6
-    }
-  ]
-}
-```
+Book list fields:
+- `_id`
+- `title`
+- `author`
+- `category`
+- `pricePerDay`
+- `pricePerWeek`
+- `pricePerMonth`
+- `depositAmount`
+- `replacementCost`
+- `isAvailable`
+- `unavailabilityReason`
+- `averageRating`
+- `image`
 
 ### `GET /api/books/:id`
 Public.
-Response `200`:
-```json
-{
-  "_id": "...",
-  "title": "Book Title",
-  "author": "Author Name",
-  "description": "...",
-  "category": "Fiction",
-  "rentPrice": 12.5,
-  "depositRequired": 25,
-  "penaltyPerDay": 5,
-  "image": "...",
-  "isAvailable": true,
-  "averageRating": 4.6,
-  "totalReviews": 18,
-  "createdAt": "...",
-  "updatedAt": "..."
-}
-```
-Errors:
-- `400` if id is invalid
-- `404` if book not found
 
-### `GET /api/books/categories`
-Public.
-Response `200`:
-```json
-{ "categories": ["Fiction", "Medical", "Business"] }
-```
-Notes:
-- Extra helper route currently implemented.
-
----
+Full book fields include:
+- `pricePerDay`
+- `pricePerWeek`
+- `pricePerMonth`
+- `depositAmount`
+- `replacementCost`
+- `isAvailable`
+- `unavailabilityReason`
 
 ## Rentals - `/api/rentals`
 
-### `POST /api/rentals/rent`
+### `GET /api/rentals/preview`
 Requires auth.
+
+Query:
+```json
+{
+  "bookId": "...",
+  "rentalType": "daily",
+  "rentalDuration": 7
+}
+```
+
+Response:
+```json
+{
+  "allowed": true,
+  "message": "",
+  "pricing": {
+    "rentalFee": 280,
+    "depositAmount": 500,
+    "total": 780,
+    "walletBalance": 1200,
+    "walletAfter": 420
+  }
+}
+```
+
+### `POST /api/rentals/create`
+Requires auth.
+
 Request:
 ```json
-{ "bookId": "...", "durationDays": 7 }
+{
+  "bookId": "...",
+  "rentalType": "daily",
+  "rentalDuration": 7
+}
 ```
-Response `201`:
+
+Response:
 ```json
 {
   "message": "Book rented successfully",
   "rental": {
     "_id": "...",
     "book": "...",
-    "startDate": "...",
+    "rentalType": "daily",
+    "rentalDuration": 7,
+    "rentalFee": 280,
+    "depositAmount": 500,
+    "rentedAt": "...",
     "dueDate": "...",
     "status": "active"
+  },
+  "wallet": {
+    "chargedAmount": 780,
+    "balance": 420
   }
 }
 ```
-Errors:
-- `400` if book is unavailable
-- `400` if user is suspended
-- `400` if user hit `maxRentalsAllowed`
 
-### `POST /api/rentals/return`
+### `GET /api/rentals/my-rentals`
 Requires auth.
-Request:
-```json
-{ "rentalId": "..." }
-```
-Response `200`:
+
+Response:
 ```json
 {
-  "message": "Book returned",
-  "rental": {
-    "status": "returned",
-    "returnedDate": "...",
-    "overdueDays": 0,
-    "penaltyAmount": 0
-  }
-}
-```
-Notes:
-- If returned late, status becomes `penalised`.
-- `overdueDays` and `penaltyAmount` are recalculated from due date and `book.penaltyPerDay`.
-
-### `GET /api/rentals/my`
-Requires auth.
-Supported query params:
-- `status` (`active` / `returned` / `overdue` / `penalised`)
-- `page`
-- `limit`
-
-Response `200`:
-```json
-{
-  "total": 12,
-  "rentals": [
+  "total": 2,
+  "alerts": [
     {
-      "_id": "...",
-      "book": {
-        "title": "Book Title",
-        "author": "Author Name"
-      },
-      "status": "active",
-      "dueDate": "...",
-      "returnedDate": null,
-      "penaltyAmount": 0
+      "rentalId": "...",
+      "type": "due_soon",
+      "message": "Due in 2 days"
     }
-  ]
+  ],
+  "wallet": {
+    "balance": 420,
+    "pendingDuesTotal": 0
+  },
+  "rentals": []
 }
 ```
 
 ### `GET /api/rentals/all`
-Admin-only future route.
+Requires admin.
 
-Supported query params:
-- `status`
-- `userId`
-- `bookId`
-- `page`
-- `limit`
+Returns all rentals for return processing/admin reporting.
 
-Response `200`:
-```json
-{
-  "total": 0,
-  "rentals": [
-    {
-      "_id": "...",
-      "user": {
-        "name": "Alice",
-        "email": "alice@example.com"
-      },
-      "book": {
-        "title": "Book Title"
-      },
-      "status": "active",
-      "penaltyAmount": 0
-    }
-  ]
-}
-```
+### `POST /api/rentals/:id/return`
+Requires admin.
 
----
-
-## Reviews - `/api/reviews`
-
-### `POST /api/reviews`
-Requires auth.
 Request:
 ```json
 {
-  "bookId": "...",
-  "rentalId": "...",
-  "rating": 5,
-  "reviewText": "Great read"
+  "condition": "minor",
+  "damagePercentage": 0.25,
+  "adminNote": "Corner tear"
 }
 ```
-Response `201`:
+
+Conditions:
+- `good`
+- `minor`
+- `major`
+- `lost`
+
+Response:
 ```json
 {
-  "message": "Review submitted",
-  "review": {
-    "_id": "...",
-    "rating": 5,
-    "isVerified": true
+  "message": "Return processed successfully",
+  "returnSummary": {
+    "rentalId": "...",
+    "returnedAt": "...",
+    "status": "returned",
+    "condition": "minor",
+    "damageCharge": 300,
+    "depositRefund": 200,
+    "extraWalletDeduction": 0,
+    "pendingDue": null
   }
 }
 ```
-Errors:
-- `400` if rental status is not `returned`
-- `409` if user already reviewed this book
 
-### `GET /api/reviews/book/:bookId`
-Public.
-Supported query params:
-- `page`
-- `limit`
-- `sortBy` (`rating` / `createdAt`)
+## Wallet - `/api/wallet`
 
-Response `200`:
+### `GET /api/wallet/balance`
+Requires auth.
+
+Response:
 ```json
 {
-  "averageRating": 4.6,
-  "total": 18,
-  "reviews": [
+  "balance": 420,
+  "pendingDuesTotal": 120,
+  "pendingDues": []
+}
+```
+
+### `GET /api/wallet/transactions`
+Requires auth.
+
+Response:
+```json
+{
+  "transactions": [
     {
-      "user": { "name": "Alice" },
-      "rating": 5,
-      "reviewText": "Great read",
-      "isVerified": true,
+      "_id": "...",
+      "type": "debit",
+      "amount": 780,
+      "reason": "rental_fee",
+      "referenceId": "...",
       "createdAt": "..."
     }
   ]
 }
 ```
 
-### `DELETE /api/reviews/:id`
-Requires auth. Own review only.
-Response `200`:
+### `POST /api/wallet/topup`
+Requires admin.
+
+Request:
 ```json
-{ "message": "Review deleted" }
+{
+  "userId": "...",
+  "amount": 1000,
+  "note": "Manual admin top-up"
+}
 ```
-Side effect:
-- Recalculates `book.averageRating` and `book.totalReviews`.
 
----
+## Cron - `/api/cron`
 
-## Middleware
+### `POST /api/cron/check-overdue`
+Requires admin.
 
-### `requireAuth`
-- Verifies the JWT/session cookie and attaches `req.user`.
-- Applied to all auth-required routes.
+Runs the daily overdue processor:
+- calculates overdue days
+- deducts daily overdue charges from wallet
+- creates pending dues if wallet is short
+- flags rentals/accounts after 7 overdue days
 
-### `requireAdmin`
-- Checks `req.user.role === "admin"`.
-- Admin routes are documented here but not implemented in the current code path.
+## Admin - `/api/admin`
 
----
+### `GET /api/admin/users`
+Requires admin.
 
-## Key Business Logic
+Query:
+- `search`
 
-### Renting a book
-Before creating the rental record, check:
-1. `book.isAvailable === true`
-2. `user.isSuspended === false`
-3. `user.activeRentalsCount < user.maxRentalsAllowed`
+Response fields:
+- `_id`
+- `name`
+- `email`
+- `role`
+- `isFlagged`
+- `pendingDuesTotal`
+- `isSuspended`
+- `walletBalance`
 
-If all pass:
-- set `book.isAvailable = false`
-- increment `user.activeRentalsCount`
-- set `startDate = now`
-- set `dueDate = now + durationDays`
-
-### Returning a book
-When returning:
-- set `book.isAvailable = true`
-- decrement `user.activeRentalsCount`
-- calculate `overdueDays`
-- calculate `penaltyAmount = overdueDays * book.penaltyPerDay`
-- if `penaltyAmount > 0`, status becomes `penalised`, otherwise `returned`
-
-### Submitting a review
-Before saving:
-1. verify rental exists
-2. verify rental belongs to the requesting user
-3. verify rental status is `returned`
-
-After saving:
-- recalculate `book.averageRating`
-- update `book.totalReviews`
-
-### Deleting a review
-After deletion:
-- recalculate `book.averageRating`
-- recalculate `book.totalReviews`
-
----
-
-## Notes on Data Models
+## Core Collections
 
 ### User
-Current rental/deposit-related fields:
-- `depositAmount`
-- `depositStatus`
+- `walletBalanceCache`
+- `pendingDuesTotal`
+- `isFlagged`
 - `activeRentalsCount`
 - `maxRentalsAllowed`
 - `isSuspended`
 
+### Wallet
+- `user`
+- `balance`
+- `lastUpdated`
+
+### WalletTransaction
+- `user`
+- `type`
+- `amount`
+- `reason`
+- `referenceId`
+- `note`
+
+### PendingDue
+- `user`
+- `rental`
+- `amount`
+- `reason`
+- `status`
+- `note`
+
 ### Book
-Current rental/review-related fields:
-- `rentPrice`
-- `depositRequired`
-- `penaltyPerDay`
-- `averageRating`
-- `totalReviews`
+- `pricePerDay`
+- `pricePerWeek`
+- `pricePerMonth`
+- `depositAmount`
+- `replacementCost`
+- `isAvailable`
+- `unavailabilityReason`
 
 ### Rental
-Tracks the rental lifecycle:
-- `user`
-- `book`
-- `status`
-- `startDate`
+- `rentalType`
+- `rentalDuration`
+- `rentalFee`
+- `depositAmount`
+- `rentedAt`
 - `dueDate`
-- `returnedDate`
-- `overdueDays`
-- `penaltyAmount`
-- `penaltyPaid`
+- `returnedAt`
+- `damageCondition`
+- `damagePercentage`
+- `damageCharge`
 - `depositRefunded`
+- `overdueDays`
+- `overdueCharge`
+- `status`
+- `restrictionApplied`
 
-### Review
-Tracks the user rating for a rental/book pair:
-- `user`
-- `book`
-- `rental`
-- `rating`
-- `reviewText`
-- `isVerified`
+## Restriction Rules
 
-Unique review rule:
-- one review per `user + book`
+Block new rentals when:
+- wallet balance is lower than rental total
+- `pendingDuesTotal > 0`
+- `isFlagged === true`
+- `isSuspended === true`
 
----
-
-## Admin - Users (Planned, not implemented yet)
-
-These endpoints are documented for future implementation and are not currently mounted.
-
-### `GET /api/admin/users`
-### `GET /api/admin/users/:id`
-### `PATCH /api/admin/users/:id/suspend`
-### `PATCH /api/admin/users/:id/max-rentals`
-
----
-
-## Standard Error Shape
-
-All errors should use:
-
-```json
-{ "error": "Human readable message" }
-```
-
-Common HTTP status codes:
-- `200` success
-- `201` created
-- `400` validation / bad request
-- `401` unauthorized
-- `403` forbidden
-- `404` not found
-- `409` conflict
+Show reasons such as:
+- `Insufficient balance — please top up your wallet`
+- `You have pending dues of ₹X — clear dues to rent again`

@@ -6,6 +6,9 @@ const booksRoutes = require("./routes/books.js");
 const profileRoutes = require("./routes/profile.js");
 const rentalsRoutes = require("./routes/rentals.js");
 const reviewsRoutes = require("./routes/reviews.js");
+const walletRoutes = require("./routes/wallet.js");
+const adminRoutes = require("./routes/admin.js");
+const cronRoutes = require("./routes/cron.js");
 const connectDB = require("./config/db.js");
 const { parseCookies } = require("./utils/security.js");
 
@@ -61,6 +64,9 @@ app.use("/api/books", booksRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/rentals", rentalsRoutes);
 app.use("/api/reviews", reviewsRoutes);
+app.use("/api/wallet", walletRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/cron", cronRoutes);
 
 async function startServer() {
   try {

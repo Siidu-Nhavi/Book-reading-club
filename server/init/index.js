@@ -6,6 +6,7 @@ const Book = require("../models/Book");
 const User = require("../models/User");
 const Rental = require("../models/Rental");
 const Review = require("../models/Review");
+const Wallet = require("../models/Wallet");
 const { generateSalt, hashPassword } = require("../utils/security.js");
 
 const csvFilePath = path.join(__dirname, "updated_main.csv");
@@ -19,8 +20,8 @@ const TARGET_REVIEWS = 320;
 const DEMO_PASSWORD_ENV_KEY = "SEED_DEMO_PASSWORD";
 const RNG_SEED = 20260410;
 
-const ACTIVE_STATUSES = new Set(["active", "overdue"]);
-const REVIEWABLE_STATUSES = new Set(["returned", "penalised"]);
+const ACTIVE_STATUSES = new Set(["active", "overdue", "flagged"]);
+const REVIEWABLE_STATUSES = new Set(["returned", "flagged"]);
 
 function createRng(seed) {
   let current = seed >>> 0;
@@ -91,10 +92,12 @@ function splitCsvLine(line) {
 function toBookDocument(row) {
   const parsedPrice = Number.parseFloat(row.price);
   const normalizedPrice = Number.isFinite(parsedPrice) ? parsedPrice : 0;
-  const rentPrice = Number(normalizedPrice.toFixed(2));
+  const pricePerDay = Math.max(20, Number((normalizedPrice / 18).toFixed(2)));
+  const pricePerWeek = Math.max(pricePerDay * 5, Number((pricePerDay * 6).toFixed(2)));
+  const pricePerMonth = Math.max(pricePerWeek * 3, Number((pricePerDay * 20).toFixed(2)));
   const category = normalizeCategory(row.category);
-  const penaltyPerDay = Math.max(10, Math.round(rentPrice * 0.15));
-  const depositRequired = Math.round(rentPrice * 2);
+  const depositAmount = Math.round(pricePerWeek * 1.2);
+  const replacementCost = Math.max(Math.round(normalizedPrice), depositAmount + Math.round(pricePerDay * 10));
 
   return {
     title: row.name || row.title || "Untitled",
@@ -102,11 +105,14 @@ function toBookDocument(row) {
     description:
       row.description ||
       `Format: ${row.format || "N/A"}. ISBN: ${row.isbn || "N/A"}. Rating: ${row.book_depository_stars || "N/A"}`,
-    rentPrice,
-    depositRequired,
-    penaltyPerDay,
+    pricePerDay,
+    pricePerWeek,
+    pricePerMonth,
+    depositAmount,
+    replacementCost,
     image: row.image || "",
     isAvailable: true,
+    unavailabilityReason: "none",
     category,
     averageRating: 0,
     totalReviews: 0,
@@ -280,7 +286,7 @@ async function buildUsers(count, rng) {
     const hashedPassword = await hashPassword(password, salt);
 
     const role = index === 0 ? "admin" : "user";
-    const hasPaidDeposit = index % 4 !== 0;
+    const walletBalance = randomInt(rng, 500, 8000);
 
     users.push({
       name: `${firstName} ${lastName}`,
@@ -288,8 +294,11 @@ async function buildUsers(count, rng) {
       password: hashedPassword,
       salt,
       role,
-      depositAmount: hasPaidDeposit ? randomInt(rng, 200, 1200) : 0,
-      depositStatus: hasPaidDeposit ? "paid" : "pending",
+      walletBalanceCache: walletBalance,
+      pendingDuesTotal: 0,
+      isFlagged: false,
+      depositAmount: 0,
+      depositStatus: "pending",
       activeRentalsCount: 0,
       maxRentalsAllowed: randomInt(rng, 4, 8),
       isSuspended: index !== 0 && index % 23 === 0,
@@ -316,7 +325,7 @@ function chooseRentalStatus(rng) {
     return "returned";
   }
 
-  return "penalised";
+  return "flagged";
 }
 
 function buildRentals(users, books, count, rng) {
@@ -343,45 +352,74 @@ function buildRentals(users, books, count, rng) {
     }
 
     const book = pickOne(rng, books);
-    const startDate = new Date(now - randomInt(rng, 1, 160) * 24 * 60 * 60 * 1000);
-    const dueDate = new Date(startDate.getTime() + randomInt(rng, 7, 21) * 24 * 60 * 60 * 1000);
+    const rentalType = pickOne(rng, ["daily", "weekly", "monthly"]);
+    const rentalDuration =
+      rentalType === "daily" ? randomInt(rng, 2, 14) : rentalType === "weekly" ? randomInt(rng, 1, 4) : randomInt(rng, 1, 3);
+    const rentedAt = new Date(now - randomInt(rng, 1, 160) * 24 * 60 * 60 * 1000);
+    const dueDate = new Date(rentedAt);
 
-    let returnedDate = null;
-    let overdueDays = 0;
-    let penaltyAmount = 0;
-    let penaltyPaid = false;
-    let depositRefunded = false;
-
-    if (status === "returned") {
-      returnedDate = new Date(
-        startDate.getTime() + randomInt(rng, 4, 18) * 24 * 60 * 60 * 1000,
-      );
-      overdueDays = Math.max(0, Math.ceil((returnedDate - dueDate) / (24 * 60 * 60 * 1000)));
-      penaltyAmount = overdueDays * book.penaltyPerDay;
-      penaltyPaid = penaltyAmount === 0 || rng() > 0.2;
-      depositRefunded = penaltyAmount === 0 || penaltyPaid;
+    if (rentalType === "daily") {
+      dueDate.setDate(dueDate.getDate() + rentalDuration);
+    } else if (rentalType === "weekly") {
+      dueDate.setDate(dueDate.getDate() + rentalDuration * 7);
+    } else {
+      dueDate.setMonth(dueDate.getMonth() + rentalDuration);
     }
 
-    if (status === "penalised") {
+    let returnedAt = null;
+    let overdueDays = 0;
+    let overdueCharge = 0;
+    let depositRefunded = 0;
+    let damageCharge = 0;
+    let damageCondition = null;
+    let restrictionApplied = false;
+    const rentalFee =
+      rentalType === "daily"
+        ? book.pricePerDay * rentalDuration
+        : rentalType === "weekly"
+          ? book.pricePerWeek * rentalDuration
+          : book.pricePerMonth * rentalDuration;
+
+    if (status === "returned") {
+      returnedAt = new Date(
+        rentedAt.getTime() + randomInt(rng, 4, 40) * 24 * 60 * 60 * 1000,
+      );
+      overdueDays = Math.max(0, Math.ceil((returnedAt - dueDate) / (24 * 60 * 60 * 1000)));
+      overdueCharge = overdueDays * book.pricePerDay;
+      damageCondition = rng() > 0.9 ? "minor" : "good";
+      damageCharge = damageCondition === "minor" ? Math.round(book.replacementCost * 0.25) : 0;
+      depositRefunded = Math.max(0, book.depositAmount - damageCharge);
+    }
+
+    if (status === "flagged") {
       const overdue = randomInt(rng, 1, 12);
       overdueDays = overdue;
-      returnedDate = new Date(dueDate.getTime() + overdue * 24 * 60 * 60 * 1000);
-      penaltyAmount = overdueDays * book.penaltyPerDay;
-      penaltyPaid = rng() > 0.4;
-      depositRefunded = penaltyPaid && rng() > 0.35;
+      returnedAt = rng() > 0.5 ? new Date(dueDate.getTime() + overdue * 24 * 60 * 60 * 1000) : null;
+      overdueCharge = overdueDays * book.pricePerDay;
+      damageCondition = rng() > 0.6 ? "major" : null;
+      damageCharge = damageCondition === "major" ? Math.round(book.replacementCost * 0.75) : 0;
+      depositRefunded = 0;
+      restrictionApplied = true;
     }
 
     rentals.push({
       user: user._id,
       book: book._id,
+      rentalType,
+      rentalDuration,
+      rentalFee,
+      depositAmount: book.depositAmount,
       status,
-      startDate,
+      rentedAt,
       dueDate,
-      returnedDate,
+      returnedAt,
+      damageCondition,
+      damageCharge,
       overdueDays,
-      penaltyAmount,
-      penaltyPaid,
+      overdueCharge,
       depositRefunded,
+      restrictionApplied,
+      lastOverdueChargeAt: status === "active" ? null : dueDate,
     });
 
     if (ACTIVE_STATUSES.has(status)) {
@@ -425,7 +463,7 @@ function buildReviews(users, rentals, count, rng) {
   }
 
   return candidates.slice(0, count).map((rental, index) => {
-    const baseRating = rental.status === "penalised" ? randomInt(rng, 2, 4) : randomInt(rng, 3, 5);
+    const baseRating = rental.status === "flagged" ? randomInt(rng, 2, 4) : randomInt(rng, 3, 5);
     const rating = Math.min(5, Math.max(1, baseRating));
     const reviewText = pickOne(rng, reviewTemplates);
 
@@ -456,7 +494,7 @@ async function syncDerivedFields() {
     Rental.aggregate([
       {
         $match: {
-          status: { $in: ["active", "overdue"] },
+          status: { $in: ["active", "overdue", "flagged"] },
         },
       },
       {
@@ -469,8 +507,11 @@ async function syncDerivedFields() {
   ]);
 
   await Promise.all([
-    Book.updateMany({}, { $set: { averageRating: 0, totalReviews: 0, isAvailable: true } }),
-    User.updateMany({}, { $set: { activeRentalsCount: 0 } }),
+    Book.updateMany(
+      {},
+      { $set: { averageRating: 0, totalReviews: 0, isAvailable: true, unavailabilityReason: "none" } },
+    ),
+    User.updateMany({}, { $set: { activeRentalsCount: 0, pendingDuesTotal: 0, isFlagged: false } }),
   ]);
 
   if (reviewStats.length > 0) {
@@ -500,13 +541,13 @@ async function syncDerivedFields() {
     );
 
     const activeBookIds = await Rental.distinct("book", {
-      status: { $in: ["active", "overdue"] },
+      status: { $in: ["active", "overdue", "flagged"] },
     });
 
     if (activeBookIds.length > 0) {
       await Book.updateMany(
         { _id: { $in: activeBookIds } },
-        { $set: { isAvailable: false } },
+        { $set: { isAvailable: false, unavailabilityReason: "rented" } },
       );
     }
   }
@@ -533,17 +574,26 @@ async function initialize() {
     }
 
     console.log(
-      `Fresh-seed mode active. Clearing existing data for reviews, rentals, users, and books.`,
+      `Fresh-seed mode active. Clearing existing data for reviews, rentals, wallets, users, and books.`,
     );
 
     await Review.deleteMany({});
     await Rental.deleteMany({});
+    await Wallet.deleteMany({});
     await User.deleteMany({});
     await Book.deleteMany({});
 
     const insertedBooks = await Book.insertMany(books, { ordered: false });
     const usersPayload = await buildUsers(TARGET_USERS, rng);
     const insertedUsers = await User.insertMany(usersPayload, { ordered: true });
+    await Wallet.insertMany(
+      insertedUsers.map((user) => ({
+        user: user._id,
+        balance: user.walletBalanceCache || 0,
+        lastUpdated: new Date(),
+      })),
+      { ordered: true },
+    );
 
     const rentalsPayload = buildRentals(insertedUsers, insertedBooks, TARGET_RENTALS, rng);
     const insertedRentals = await Rental.insertMany(rentalsPayload, { ordered: true });

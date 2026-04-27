@@ -1,4 +1,6 @@
 const Rental = require("../../models/Rental.js");
+const { getRentalAlerts } = require("../../services/rentalFinanceService.js");
+const { getWalletOverview } = require("../../services/walletService.js");
 
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 50;
@@ -26,17 +28,24 @@ async function getMyRentals(req, res) {
   }
 
   try {
-    const [rentals, totalRentals] = await Promise.all([
+    const [rentals, totalRentals, alerts, walletOverview] = await Promise.all([
       Rental.find(filters)
-        .populate("book", "title author")
+        .populate("book", "title author image pricePerDay pricePerWeek pricePerMonth depositAmount isAvailable")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit),
       Rental.countDocuments(filters),
+      getRentalAlerts(req.user._id),
+      getWalletOverview(req.user._id),
     ]);
 
     return res.status(200).json({
       total: totalRentals,
+      alerts,
+      wallet: {
+        balance: walletOverview.wallet.balance,
+        pendingDuesTotal: walletOverview.pendingDuesTotal,
+      },
       rentals,
     });
   } catch (error) {

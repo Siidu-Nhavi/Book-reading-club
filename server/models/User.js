@@ -28,6 +28,20 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
+    walletBalanceCache: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    pendingDuesTotal: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    isFlagged: {
+      type: Boolean,
+      default: false,
+    },
     depositAmount: {
       type: Number,
       default: 0,

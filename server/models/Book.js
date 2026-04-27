@@ -18,14 +18,29 @@ const bookSchema = new mongoose.Schema(
       trim: true,
       required: true,
     },
-    rentPrice: {
+    pricePerDay: {
       type: Number,
       required: true,
       min: 0,
     },
-    depositRequired: {
+    pricePerWeek: {
       type: Number,
-      default: 0,
+      required: true,
+      min: 0,
+    },
+    pricePerMonth: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    depositAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    replacementCost: {
+      type: Number,
+      required: true,
       min: 0,
     },
     image: {
@@ -37,6 +52,11 @@ const bookSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
       required: true,
+    },
+    unavailabilityReason: {
+      type: String,
+      enum: ["none", "rented", "lost"],
+      default: "none",
     },
     category: {
       type: String,
@@ -54,15 +74,9 @@ const bookSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
-    penaltyPerDay: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
   },
   { timestamps: true },
 );
-
 
 const Book = mongoose.models.Book || mongoose.model("Book", bookSchema);
 

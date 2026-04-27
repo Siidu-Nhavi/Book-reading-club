@@ -14,13 +14,27 @@ const rentalSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    status: {
+    rentalType: {
       type: String,
-      enum: ["active", "returned", "overdue", "penalised"],
-      default: "active",
-      index: true,
+      enum: ["daily", "weekly", "monthly"],
+      required: true,
     },
-    startDate: {
+    rentalDuration: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    rentalFee: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    depositAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    rentedAt: {
       type: Date,
       default: Date.now,
       required: true,
@@ -30,27 +44,59 @@ const rentalSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    returnedDate: {
+    returnedAt: {
       type: Date,
       default: null,
+    },
+    damageCondition: {
+      type: String,
+      enum: ["good", "minor", "major", "lost", null],
+      default: null,
+    },
+    damagePercentage: {
+      type: Number,
+      default: null,
+      min: 0,
+      max: 1,
+    },
+    damageCharge: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    depositRefunded: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
     overdueDays: {
       type: Number,
       default: 0,
       min: 0,
     },
-    penaltyAmount: {
+    overdueCharge: {
       type: Number,
       default: 0,
       min: 0,
     },
-    penaltyPaid: {
+    lastOverdueChargeAt: {
+      type: Date,
+      default: null,
+    },
+    restrictionApplied: {
       type: Boolean,
       default: false,
     },
-    depositRefunded: {
-      type: Boolean,
-      default: false,
+    status: {
+      type: String,
+      enum: ["active", "returned", "overdue", "flagged"],
+      default: "active",
+      index: true,
+    },
+    notes: {
+      type: String,
+      trim: true,
+      default: "",
     },
   },
   { timestamps: true },

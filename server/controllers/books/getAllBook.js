@@ -47,7 +47,12 @@ function toPositiveInteger(value, fallback) {
 function getSort(sortBy) {
   switch (sortBy) {
     case "rentPrice":
-      return "rentPrice";
+    case "pricePerDay":
+      return "pricePerDay";
+    case "pricePerWeek":
+      return "pricePerWeek";
+    case "pricePerMonth":
+      return "pricePerMonth";
     case "averageRating":
       return "averageRating";
     case "title":
@@ -101,7 +106,9 @@ async function getAllBook(req, res) {
     const [books, totalBooks] = await Promise.all([
       Book.find(filters)
         .sort(sort)
-        .select("_id title author category rentPrice isAvailable averageRating")
+        .select(
+          "_id title author category pricePerDay pricePerWeek pricePerMonth depositAmount replacementCost isAvailable unavailabilityReason averageRating image",
+        )
         .skip((page - 1) * limit)
         .limit(limit),
       Book.countDocuments(filters),
