@@ -56,6 +56,49 @@ const userSchema = new mongoose.Schema(
       type: profileSchema,
       default: () => ({}),
     },
+    accountSettings: {
+      emailOrderUpdates: {
+        type: Boolean,
+        default: true,
+      },
+      emailRecommendations: {
+        type: Boolean,
+        default: true,
+      },
+      pushFlashDeals: {
+        type: Boolean,
+        default: false,
+      },
+      smsDeliveryAlerts: {
+        type: Boolean,
+        default: true,
+      },
+      oneClickCheckout: {
+        type: Boolean,
+        default: false,
+      },
+      saveCardsForFasterCheckout: {
+        type: Boolean,
+        default: true,
+      },
+      defaultDeliveryType: {
+        type: String,
+        enum: ["home", "pickup", "smart-locker"],
+        default: "home",
+      },
+      twoFactorAuth: {
+        type: Boolean,
+        default: false,
+      },
+      allowNewDeviceLogin: {
+        type: Boolean,
+        default: true,
+      },
+      marketingPersonalization: {
+        type: Boolean,
+        default: true,
+      },
+    },
   },
   { timestamps: true },
 );

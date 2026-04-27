@@ -50,6 +50,26 @@ function toUpdatePayload(payload = {}) {
   };
 }
 
+const DEFAULT_ACCOUNT_SETTINGS = {
+  emailOrderUpdates: true,
+  emailRecommendations: true,
+  pushFlashDeals: false,
+  smsDeliveryAlerts: true,
+  oneClickCheckout: false,
+  saveCardsForFasterCheckout: true,
+  defaultDeliveryType: "home",
+  twoFactorAuth: false,
+  allowNewDeviceLogin: true,
+  marketingPersonalization: true,
+};
+
+function normalizeAccountSettings(settings = {}) {
+  return {
+    ...DEFAULT_ACCOUNT_SETTINGS,
+    ...(settings || {}),
+  };
+}
+
 export const profileApi = {
   async getMyProfile() {
     const data = await apiRequest("/api/profile/me");
@@ -78,6 +98,21 @@ export const profileApi = {
     return {
       ...data,
       avatar: normalizeAvatarUrl(data?.avatar || ""),
+    };
+  },
+  async getAccountSettings() {
+    const data = await apiRequest("/api/profile/settings");
+    return normalizeAccountSettings(data?.settings);
+  },
+  async updateAccountSettings(settings) {
+    const data = await apiRequest("/api/profile/settings", {
+      method: "PUT",
+      body: JSON.stringify({ settings }),
+    });
+
+    return {
+      ...data,
+      settings: normalizeAccountSettings(data?.settings),
     };
   },
 };

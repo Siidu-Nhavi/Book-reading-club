@@ -1,6 +1,8 @@
 const express = require("express");
 const { getCurrentUser } = require("../controllers/user/getCurrentUser.js");
+const { getAccountSettings } = require("../controllers/user/getAccountSettings.js");
 const { updateProfile } = require("../controllers/user/updateProfile.js");
+const { updateAccountSettings } = require("../controllers/user/updateAccountSettings.js");
 const { uploadAvatar } = require("../controllers/user/uploadAvatar.js");
 const { requireAuth } = require("../middleware/auth.js");
 const { uploadAvatar: uploadAvatarMiddleware } = require("../middleware/uploadAvatar.js");
@@ -9,6 +11,8 @@ const router = express.Router();
 
 router.get("/me", requireAuth, getCurrentUser);
 router.put("/me", requireAuth, updateProfile);
+router.get("/settings", requireAuth, getAccountSettings);
+router.put("/settings", requireAuth, updateAccountSettings);
 router.post(
 	"/avatar",
 	requireAuth,
