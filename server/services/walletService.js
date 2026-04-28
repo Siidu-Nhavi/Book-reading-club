@@ -188,19 +188,35 @@ async function createPendingDue({ userId, rentalId = null, amount, reason, note 
 }
 
 async function getWalletOverview(userId) {
-  const [wallet, pendingDues] = await Promise.all([
+  const [wallet, pendingDues, heldRefundsResult] = await Promise.all([
     ensureWallet(userId),
     PendingDue.find({ user: userId, status: "pending" }).sort({ createdAt: -1 }),
+    require("../models/Rental.js").aggregate([
+      {
+        $match: {
+          user: userId,
+          depositReleaseStatus: "held",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: "$depositRefundEligible" },
+        },
+      },
+    ]),
   ]);
 
   const pendingDuesTotal = roundCurrency(
     pendingDues.reduce((total, due) => total + Number(due.amount || 0), 0),
   );
+  const heldRefundTotal = roundCurrency(heldRefundsResult[0]?.total || 0);
 
   return {
     wallet,
     pendingDues,
     pendingDuesTotal,
+    heldRefundTotal,
   };
 }
 

@@ -45,6 +45,7 @@ async function getMyRentals(req, res) {
       wallet: {
         balance: walletOverview.wallet.balance,
         pendingDuesTotal: walletOverview.pendingDuesTotal,
+        heldRefundTotal: walletOverview.heldRefundTotal,
       },
       rentals,
     });

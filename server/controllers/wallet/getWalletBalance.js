@@ -8,6 +8,7 @@ async function getWalletBalance(req, res) {
       balance: overview.wallet.balance,
       pendingDuesTotal: overview.pendingDuesTotal,
       pendingDues: overview.pendingDues,
+      heldRefundTotal: overview.heldRefundTotal,
     });
   } catch (error) {
     console.error("Get wallet balance error:", error);

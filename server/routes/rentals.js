@@ -13,7 +13,7 @@ router.get("/my", requireAuth, getMyRentals);
 router.get("/all", requireAuth, requireAdmin, getAllRentalsAdmin);
 router.post("/create", requireAuth, requireNotSuspended, rentBook);
 router.post("/rent", requireAuth, requireNotSuspended, rentBook);
-router.post("/:id/return", requireAuth, requireAdmin, returnBook);
-router.post("/return", requireAuth, requireAdmin, returnBook);
+router.post("/:id/return", requireAuth, returnBook);
+router.post("/return", requireAuth, returnBook);
 
 module.exports = router;

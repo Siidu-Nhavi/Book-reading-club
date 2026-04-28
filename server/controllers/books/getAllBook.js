@@ -107,7 +107,7 @@ async function getAllBook(req, res) {
       Book.find(filters)
         .sort(sort)
         .select(
-          "_id title author category pricePerDay pricePerWeek pricePerMonth depositAmount replacementCost isAvailable unavailabilityReason averageRating image",
+          "_id title author category rentPrice pricePerDay pricePerWeek pricePerMonth depositAmount replacementCost isAvailable unavailabilityReason averageRating image",
         )
         .skip((page - 1) * limit)
         .limit(limit),

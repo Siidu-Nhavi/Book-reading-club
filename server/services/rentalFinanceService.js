@@ -182,16 +182,6 @@ async function settleDamageAndDeposit({
   let pendingDue = null;
   let shouldFlag = false;
 
-  if (depositRefund > 0) {
-    await creditWallet({
-      userId,
-      amount: depositRefund,
-      reason: "deposit_refund",
-      referenceId: rental._id,
-      note: `Deposit refund for ${book.title}`,
-    });
-  }
-
   if (deductible > 0) {
     const reason = condition === "lost" ? "damage_charge" : "damage_charge";
     const debitResult = await debitWallet({
@@ -223,6 +213,60 @@ async function settleDamageAndDeposit({
     extraWalletDeduction,
     pendingDue,
     shouldFlag,
+  };
+}
+
+async function releaseHeldDepositsIfEligible(userId) {
+  const user = await User.findById(userId).select("activeRentalsCount");
+
+  if (!user || user.activeRentalsCount > 0) {
+    return {
+      releasedAmount: 0,
+      releasedRentalIds: [],
+    };
+  }
+
+  const heldRentals = await Rental.find({
+    user: userId,
+    depositReleaseStatus: "held",
+    depositRefundEligible: { $gt: 0 },
+  }).populate("book", "title");
+
+  let releasedAmount = 0;
+  const releasedRentalIds = [];
+
+  for (const heldRental of heldRentals) {
+    const amount = roundCurrency(heldRental.depositRefundEligible || 0);
+
+    if (amount <= 0) {
+      continue;
+    }
+
+    await creditWallet({
+      userId,
+      amount,
+      reason: "deposit_refund",
+      referenceId: heldRental._id,
+      note: `Deposit refund released for ${heldRental.book?.title || "book"}`,
+    });
+
+    await Rental.updateOne(
+      { _id: heldRental._id },
+      {
+        $set: {
+          depositRefunded: amount,
+          depositReleaseStatus: "released",
+        },
+      },
+    );
+
+    releasedAmount = roundCurrency(releasedAmount + amount);
+    releasedRentalIds.push(String(heldRental._id));
+  }
+
+  return {
+    releasedAmount,
+    releasedRentalIds,
   };
 }
 
@@ -266,6 +310,12 @@ async function processReturn({
 
   const returnedAt = new Date();
   const status = settlement.shouldFlag ? "flagged" : "returned";
+  const releaseStatus =
+    settlement.depositRefund > 0
+      ? "held"
+      : settlement.damageCharge > 0
+        ? "forfeited"
+        : "none";
 
   await Rental.updateOne(
     { _id: rental._id },
@@ -275,7 +325,9 @@ async function processReturn({
         damageCondition: condition,
         damagePercentage: damagePercentage ?? null,
         damageCharge: settlement.damageCharge,
-        depositRefunded: settlement.depositRefund,
+        depositRefundEligible: settlement.depositRefund,
+        depositRefunded: 0,
+        depositReleaseStatus: releaseStatus,
         restrictionApplied: settlement.shouldFlag,
         status,
         notes: adminNote,
@@ -310,6 +362,7 @@ async function processReturn({
         };
 
   await Book.updateOne({ _id: book._id }, { $set: nextBookUpdate });
+  const releasedDeposits = await releaseHeldDepositsIfEligible(rental.user);
   await syncUserFinancialFlags(rental.user);
 
   return {
@@ -320,6 +373,8 @@ async function processReturn({
     condition,
     damageCharge: settlement.damageCharge,
     depositRefund: settlement.depositRefund,
+    depositReleasedNow: releasedDeposits.releasedAmount,
+    depositHeld: releaseStatus === "held" ? settlement.depositRefund : 0,
     extraWalletDeduction: settlement.extraWalletDeduction,
     pendingDue: settlement.pendingDue,
   };
@@ -452,4 +507,5 @@ module.exports = {
   processReturn,
   applyOverdueCharges,
   getRentalAlerts,
+  releaseHeldDepositsIfEligible,
 };

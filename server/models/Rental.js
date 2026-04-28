@@ -64,10 +64,20 @@ const rentalSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    depositRefundEligible: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     depositRefunded: {
       type: Number,
       default: 0,
       min: 0,
+    },
+    depositReleaseStatus: {
+      type: String,
+      enum: ["none", "held", "released", "forfeited"],
+      default: "none",
     },
     overdueDays: {
       type: Number,

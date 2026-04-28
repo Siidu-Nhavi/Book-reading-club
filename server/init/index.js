@@ -8,6 +8,7 @@ const Rental = require("../models/Rental");
 const Review = require("../models/Review");
 const Wallet = require("../models/Wallet");
 const { generateSalt, hashPassword } = require("../utils/security.js");
+const { calculateBookPricing } = require("../utils/categoryPricing.js");
 
 const csvFilePath = path.join(__dirname, "updated_main.csv");
 const sampleUsersPath = path.join(__dirname, "sampleUsers.json");
@@ -16,7 +17,7 @@ const sampleReviewsPath = path.join(__dirname, "sampleReviews.json");
 const TARGET_BOOKS = 200;
 const TARGET_USERS = 80;
 const TARGET_RENTALS = 400;
-const TARGET_REVIEWS = 320;
+const TARGET_REVIEWS = 280;
 const DEMO_PASSWORD_ENV_KEY = "SEED_DEMO_PASSWORD";
 const RNG_SEED = 20260410;
 
@@ -92,12 +93,11 @@ function splitCsvLine(line) {
 function toBookDocument(row) {
   const parsedPrice = Number.parseFloat(row.price);
   const normalizedPrice = Number.isFinite(parsedPrice) ? parsedPrice : 0;
-  const pricePerDay = Math.max(20, Number((normalizedPrice / 18).toFixed(2)));
-  const pricePerWeek = Math.max(pricePerDay * 5, Number((pricePerDay * 6).toFixed(2)));
-  const pricePerMonth = Math.max(pricePerWeek * 3, Number((pricePerDay * 20).toFixed(2)));
   const category = normalizeCategory(row.category);
-  const depositAmount = Math.round(pricePerWeek * 1.2);
-  const replacementCost = Math.max(Math.round(normalizedPrice), depositAmount + Math.round(pricePerDay * 10));
+  const pricing = calculateBookPricing({
+    basePrice: normalizedPrice,
+    category,
+  });
 
   return {
     title: row.name || row.title || "Untitled",
@@ -105,11 +105,12 @@ function toBookDocument(row) {
     description:
       row.description ||
       `Format: ${row.format || "N/A"}. ISBN: ${row.isbn || "N/A"}. Rating: ${row.book_depository_stars || "N/A"}`,
-    pricePerDay,
-    pricePerWeek,
-    pricePerMonth,
-    depositAmount,
-    replacementCost,
+    rentPrice: pricing.rentPrice,
+    pricePerDay: pricing.pricePerDay,
+    pricePerWeek: pricing.pricePerWeek,
+    pricePerMonth: pricing.pricePerMonth,
+    depositAmount: pricing.depositAmount,
+    replacementCost: pricing.replacementCost,
     image: row.image || "",
     isAvailable: true,
     unavailabilityReason: "none",
@@ -586,8 +587,36 @@ async function initialize() {
     const insertedBooks = await Book.insertMany(books, { ordered: false });
     const usersPayload = await buildUsers(TARGET_USERS, rng);
     const insertedUsers = await User.insertMany(usersPayload, { ordered: true });
+
+    // Add explicit admin user
+    const adminSalt = await generateSalt();
+    const adminHashedPassword = await hashPassword("default@1234", adminSalt);
+    const adminUser = await User.create({
+      name: "Admin",
+      email: "admin@gmail.com",
+      password: adminHashedPassword,
+      salt: adminSalt,
+      role: "admin",
+      walletBalanceCache: 10000,
+      pendingDuesTotal: 0,
+      isFlagged: false,
+      depositAmount: 0,
+      depositStatus: "pending",
+      activeRentalsCount: 0,
+      maxRentalsAllowed: 10,
+      isSuspended: false,
+      profile: {
+        avatarUrl: "",
+        bio: "System administrator",
+        mobileNumber: "9000000000",
+        address: "Admin Office, Mumbai",
+      },
+    });
+
+    const allUsers = [...insertedUsers, adminUser];
+
     await Wallet.insertMany(
-      insertedUsers.map((user) => ({
+      allUsers.map((user) => ({
         user: user._id,
         balance: user.walletBalanceCache || 0,
         lastUpdated: new Date(),
@@ -605,7 +634,8 @@ async function initialize() {
 
     console.log("Initialization complete.");
     console.log(`Books inserted: ${insertedBooks.length}`);
-    console.log(`Users inserted: ${insertedUsers.length}`);
+    console.log(`Users inserted: ${insertedUsers.length + 1} (includes 1 admin user)`);
+    console.log(`Admin credentials: email=admin@gmail.com, password=default@1234`);
     console.log(`Rentals inserted: ${insertedRentals.length}`);
     console.log(`Reviews inserted: ${insertedReviews.length}`);
     console.log(`Demo password source: ${DEMO_PASSWORD_ENV_KEY}`);

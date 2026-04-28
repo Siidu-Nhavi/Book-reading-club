@@ -4,6 +4,7 @@ const User = require("../models/User.js");
 const Book = require("../models/Book.js");
 const Wallet = require("../models/Wallet.js");
 const Rental = require("../models/Rental.js");
+const { calculateBookPricing } = require("../utils/categoryPricing.js");
 
 async function backfillUsers() {
   const result = await User.updateMany(
@@ -32,67 +33,51 @@ async function backfillUsers() {
 }
 
 async function backfillBooks() {
-  const result = await Book.updateMany({}, [
-    {
-      $set: {
-        pricePerDay: {
-          $ifNull: [
-            "$pricePerDay",
-            {
-              $max: [20, { $round: [{ $divide: [{ $ifNull: ["$rentPrice", { $ifNull: ["$price", 0] }] }, 18] }, 2] }],
-            },
-          ],
-        },
-        pricePerWeek: {
-          $ifNull: [
-            "$pricePerWeek",
-            {
-              $max: [120, { $round: [{ $multiply: [{ $divide: [{ $ifNull: ["$rentPrice", { $ifNull: ["$price", 0] }] }, 18] }, 6] }, 2] }],
-            },
-          ],
-        },
-        pricePerMonth: {
-          $ifNull: [
-            "$pricePerMonth",
-            {
-              $max: [360, { $round: [{ $multiply: [{ $divide: [{ $ifNull: ["$rentPrice", { $ifNull: ["$price", 0] }] }, 18] }, 20] }, 2] }],
-            },
-          ],
-        },
-        depositAmount: {
-          $ifNull: ["$depositAmount", { $ifNull: ["$depositRequired", 0] }],
-        },
-        replacementCost: {
-          $ifNull: [
-            "$replacementCost",
-            {
-              $max: [
-                { $ifNull: ["$depositRequired", 0] },
-                { $round: [{ $ifNull: ["$rentPrice", { $ifNull: ["$price", 0] }] }, 0] },
-              ],
-            },
-          ],
-        },
-        averageRating: {
-          $ifNull: ["$averageRating", 0],
-        },
-        totalReviews: {
-          $ifNull: ["$totalReviews", 0],
-        },
-        isAvailable: {
-          $ifNull: ["$isAvailable", true],
-        },
-        unavailabilityReason: {
-          $ifNull: ["$unavailabilityReason", "none"],
+  const books = await Book.find({}).lean();
+
+  if (books.length === 0) {
+    return { matchedCount: 0, modifiedCount: 0 };
+  }
+
+  const operations = books.map((book) => {
+    const basePrice = book.rentPrice ?? book.price ?? 0;
+    const pricing = calculateBookPricing({
+      basePrice,
+      category: book.category,
+    });
+
+    return {
+      updateOne: {
+        filter: { _id: book._id },
+        update: {
+          $set: {
+            rentPrice: pricing.rentPrice,
+            pricePerDay: pricing.pricePerDay,
+            pricePerWeek: pricing.pricePerWeek,
+            pricePerMonth: pricing.pricePerMonth,
+            depositAmount: book.depositAmount ?? Math.max(50, pricing.depositAmount),
+            replacementCost: book.replacementCost ?? pricing.replacementCost,
+            averageRating: book.averageRating ?? 0,
+            totalReviews: book.totalReviews ?? 0,
+            isAvailable: book.isAvailable ?? true,
+            unavailabilityReason: book.unavailabilityReason ?? "none",
+          },
+          $unset: {
+            price: 1,
+            depositRequired: 1,
+            penaltyPerDay: 1,
+          },
         },
       },
-    },
-    {
-      $unset: ["price", "rentPrice", "depositRequired", "penaltyPerDay"],
-    },
-  ]);
+    };
+  });
 
-  return result;
+  const result = await Book.bulkWrite(operations, { ordered: false });
+
+  return {
+    matchedCount: books.length,
+    modifiedCount: result.modifiedCount || 0,
+  };
 }
 
 async function backfillWallets() {
@@ -119,65 +104,62 @@ async function backfillWallets() {
 }
 
 async function backfillRentals() {
-  const result = await Rental.updateMany({}, [
-    {
-      $set: {
-        rentalType: {
-          $ifNull: ["$rentalType", "daily"],
-        },
-        rentalDuration: {
-          $ifNull: ["$rentalDuration", 7],
-        },
-        rentalFee: {
-          $ifNull: ["$rentalFee", { $ifNull: ["$penaltyAmount", 0] }],
-        },
-        depositAmount: {
-          $ifNull: ["$depositAmount", 0],
-        },
-        rentedAt: {
-          $ifNull: ["$rentedAt", "$startDate"],
-        },
-        returnedAt: {
-          $ifNull: ["$returnedAt", "$returnedDate"],
-        },
-        damageCharge: {
-          $ifNull: ["$damageCharge", 0],
-        },
-        overdueCharge: {
-          $ifNull: ["$overdueCharge", { $ifNull: ["$penaltyAmount", 0] }],
-        },
-        depositRefunded: {
-          $cond: {
-            if: { $eq: [{ $type: "$depositRefunded" }, "bool"] },
-            then: {
-              $cond: {
-                if: "$depositRefunded",
-                then: { $ifNull: ["$depositAmount", 0] },
-                else: 0,
-              },
-            },
-            else: { $ifNull: ["$depositRefunded", 0] },
+  const rentals = await Rental.find({}).lean();
+
+  if (rentals.length === 0) {
+    return { matchedCount: 0, modifiedCount: 0 };
+  }
+
+  const operations = rentals.map((rental) => {
+    const legacyDepositRefunded = rental.depositRefunded;
+    const normalizedDepositRefunded =
+      typeof legacyDepositRefunded === "boolean"
+        ? legacyDepositRefunded
+          ? Number(rental.depositAmount || 0)
+          : 0
+        : Number(legacyDepositRefunded || 0);
+
+    return {
+      updateOne: {
+        filter: { _id: rental._id },
+        update: {
+          $set: {
+            rentalType: rental.rentalType ?? "daily",
+            rentalDuration: rental.rentalDuration ?? 7,
+            rentalFee: rental.rentalFee ?? Number(rental.penaltyAmount || 0),
+            depositAmount: rental.depositAmount ?? 0,
+            rentedAt: rental.rentedAt ?? rental.startDate ?? rental.createdAt,
+            dueDate: rental.dueDate,
+            returnedAt: rental.returnedAt ?? rental.returnedDate ?? null,
+            damageCharge: rental.damageCharge ?? 0,
+            depositRefundEligible:
+              rental.depositRefundEligible ??
+              (typeof legacyDepositRefunded === "number" ? Number(legacyDepositRefunded || 0) : 0),
+            overdueCharge: rental.overdueCharge ?? Number(rental.penaltyAmount || 0),
+            depositRefunded: normalizedDepositRefunded,
+            depositReleaseStatus:
+              rental.depositReleaseStatus ??
+              (normalizedDepositRefunded > 0 ? "released" : "none"),
+            status: rental.status === "penalised" ? "flagged" : rental.status,
+            restrictionApplied: rental.restrictionApplied ?? false,
           },
-        },
-        status: {
-          $switch: {
-            branches: [
-              { case: { $eq: ["$status", "penalised"] }, then: "flagged" },
-            ],
-            default: "$status",
+          $unset: {
+            startDate: 1,
+            returnedDate: 1,
+            penaltyAmount: 1,
+            penaltyPaid: 1,
           },
-        },
-        restrictionApplied: {
-          $ifNull: ["$restrictionApplied", false],
         },
       },
-    },
-    {
-      $unset: ["startDate", "returnedDate", "penaltyAmount", "penaltyPaid"],
-    },
-  ]);
+    };
+  });
 
-  return result;
+  const result = await Rental.bulkWrite(operations, { ordered: false });
+
+  return {
+    matchedCount: rentals.length,
+    modifiedCount: result.modifiedCount || 0,
+  };
 }
 
 async function run() {

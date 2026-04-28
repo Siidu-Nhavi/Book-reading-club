@@ -18,6 +18,11 @@ const bookSchema = new mongoose.Schema(
       trim: true,
       required: true,
     },
+    rentPrice: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
     pricePerDay: {
       type: Number,
       required: true,
