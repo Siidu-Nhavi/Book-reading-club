@@ -7,6 +7,8 @@ import {
   formatBookPrice,
   getBookDepositAmount,
   getBookMonthlyPrice,
+  getBookRating,
+  getBookReviewCount,
   getBookWeeklyPrice,
   formatCategoryLabel,
   truncateText,
@@ -17,6 +19,7 @@ import {
   PUBLIC_UI,
 } from "../../utils/publicUi";
 import AvailabilityBadge from "../common/AvailabilityBadge";
+import RatingStars from "../common/RatingStars";
 import BookMedia from "./BookMedia";
 
 export default function BookCard({
@@ -37,6 +40,9 @@ export default function BookCard({
   const dailyRent = Number(book?.pricePerDay || 0);
   const monthlyRent = getBookMonthlyPrice(book);
   const depositAmount = getBookDepositAmount(book);
+  const baseRentPrice = Number(book?.rentPrice || 0);
+  const rating = getBookRating(book);
+  const reviewCount = getBookReviewCount(book);
   const isRentDisabled = !book?.isAvailable || Boolean(rentDisabledReason);
 
   return (
@@ -145,6 +151,8 @@ export default function BookCard({
           >
             by {book?.author || "Unknown Author"}
           </Typography>
+
+          <RatingStars rating={rating} count={reviewCount} size="small" />
         </Stack>
 
         {showRentButton ? (
@@ -161,6 +169,9 @@ export default function BookCard({
             }}
           >
             <Stack spacing={0.4}>
+              <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
+                Rent price: {formatBookPrice(baseRentPrice)}
+              </Typography>
               <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 600 }}>
                 {formatBookPrice(dailyRent)} / day
               </Typography>
@@ -175,25 +186,35 @@ export default function BookCard({
             <Button
               variant="contained"
               disabled={isRentDisabled}
-              endIcon={!isRentDisabled ? <ArrowForwardRoundedIcon /> : null}
+              endIcon={!isRentDisabled ? <ArrowForwardRoundedIcon sx={{ fontSize: "1.1rem" }} /> : null}
               onClick={(event) => {
                 event.stopPropagation();
                 onRent?.(book);
               }}
               sx={{
-                ...PUBLIC_BUTTON_PRIMARY_SX,
-                borderRadius: 999,
+                bgcolor: PUBLIC_UI.primary,
+                color: "#fff",
+                borderRadius: 2,
                 textTransform: "none",
-                fontWeight: 500,
-                px: 1.7,
-                py: 0.7,
-                bgcolor: PUBLIC_UI.accent,
+                fontWeight: 600,
+                fontSize: "0.9rem",
+                px: 2,
+                py: 1,
+                minHeight: 40,
+                boxShadow: "none",
+                transition: "all 0.2s ease-in-out",
                 "&:hover": {
-                  bgcolor: "#f1883e",
+                  bgcolor: PUBLIC_UI.primaryDark,
+                  boxShadow: `0 4px 12px ${PUBLIC_UI.primary}40`,
+                  transform: "translateY(-1px)",
+                },
+                "&:active": {
+                  transform: "scale(0.98)",
                 },
                 "&.Mui-disabled": {
-                  bgcolor: "rgba(255, 158, 87, 0.2)",
+                  bgcolor: PUBLIC_UI.border,
                   color: PUBLIC_UI.muted,
+                  boxShadow: "none",
                 },
               }}
             >

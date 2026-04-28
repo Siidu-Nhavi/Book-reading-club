@@ -2,18 +2,22 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import {
   AboutUsPage,
   AccountSettings,
+  AdminBooksPage,
+  AdminDashboard,
+  AdminRentalsPage,
+  AdminReturnsPage,
+  AdminReviewsPage,
+  AdminUsersPage,
+  AdminWalletPage,
   BookDetailPage,
   BooksCatalogPage,
   CareersPage,
   CommunityPage,
   DashboardHome,
-  MyRentalsPage,
-  WalletPage,
-  AdminWalletPage,
-  AdminReturnsPage,
   FeaturesPage,
   LandingPage,
   Login,
+  MyRentalsPage,
   NotFoundPage,
   PricingPage,
   PrivacyPolicyPage,
@@ -21,9 +25,11 @@ import {
   SupportPage,
   TermsOfServicePage,
   UpdateProfile,
+  WalletPage,
 } from "./pages/index.js";
 import PublicLayout from "./layouts/PublicLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
+import { AdminLayout } from "./components/admin/index.js";
 import ProtectedRoute from "./components/utils/ProtectedRoute";
 import ScrollManager from "./components/utils/ScrollManager";
 
@@ -48,18 +54,87 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
 
+        <Route path="/auth/login" element={<Login />} />
+        <Route path="/auth/signup" element={<Signup />} />
+        {/* Convenience routes: keep legacy `/login` and `/signup` working */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route element={<ProtectedRoute />}>
+          {/* Regular Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="rentals" element={<MyRentalsPage />} />
             <Route path="wallet" element={<WalletPage />} />
-            <Route path="admin/wallets" element={<AdminWalletPage />} />
-            <Route path="admin/returns" element={<AdminReturnsPage />} />
             <Route path="profile" element={<UpdateProfile />} />
             <Route path="settings" element={<AccountSettings />} />
           </Route>
+
+          {/* Admin Dashboard Routes with AdminLayout */}
+          <Route
+            path="/dashboard/admin"
+            element={
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/dashboard/admin/dashboard"
+            element={
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/dashboard/admin/books"
+            element={
+              <AdminLayout>
+                <AdminBooksPage />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/dashboard/admin/users"
+            element={
+              <AdminLayout>
+                <AdminUsersPage />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/dashboard/admin/rentals"
+            element={
+              <AdminLayout>
+                <AdminRentalsPage />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/dashboard/admin/reviews"
+            element={
+              <AdminLayout>
+                <AdminReviewsPage />
+              </AdminLayout>
+            }
+          />
+          {/* Legacy admin routes for backward compatibility */}
+          <Route
+            path="/dashboard/admin/wallets"
+            element={
+              <AdminLayout>
+                <AdminWalletPage />
+              </AdminLayout>
+            }
+          />
+          <Route
+            path="/dashboard/admin/returns"
+            element={
+              <AdminLayout>
+                <AdminReturnsPage />
+              </AdminLayout>
+            }
+          />
         </Route>
       </Routes>
     </BrowserRouter>

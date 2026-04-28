@@ -37,7 +37,7 @@ export default function BookMedia({
             objectFit: "cover",
             objectPosition: "center",
             imageRendering: "auto",
-            transform: "scale(1.01)",
+            display: "block",
           }}
         />
       ) : (

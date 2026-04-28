@@ -35,7 +35,7 @@ function calculatePreview(rental, condition, damagePercentage) {
 }
 
 export default function AdminReturnsPage() {
-  usePageTitle("Admin Return Processing - BookNest");
+  usePageTitle("Admin Rentals & Returns - BookNest");
   const { user } = useAuth();
   const [rentals, setRentals] = useState([]);
   const [statusMessage, setStatusMessage] = useState("");
@@ -72,7 +72,7 @@ export default function AdminReturnsPage() {
       <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: `1px solid ${BOOKNEST_COLORS.border}` }}>
         <Stack spacing={1}>
           <Typography variant="h4" sx={{ fontWeight: 800, color: BOOKNEST_COLORS.text }}>
-            Admin Return Processing
+            Admin Rentals & Returns
           </Typography>
           <Typography sx={{ color: BOOKNEST_COLORS.muted }}>
             Process returns, calculate damage charges, refund deposits, and create pending dues automatically.

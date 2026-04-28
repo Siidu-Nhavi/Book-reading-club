@@ -7,4 +7,10 @@ export const walletApi = {
   getTransactions() {
     return apiRequest("/api/wallet/transactions");
   },
+  deposit(amount, note = "") {
+    return apiRequest("/api/wallet/deposit", {
+      method: "POST",
+      body: JSON.stringify({ amount, note }),
+    });
+  },
 };

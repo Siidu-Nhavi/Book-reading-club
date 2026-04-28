@@ -16,7 +16,7 @@ import { formatBookPrice } from "../../utils/books";
 import { BOOKNEST_COLORS } from "../../utils/profile";
 
 export default function AdminWalletPage() {
-  usePageTitle("Admin Wallet Top-Up - BookNest");
+  usePageTitle("Admin Users & Wallets - BookNest");
   const { user } = useAuth();
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState([]);
@@ -55,7 +55,7 @@ export default function AdminWalletPage() {
       <Paper elevation={0} sx={{ p: 3, borderRadius: 3, border: `1px solid ${BOOKNEST_COLORS.border}` }}>
         <Stack spacing={1.5}>
           <Typography variant="h4" sx={{ fontWeight: 800, color: BOOKNEST_COLORS.text }}>
-            Admin Wallet Top-Up
+            Admin Users & Wallets
           </Typography>
           <TextField
             value={search}

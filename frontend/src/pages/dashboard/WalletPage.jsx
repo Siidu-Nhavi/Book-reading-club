@@ -1,7 +1,9 @@
 import {
   Alert,
+  Button,
   Paper,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -22,11 +24,30 @@ export default function WalletPage() {
   const [state, setState] = useState({
     balance: 0,
     pendingDuesTotal: 0,
+    heldRefundTotal: 0,
     pendingDues: [],
     transactions: [],
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [depositNote, setDepositNote] = useState("");
+
+  const loadWallet = async () => {
+    const [balance, transactions] = await Promise.all([
+      walletApi.getBalance(),
+      walletApi.getTransactions(),
+    ]);
+
+    setState({
+      balance: balance.balance || 0,
+      pendingDuesTotal: balance.pendingDuesTotal || 0,
+      heldRefundTotal: balance.heldRefundTotal || 0,
+      pendingDues: balance.pendingDues || [],
+      transactions: transactions.transactions || [],
+    });
+  };
 
   useEffect(() => {
     let active = true;
@@ -44,6 +65,7 @@ export default function WalletPage() {
           setState({
             balance: balance.balance || 0,
             pendingDuesTotal: balance.pendingDuesTotal || 0,
+            heldRefundTotal: balance.heldRefundTotal || 0,
             pendingDues: balance.pendingDues || [],
             transactions: transactions.transactions || [],
           });
@@ -73,7 +95,7 @@ export default function WalletPage() {
             Wallet
           </Typography>
           <Typography sx={{ color: BOOKNEST_COLORS.muted }}>
-            View your current balance, pending dues, and every wallet credit or debit.
+            Add money, track held deposits, view pending dues, and review every wallet movement.
           </Typography>
           <Typography sx={{ fontWeight: 700, color: BOOKNEST_COLORS.primaryBrown }}>
             Current balance: {formatBookPrice(Number(state.balance || 0))}
@@ -81,11 +103,58 @@ export default function WalletPage() {
           <Typography sx={{ fontWeight: 600, color: state.pendingDuesTotal > 0 ? BOOKNEST_COLORS.danger : BOOKNEST_COLORS.muted }}>
             Pending dues: {formatBookPrice(Number(state.pendingDuesTotal || 0))}
           </Typography>
+          <Typography sx={{ fontWeight: 600, color: BOOKNEST_COLORS.muted }}>
+            Held refundable deposits: {formatBookPrice(Number(state.heldRefundTotal || 0))}
+          </Typography>
         </Stack>
       </Paper>
 
       {error ? <Alert severity="error">{error}</Alert> : null}
+      {message ? <Alert severity="success">{message}</Alert> : null}
       {isLoading ? <Typography sx={{ color: BOOKNEST_COLORS.muted }}>Loading wallet...</Typography> : null}
+
+      <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: `1px solid ${BOOKNEST_COLORS.border}` }}>
+        <Stack spacing={1.4}>
+          <Typography sx={{ fontWeight: 700, color: BOOKNEST_COLORS.text }}>
+            Add money to wallet
+          </Typography>
+          <Typography variant="body2" sx={{ color: BOOKNEST_COLORS.muted }}>
+            This app uses an internal wallet flow, so deposit adds funds directly without any third-party payment gateway.
+          </Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+            <TextField
+              label="Amount"
+              type="number"
+              value={depositAmount}
+              onChange={(event) => setDepositAmount(event.target.value)}
+            />
+            <TextField
+              label="Note"
+              value={depositNote}
+              onChange={(event) => setDepositNote(event.target.value)}
+              fullWidth
+            />
+            <Button
+              variant="contained"
+              onClick={async () => {
+                try {
+                  setError("");
+                  setMessage("");
+                  await walletApi.deposit(Number(depositAmount || 0), depositNote);
+                  setDepositAmount("");
+                  setDepositNote("");
+                  setMessage("Wallet funded successfully");
+                  await loadWallet();
+                } catch (requestError) {
+                  setError(requestError.message || "Unable to fund wallet");
+                }
+              }}
+            >
+              Deposit
+            </Button>
+          </Stack>
+        </Stack>
+      </Paper>
 
       {state.pendingDues?.length ? (
         <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: `1px solid ${BOOKNEST_COLORS.border}` }}>

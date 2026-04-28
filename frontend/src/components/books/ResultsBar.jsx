@@ -47,27 +47,30 @@ export default function ResultsBar({
       </Box>
 
       <Stack direction="row" spacing={1.2} sx={{ alignItems: "center" }}>
+        {/* Mobile: Show filter button */}
         <Button
           startIcon={<FilterListRoundedIcon />}
           variant="outlined"
           onClick={onOpenFilters}
+          size="small"
           sx={{
             ...PUBLIC_BUTTON_GHOST_SX,
-            borderRadius: 999,
-            minHeight: 40,
-            display: { xs: "inline-flex", lg: "none" },
+            borderRadius: 2,
+            minHeight: 36,
+            display: { xs: "inline-flex", md: "none" },
           }}
         >
           Filters
         </Button>
 
-        <FormControl size="small" sx={{ minWidth: 180 }}>
+        {/* Sort dropdown - shown on mobile and tablet only */}
+        <FormControl size="small" sx={{ minWidth: 180, display: { xs: "flex", md: "none" } }}>
           <InputLabel>Sort by</InputLabel>
           <Select
             label="Sort by"
             value={sortBy}
             onChange={(event) => onSortChange(event.target.value)}
-            sx={{ borderRadius: 3, bgcolor: "#fff" }}
+            sx={{ borderRadius: 2 }}
           >
             {sortOptions.map((option) => (
               <MenuItem key={option.value} value={option.value}>

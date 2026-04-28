@@ -190,6 +190,7 @@ export default function BookDetailPage() {
   const rating = useMemo(() => (book ? getBookRating(book) : 0), [book]);
   const reviewCount = useMemo(() => (book ? getBookReviewCount(book) : 0), [book]);
   const depositAmount = useMemo(() => (book ? getBookDepositAmount(book) : 0), [book]);
+  const baseRentPrice = useMemo(() => Number(book?.rentPrice || 0), [book]);
   const dailyPrice = useMemo(() => (book ? getBookDailyPrice(book) : 0), [book]);
   const weeklyPrice = useMemo(() => (book ? getBookWeeklyPrice(book) : 0), [book]);
   const monthlyPrice = useMemo(() => (book ? getBookMonthlyPrice(book) : 0), [book]);
@@ -291,6 +292,9 @@ export default function BookDetailPage() {
               <Stack spacing={1.4}>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
                   <AvailabilityBadge available={Boolean(book.isAvailable)} />
+                  <Typography sx={{ color: PUBLIC_UI.muted, fontWeight: 600 }}>
+                    Rent price: {formatBookPrice(baseRentPrice)}
+                  </Typography>
                   <Typography sx={{ color: PUBLIC_UI.muted, fontWeight: 600 }}>
                     Deposit: {formatBookPrice(depositAmount)}
                   </Typography>
@@ -481,10 +485,68 @@ export default function BookDetailPage() {
         </Box>
       </Stack>
 
-      <Dialog open={isRentModalOpen} onClose={() => setIsRentModalOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Rent {book.title}</DialogTitle>
+      <Dialog
+        open={isRentModalOpen}
+        onClose={() => setIsRentModalOpen(false)}
+        fullWidth
+        maxWidth="xs"
+        BackdropProps={{
+          sx: {
+            backgroundColor: "rgba(0, 0, 0, 0.58)",
+          },
+        }}
+        PaperProps={{
+          sx: {
+            width: "100%",
+            maxWidth: 390,
+            mx: 1.5,
+            borderRadius: 4,
+            p: 0.5,
+            overflow: "hidden",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            textAlign: "center",
+            fontWeight: 700,
+            pb: 1,
+          }}
+        >
+          Rent {book.title}
+        </DialogTitle>
         <DialogContent>
           <Stack spacing={2.2} sx={{ pt: 1 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                overflow: "hidden",
+                borderRadius: 3,
+                border: `1px solid ${PUBLIC_UI.border}`,
+              }}
+            >
+              <Box
+                component="img"
+                src={book.image}
+                alt={book.title}
+                sx={{
+                  width: "100%",
+                  height: 180,
+                  objectFit: "cover",
+                  display: "block",
+                }}
+              />
+            </Paper>
+
+            <Stack spacing={0.4} sx={{ textAlign: "center" }}>
+              <Typography sx={{ fontWeight: 700, color: PUBLIC_UI.text }}>
+                {book.title}
+              </Typography>
+              <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
+                by {book.author}
+              </Typography>
+            </Stack>
+
             <RentalDurationSelector
               rentalType={rentalType}
               rentalDuration={rentalDuration}

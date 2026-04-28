@@ -19,6 +19,30 @@ import { formatBookPrice } from "../../utils/books";
 import { PUBLIC_UI } from "../../utils/publicUi";
 import CategoryCard from "./CategoryCard";
 
+const FILTER_SECTION_SX = {
+  bgcolor: PUBLIC_UI.surface,
+  border: `1px solid ${PUBLIC_UI.border}`,
+  borderRadius: 2,
+  overflow: "hidden",
+  transition: "all 0.2s ease-in-out",
+  "&:hover": {
+    borderColor: PUBLIC_UI.primary,
+    boxShadow: `0 2px 8px ${PUBLIC_UI.primary}15`,
+  },
+};
+
+const ACCORDION_SX = {
+  ...FILTER_SECTION_SX,
+  "&.MuiAccordion-root": {
+    margin: 0,
+    elevation: 0,
+    "&:before": { display: "none" },
+    "&.Mui-expanded": {
+      margin: 0,
+    },
+  },
+};
+
 export default function FilterSidebar({
   categoryOptions,
   selectedCategories,
@@ -44,8 +68,8 @@ export default function FilterSidebar({
   const isAllBooksSelected = selectedCategories.length === 0;
 
   return (
-    <Stack spacing={2.75}>
-      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
+    <Stack spacing={1.5}>
+      <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", px: 0.5 }}>
         <Typography variant="h6" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
           Filters
         </Typography>
@@ -53,29 +77,42 @@ export default function FilterSidebar({
           <Button
             size="small"
             onClick={onClearFilters}
-            startIcon={<RestartAltRoundedIcon />}
+            startIcon={<RestartAltRoundedIcon sx={{ fontSize: "1.1rem" }} />}
             sx={{
               textTransform: "none",
               color: PUBLIC_UI.primary,
               fontWeight: 700,
+              fontSize: "0.85rem",
               borderRadius: 2.5,
+              p: "4px 8px",
+              minHeight: "auto",
             }}
           >
-            Clear Filters
+            Reset
           </Button>
         ) : null}
       </Stack>
 
-      <Divider />
-
-      <Accordion defaultExpanded disableGutters elevation={0} sx={{ bgcolor: "transparent", "&::before": { display: "none" } }}>
-        <AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary }} />} sx={{ px: 0 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
+      <Accordion 
+        defaultExpanded 
+        disableGutters 
+        sx={ACCORDION_SX}
+      >
+        <AccordionSummary 
+          expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary, fontSize: "1.3rem" }} />} 
+          sx={{ 
+            px: 1.5, 
+            py: 1,
+            minHeight: "auto",
+            "&.Mui-expanded": { minHeight: "auto" },
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text, fontSize: "0.95rem" }}>
             Category
           </Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: 0 }}>
-          <Stack spacing={1.1}>
+        <AccordionDetails sx={{ px: 1.5, py: 1, pt: 0 }}>
+          <Stack spacing={0.75}>
             {categoryEntries.map((category) => (
               <CategoryCard
                 key={category.value}
@@ -96,28 +133,66 @@ export default function FilterSidebar({
         </AccordionDetails>
       </Accordion>
 
-      <Accordion defaultExpanded disableGutters elevation={0} sx={{ bgcolor: "transparent", "&::before": { display: "none" } }}>
-        <AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary }} />} sx={{ px: 0 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
+      <Accordion 
+        defaultExpanded 
+        disableGutters 
+        sx={ACCORDION_SX}
+      >
+        <AccordionSummary 
+          expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary, fontSize: "1.3rem" }} />} 
+          sx={{ 
+            px: 1.5, 
+            py: 1,
+            minHeight: "auto",
+            "&.Mui-expanded": { minHeight: "auto" },
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text, fontSize: "0.95rem" }}>
             Availability
           </Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: 0 }}>
+        <AccordionDetails sx={{ px: 1.5, py: 1, pt: 0 }}>
           <RadioGroup value={availability} onChange={(event) => onAvailabilityChange(event.target.value)}>
-            <FormControlLabel value="all" control={<Radio />} label="All" />
-            <FormControlLabel value="available" control={<Radio />} label="Available Now" />
-            <FormControlLabel value="coming_soon" control={<Radio />} label="Coming Soon" />
+            <FormControlLabel 
+              value="all" 
+              control={<Radio size="small" />} 
+              label={<Typography sx={{ fontSize: "0.9rem" }}>All</Typography>} 
+              sx={{ mb: 0.3 }}
+            />
+            <FormControlLabel 
+              value="available" 
+              control={<Radio size="small" />} 
+              label={<Typography sx={{ fontSize: "0.9rem" }}>Available Now</Typography>} 
+              sx={{ mb: 0.3 }}
+            />
+            <FormControlLabel 
+              value="coming_soon" 
+              control={<Radio size="small" />} 
+              label={<Typography sx={{ fontSize: "0.9rem" }}>Coming Soon</Typography>} 
+            />
           </RadioGroup>
         </AccordionDetails>
       </Accordion>
 
-      <Accordion defaultExpanded disableGutters elevation={0} sx={{ bgcolor: "transparent", "&::before": { display: "none" } }}>
-        <AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary }} />} sx={{ px: 0 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
-            Rental Price (per week)
+      <Accordion 
+        defaultExpanded 
+        disableGutters 
+        sx={ACCORDION_SX}
+      >
+        <AccordionSummary 
+          expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary, fontSize: "1.3rem" }} />} 
+          sx={{ 
+            px: 1.5, 
+            py: 1,
+            minHeight: "auto",
+            "&.Mui-expanded": { minHeight: "auto" },
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text, fontSize: "0.95rem" }}>
+            Rental Price
           </Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: 0 }}>
+        <AccordionDetails sx={{ px: 1.5, py: 1.2, pt: 0.5 }}>
           <Slider
             value={priceRange}
             min={priceBounds.min}
@@ -125,43 +200,82 @@ export default function FilterSidebar({
             onChangeCommitted={(_, value) => onPriceRangeChange(value)}
             valueLabelDisplay="auto"
             valueLabelFormat={(value) => formatBookPrice(value)}
-            sx={{ color: PUBLIC_UI.primary }}
+            sx={{ 
+              color: PUBLIC_UI.primary,
+              mb: 1,
+              "& .MuiSlider-markLabel": {
+                fontSize: "0.75rem",
+              }
+            }}
           />
-          <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-            <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
-              {formatBookPrice(priceRange[0])}
-            </Typography>
-            <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
-              {formatBookPrice(priceRange[1])}
-            </Typography>
+          <Stack direction="row" sx={{ justifyContent: "space-between", gap: 1 }}>
+            <Box sx={{ 
+              bgcolor: PUBLIC_UI.primarySoft, 
+              px: 1, 
+              py: 0.5, 
+              borderRadius: 1.5,
+              minWidth: "50%",
+            }}>
+              <Typography variant="caption" sx={{ color: PUBLIC_UI.primary, fontWeight: 600 }}>
+                {formatBookPrice(priceRange[0])}
+              </Typography>
+            </Box>
+            <Box sx={{ 
+              bgcolor: PUBLIC_UI.primarySoft, 
+              px: 1, 
+              py: 0.5, 
+              borderRadius: 1.5,
+              minWidth: "50%",
+            }}>
+              <Typography variant="caption" sx={{ color: PUBLIC_UI.primary, fontWeight: 600 }}>
+                {formatBookPrice(priceRange[1])}
+              </Typography>
+            </Box>
           </Stack>
         </AccordionDetails>
       </Accordion>
 
-      <Accordion defaultExpanded disableGutters elevation={0} sx={{ bgcolor: "transparent", "&::before": { display: "none" } }}>
-        <AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary }} />} sx={{ px: 0 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
-            Minimum Rating
+      <Accordion 
+        defaultExpanded 
+        disableGutters 
+        sx={ACCORDION_SX}
+      >
+        <AccordionSummary 
+          expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary, fontSize: "1.3rem" }} />} 
+          sx={{ 
+            px: 1.5, 
+            py: 1,
+            minHeight: "auto",
+            "&.Mui-expanded": { minHeight: "auto" },
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text, fontSize: "0.95rem" }}>
+            Rating
           </Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: 0 }}>
-          <Stack spacing={1}>
+        <AccordionDetails sx={{ px: 1.5, py: 1, pt: 0 }}>
+          <Stack spacing={0.6}>
             {[0, 1, 2, 3, 4, 5].map((value) => (
               <Button
                 key={`rating-filter-${value}`}
                 variant={minRating === value ? "contained" : "outlined"}
-                startIcon={<StarRoundedIcon />}
+                startIcon={<StarRoundedIcon sx={{ fontSize: "0.95rem" }} />}
                 onClick={() => onRatingChange(value)}
+                fullWidth
                 sx={{
                   justifyContent: "flex-start",
-                  borderRadius: 3,
+                  borderRadius: 2,
                   textTransform: "none",
+                  fontSize: "0.9rem",
+                  p: "6px 10px",
+                  minHeight: "auto",
                   color: minRating === value ? "#fff" : PUBLIC_UI.primary,
                   bgcolor: minRating === value ? PUBLIC_UI.primary : "transparent",
                   borderColor: PUBLIC_UI.border,
                   transition: "all 0.3s ease-in-out",
                   "&:hover": {
                     borderColor: PUBLIC_UI.primary,
+                    bgcolor: minRating === value ? PUBLIC_UI.primary : PUBLIC_UI.primarySoft,
                   },
                 }}
               >
@@ -172,20 +286,33 @@ export default function FilterSidebar({
         </AccordionDetails>
       </Accordion>
 
-      <Accordion defaultExpanded disableGutters elevation={0} sx={{ bgcolor: "transparent", "&::before": { display: "none" } }}>
-        <AccordionSummary expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary }} />} sx={{ px: 0 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
+      <Accordion 
+        defaultExpanded 
+        disableGutters 
+        sx={ACCORDION_SX}
+      >
+        <AccordionSummary 
+          expandIcon={<ExpandMoreRoundedIcon sx={{ color: PUBLIC_UI.primary, fontSize: "1.3rem" }} />} 
+          sx={{ 
+            px: 1.5, 
+            py: 1,
+            minHeight: "auto",
+            "&.Mui-expanded": { minHeight: "auto" },
+          }}
+        >
+          <Typography variant="subtitle2" sx={{ fontWeight: 800, color: PUBLIC_UI.text, fontSize: "0.95rem" }}>
             Sort By
           </Typography>
         </AccordionSummary>
-        <AccordionDetails sx={{ px: 0 }}>
+        <AccordionDetails sx={{ px: 1.5, py: 1, pt: 0 }}>
           <RadioGroup value={sortBy} onChange={(event) => onSortChange(event.target.value)}>
             {sortOptions.map((option) => (
               <FormControlLabel
                 key={option.value}
                 value={option.value}
-                control={<Radio />}
-                label={option.label}
+                control={<Radio size="small" />}
+                label={<Typography sx={{ fontSize: "0.9rem" }}>{option.label}</Typography>}
+                sx={{ mb: 0.3 }}
               />
             ))}
           </RadioGroup>

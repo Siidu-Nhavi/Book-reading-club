@@ -45,6 +45,30 @@ export const dashboardNavItems = [
     icon: SupportAgentRoundedIcon,
   },
   {
+    label: "Admin Users",
+    to: "/dashboard/admin/users",
+    icon: ManageAccountsRoundedIcon,
+    roles: ["admin"],
+  },
+  {
+    label: "Admin Books",
+    to: "/dashboard/admin/books",
+    icon: MenuBookRoundedIcon,
+    roles: ["admin"],
+  },
+  {
+    label: "Admin Rentals",
+    to: "/dashboard/admin/rentals",
+    icon: AssignmentReturnRoundedIcon,
+    roles: ["admin"],
+  },
+  {
+    label: "Admin Reviews",
+    to: "/dashboard/admin/reviews",
+    icon: SupportAgentRoundedIcon,
+    roles: ["admin"],
+  },
+  {
     label: "Admin Wallets",
     to: "/dashboard/admin/wallets",
     icon: ManageAccountsRoundedIcon,

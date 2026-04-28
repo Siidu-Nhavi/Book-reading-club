@@ -524,7 +524,7 @@ export default function BooksCatalogPage() {
   );
 
   return (
-    <Box sx={{ pt: `${NAVBAR_HEIGHT}px` }}>
+    <Box sx={{ pt: `${NAVBAR_HEIGHT}px`, minHeight: "100vh", bgcolor: PUBLIC_UI.pageBackground }}>
       <FilterBar
         searchValue={searchTerm}
         onSearchChange={(value) => {
@@ -549,114 +549,160 @@ export default function BooksCatalogPage() {
         onClearFilters={handleClearFilters}
       />
 
-      <Container maxWidth="xl" sx={{ py: { xs: 3, md: 4 } }}>
-        <Stack spacing={3} ref={catalogRef}>
-          {error ? (
-            <Alert severity="error" sx={{ borderRadius: 3 }}>
-              {error}
-            </Alert>
-          ) : null}
+      <Box
+        sx={{
+          display: "flex",
+          gap: { xs: 0, md: 3 },
+          maxWidth: "var(--max-width-page)",
+          mx: "auto",
+          px: { xs: 2, md: 3 },
+          py: { xs: 3, md: 4 },
+          alignItems: "flex-start",
+        }}
+      >
+        {/* Desktop Sidebar - Hidden on Mobile */}
+        <Box
+          sx={{
+            display: { xs: "none", md: "block" },
+            flexShrink: 0,
+            position: "sticky",
+            top: `${NAVBAR_HEIGHT + 20}px`,
+            width: { md: "240px", lg: "280px" },
+            maxHeight: "calc(100vh - 100px)",
+            overflowY: "auto",
+            overflowX: "hidden",
+            pr: 1,
+            "&::-webkit-scrollbar": {
+              width: "6px",
+            },
+            "&::-webkit-scrollbar-track": {
+              bgcolor: PUBLIC_UI.border,
+              borderRadius: "3px",
+            },
+            "&::-webkit-scrollbar-thumb": {
+              bgcolor: PUBLIC_UI.muted,
+              borderRadius: "3px",
+              "&:hover": {
+                bgcolor: PUBLIC_UI.text,
+              },
+            },
+          }}
+        >
+          {filterPanel}
+        </Box>
 
-          <Paper
-            elevation={0}
-            sx={{
-              ...PUBLIC_SURFACE_SX,
-              p: { xs: 2.1, md: 2.8 },
-            }}
-          >
-            <Stack spacing={2.4}>
-              <ResultsBar
-                totalCount={filteredBooks.length}
-                page={safePage}
-                pageSize={PAGE_SIZE}
-                search={searchTerm}
-                sortBy={sortBy}
-                sortOptions={sortOptions}
-                onSortChange={handleSortChange}
-                onOpenFilters={() => setIsMobileFiltersOpen(true)}
-              />
+        {/* Main Content - Books Grid */}
+        <Box sx={{ flex: 1, minWidth: 0 }} ref={catalogRef}>
+          <Stack spacing={3}>
+            {error ? (
+              <Alert severity="error" sx={{ borderRadius: 3 }}>
+                {error}
+              </Alert>
+            ) : null}
 
-              {activeFilters.length > 0 ? (
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {activeFilters.map((filter) => (
-                    <Chip
-                      key={filter.key}
-                      label={filter.label}
-                      onDelete={filter.onDelete}
-                      sx={{
-                        bgcolor: PUBLIC_UI.primarySoft,
-                        color: PUBLIC_UI.primary,
-                        fontWeight: 600,
-                        borderRadius: 999,
-                      }}
-                    />
-                  ))}
-                </Stack>
-              ) : null}
+            <Paper
+              elevation={0}
+              sx={{
+                ...PUBLIC_SURFACE_SX,
+                p: { xs: 2.1, md: 2.8 },
+              }}
+            >
+              <Stack spacing={2.4}>
+                <ResultsBar
+                  totalCount={filteredBooks.length}
+                  page={safePage}
+                  pageSize={PAGE_SIZE}
+                  search={searchTerm}
+                  sortBy={sortBy}
+                  sortOptions={sortOptions}
+                  onSortChange={handleSortChange}
+                  onOpenFilters={() => setIsMobileFiltersOpen(true)}
+                />
 
-              <Box>
-                {isLoading ? (
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
-                      gap: 2.2,
-                    }}
-                  >
-                    {Array.from({ length: 12 }).map((_, index) => (
-                      <BookCardSkeleton key={`book-skeleton-${index + 1}`} />
+                {activeFilters.length > 0 ? (
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    {activeFilters.map((filter) => (
+                      <Chip
+                        key={filter.key}
+                        label={filter.label}
+                        onDelete={filter.onDelete}
+                        sx={{
+                          bgcolor: PUBLIC_UI.primarySoft,
+                          color: PUBLIC_UI.primary,
+                          fontWeight: 600,
+                          borderRadius: 999,
+                        }}
+                      />
                     ))}
-                  </Box>
-                ) : paginatedBooks.length > 0 ? (
-                  <Stack spacing={3}>
+                  </Stack>
+                ) : null}
+
+                <Box>
+                  {isLoading ? (
                     <Box
                       sx={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))",
+                        gridTemplateColumns: { xs: "repeat(auto-fill, minmax(150px, 1fr))", sm: "repeat(auto-fill, minmax(200px, 1fr))", md: "repeat(auto-fill, minmax(220px, 1fr))", lg: "repeat(auto-fill, minmax(260px, 1fr))" },
                         gap: 2.2,
                       }}
                     >
-                      {paginatedBooks.map((book) => (
-                        <BookCard
-                          key={book._id}
-                          book={book}
-                          rentDisabledReason={getRentDisabledReason(book)}
-                          wishlistActive={wishlistIds.includes(book._id)}
-                          onWishlistToggle={handleToggleWishlist}
-                          onRent={() => {
-                            if (!isAuthenticated) {
-                              navigate("/login");
-                              return;
-                            }
-                            navigate(`/books/${book._id}`);
-                          }}
-                        />
+                      {Array.from({ length: 12 }).map((_, index) => (
+                        <BookCardSkeleton key={`book-skeleton-${index + 1}`} />
                       ))}
                     </Box>
+                  ) : paginatedBooks.length > 0 ? (
+                    <Stack spacing={3}>
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: { xs: "repeat(auto-fill, minmax(150px, 1fr))", sm: "repeat(auto-fill, minmax(200px, 1fr))", md: "repeat(auto-fill, minmax(220px, 1fr))", lg: "repeat(auto-fill, minmax(260px, 1fr))" },
+                          gap: 2.2,
+                        }}
+                      >
+                        {paginatedBooks.map((book) => (
+                          <BookCard
+                            key={book._id}
+                            book={book}
+                            rentDisabledReason={getRentDisabledReason(book)}
+                            wishlistActive={wishlistIds.includes(book._id)}
+                            onWishlistToggle={handleToggleWishlist}
+                            onRent={() => {
+                              if (!isAuthenticated) {
+                                navigate("/login");
+                                return;
+                              }
+                              navigate(`/books/${book._id}`);
+                            }}
+                          />
+                        ))}
+                      </Box>
 
-                    <BooksPagination page={safePage} totalPages={totalPages} onChange={handlePageChange} />
-                  </Stack>
-                ) : (
-                  <EmptyState
-                    title="No books found"
-                    description="Try adjusting your filters or search term"
-                    actionLabel="Clear All Filters"
-                    actionTo="/books"
-                  />
-                )}
-              </Box>
-            </Stack>
-          </Paper>
-        </Stack>
+                      <BooksPagination page={safePage} totalPages={totalPages} onChange={handlePageChange} />
+                    </Stack>
+                  ) : (
+                    <EmptyState
+                      title="No books found"
+                      description="Try adjusting your filters or search term"
+                      actionLabel="Clear All Filters"
+                      actionTo="/books"
+                    />
+                  )}
+                </Box>
+              </Stack>
+            </Paper>
+          </Stack>
+        </Box>
+      </Box>
 
-        <BottomSheet
-          open={isMobileFiltersOpen}
-          onClose={() => setIsMobileFiltersOpen(false)}
-          title="Filter & Sort"
-        >
-          <Box>{filterPanel}</Box>
-        </BottomSheet>
-      </Container>
+      {/* Mobile Filter Drawer - Right Side */}
+      <BottomSheet
+        open={isMobileFiltersOpen}
+        onClose={() => setIsMobileFiltersOpen(false)}
+        title="Filters"
+        anchor="right"
+      >
+        <Box sx={{ pb: 2 }}>{filterPanel}</Box>
+      </BottomSheet>
     </Box>
   );
 }
