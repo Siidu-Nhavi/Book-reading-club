@@ -31,7 +31,7 @@ export default function LandingFooter() {
 				</div>
 			</div>
 			<p className={styles["footer-copy"]}>
-				Copyright 2026 BookNest • Online Reading Book System
+				&copy;Copyright 2026 BookNest • Online  Book Rental System
 			</p>
 		</footer>
 	);

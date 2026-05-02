@@ -361,15 +361,6 @@ export default function BooksCatalogPage() {
     setCategoryValues([...selectedCategories, category]);
   };
 
-  const handleCategorySelect = (value) => {
-    if (!value) {
-      setCategoryValues([]);
-      return;
-    }
-
-    setCategoryValues([value]);
-  };
-
   const handleAvailabilityChange = (value) => {
     updateParams((next) => {
       if (value === "all") {
@@ -537,14 +528,6 @@ export default function BooksCatalogPage() {
           });
         }}
         onSearchSubmit={() => null}
-        categoryOptions={categoryOptions}
-        selectedCategories={selectedCategories}
-        onCategorySelect={handleCategorySelect}
-        availability={availability}
-        onAvailabilityChange={handleAvailabilityChange}
-        sortBy={sortBy}
-        sortOptions={sortOptions}
-        onSortChange={handleSortChange}
         onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
         onClearFilters={handleClearFilters}
       />

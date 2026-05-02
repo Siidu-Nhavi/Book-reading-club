@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/useAuth";
 import usePageTitle from "../../hooks/usePageTitle";
+import authImage from "./auth.png";
 import "./Auth.css";
 
 const validateSignup = ({ name, email, password }) => {
@@ -144,10 +145,7 @@ const Signup = () => {
 				</div>
 
 				<aside className="auth-aside">
-					<div className="auth-aside-inner">
-						<h3>Your library awaits</h3>
-						<p>Discover, rent, and enjoy books easily.</p>
-					</div>
+					<img src={authImage} alt="Books arranged for readers" className="auth-aside-image" />
 				</aside>
 			</div>
 		</div>

@@ -1,13 +1,6 @@
 import {
   Box,
   Button,
-  FormControl,
-  MenuItem,
-  Select,
-  Stack,
-  ToggleButton,
-  ToggleButtonGroup,
-  Typography,
 } from "@mui/material";
 import SearchBar from "../common/SearchBar";
 import { PUBLIC_UI } from "../../utils/publicUi";
@@ -16,14 +9,6 @@ export default function FilterBar({
   searchValue,
   onSearchChange,
   onSearchSubmit,
-  categoryOptions,
-  selectedCategories,
-  onCategorySelect,
-  availability,
-  onAvailabilityChange,
-  sortBy,
-  sortOptions,
-  onSortChange,
   onOpenMobileFilters,
   onClearFilters,
 }) {

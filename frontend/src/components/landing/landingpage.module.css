@@ -39,6 +39,7 @@
   overflow-x: clip;
 }
 
+/* Shared section primitives */
 .landingPage section {
   padding: var(--space-24) 5%;
 }
@@ -91,6 +92,7 @@
   max-width: none;
 }
 
+/* Navigation */
 .nav {
   position: fixed;
   top: 0;
@@ -194,6 +196,7 @@
   line-height: 1;
 }
 
+/* Hero */
 .hero {
   min-height: 100vh;
   display: grid;
@@ -229,9 +232,9 @@
   color: var(--amber);
   padding: 5px 14px;
   font-size: 0.75rem;
-  font-weight: 500;
   letter-spacing: 2px;
   text-transform: uppercase;
+  margin-top: 2rem;
 }
 
 .hero-sub {
@@ -434,6 +437,7 @@
   animation-delay: 1.5s;
 }
 
+/* How it works */
 .howSection {
   position: relative;
 }
@@ -509,6 +513,7 @@
   color: var(--warm-gray);
 }
 
+/* Features */
 .features-layout {
   max-width: 1200px;
   margin: 0 auto;
@@ -658,6 +663,7 @@
   line-height: 1;
 }
 
+/* Categories */
 .category-grid {
   max-width: 1200px;
   margin: 0 auto;
@@ -716,6 +722,7 @@
   border-color: currentColor;
 }
 
+/* Featured books */
 .featuredSection {
   background: var(--card-bg);
 }
@@ -816,6 +823,7 @@
   border-color: var(--amber);
 }
 
+/* Testimonials */
 .testimonials-grid {
   max-width: 1200px;
   margin: 0 auto;
@@ -898,6 +906,7 @@
   color: var(--warm-gray);
 }
 
+/* Call to action */
 .cta-shell {
   background: var(--cream);
   padding-top: var(--space-16);
@@ -957,6 +966,7 @@
   line-height: 1.75;
 }
 
+/* Footer */
 .footerBar {
   background: var(--ink);
   color: rgba(245, 239, 228, 0.88);
@@ -1033,6 +1043,7 @@
   color: var(--cream);
 }
 
+/* Reveal states and animations */
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -1077,6 +1088,7 @@
   }
 }
 
+/* Responsive rules */
 @media (max-width: 900px) {
   .nav {
     padding: var(--space-3) 5%;

@@ -183,66 +183,18 @@
 
 .auth-aside {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
-  color: #fff;
-  background:
-    radial-gradient(circle at top right, rgba(255, 255, 255, 0.12), transparent 24%),
-    linear-gradient(145deg, var(--auth-brown-dark) 0%, var(--auth-brown) 52%, var(--auth-brown-light) 100%);
+  background: transparent;
 }
 
-.auth-aside::before,
-.auth-aside::after {
-  content: "";
+.auth-aside-image {
   position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.auth-aside::before {
-  width: 260px;
-  height: 260px;
-  top: -90px;
-  right: -70px;
-  background: rgba(147, 197, 253, 0.18);
-}
-
-.auth-aside::after {
-  width: 220px;
-  height: 220px;
-  bottom: -100px;
-  left: -60px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.auth-aside-inner {
-  position: relative;
-  z-index: 1;
-  width: min(360px, 100%);
-  padding: 48px 42px;
-  margin: 24px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  backdrop-filter: blur(10px);
-}
-
-.auth-aside-inner h3 {
-  margin: 0 0 1rem;
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  line-height: 1.05;
-  letter-spacing: -0.03em;
-  font-family: "Playfair Display", Georgia, serif;
-  font-weight: 700;
-}
-
-.auth-aside-inner p {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.75;
-  color: rgba(255, 255, 255, 0.82);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+  object-position: center;
 }
 
 @media (max-width: 960px) {
@@ -257,7 +209,7 @@
   }
 
   .auth-card {
-    padding: 44px 32px 36px;
+    padding: 44px 32px 36px ;
   }
 
   .auth-card::before {
@@ -299,12 +251,6 @@
 
   .auth-aside {
     min-height: 220px;
-  }
-
-  .auth-aside-inner {
-    margin: 18px;
-    padding: 28px 22px;
-    border-radius: 20px;
   }
 
   .auth-form input {
