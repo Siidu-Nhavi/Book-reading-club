@@ -498,8 +498,8 @@ export default function BookDetailPage() {
       <Dialog
         open={isRentModalOpen}
         onClose={() => setIsRentModalOpen(false)}
-        fullWidth
         maxWidth="xs"
+        scroll="paper"
         BackdropProps={{
           sx: {
             backgroundColor: "rgba(0, 0, 0, 0.58)",
@@ -507,11 +507,14 @@ export default function BookDetailPage() {
         }}
         PaperProps={{
           sx: {
-            width: "100%",
-            maxWidth: 390,
-            mx: 1.5,
+            width: "min(100%, 420px)",
+            maxWidth: "calc(100vw - 24px)",
+            maxHeight: "calc(100vh - 24px)",
+            m: { xs: 1.5, sm: 2 },
             borderRadius: 4,
             p: 0.5,
+            display: "flex",
+            flexDirection: "column",
             overflow: "hidden",
           },
         }}

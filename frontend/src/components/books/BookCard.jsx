@@ -71,7 +71,7 @@ export default function BookCard({
               textDecoration: "none",
             }}
           >
-            <BookMedia book={book} radius={0} titleMaxLength={36} aspectRatio="16 / 10" />
+            <BookMedia book={book} radius={0} titleMaxLength={36} aspectRatio="3 / 4" />
           </Box>
 
           <Box sx={{ position: "absolute", top: 12, right: showWishlist ? 46 : 12 }}>
