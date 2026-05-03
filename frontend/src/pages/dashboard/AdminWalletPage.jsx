@@ -24,6 +24,17 @@ export default function AdminWalletPage() {
   const [notes, setNotes] = useState({});
   const [message, setMessage] = useState("");
 
+  const formatSettlementMessage = (settlement, creditedAmount, userName) => {
+    const settledAmount = Number(settlement?.settledAmount || 0);
+    const baseMessage = `Topped up ${userName} by ${formatBookPrice(creditedAmount)}`;
+
+    if (settledAmount <= 0) {
+      return baseMessage;
+    }
+
+    return `${baseMessage}; ${formatBookPrice(settledAmount)} auto-cleared from pending dues.`;
+  };
+
   useEffect(() => {
     let active = true;
 
@@ -111,7 +122,11 @@ export default function AdminWalletPage() {
                         note: notes[entry._id] || "",
                       });
                       setMessage(
-                        `Topped up ${result.user.name} by ${formatBookPrice(result.wallet.creditedAmount)}`,
+                        formatSettlementMessage(
+                          result.wallet?.settlement,
+                          result.wallet?.creditedAmount || 0,
+                          result.user.name,
+                        ),
                       );
                       const response = await adminApi.getAllUsers({ search });
                       setUsers(response.users || []);

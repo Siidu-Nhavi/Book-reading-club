@@ -34,6 +34,16 @@ export default function WalletPage() {
   const [depositAmount, setDepositAmount] = useState("");
   const [depositNote, setDepositNote] = useState("");
 
+  const formatSettlementMessage = (settlement, baseMessage) => {
+    const settledAmount = Number(settlement?.settledAmount || 0);
+
+    if (settledAmount <= 0) {
+      return baseMessage;
+    }
+
+    return `${baseMessage} ${formatBookPrice(settledAmount)} auto-cleared from pending dues.`;
+  };
+
   const loadWallet = async () => {
     const [balance, transactions] = await Promise.all([
       walletApi.getBalance(),
@@ -140,10 +150,12 @@ export default function WalletPage() {
                 try {
                   setError("");
                   setMessage("");
-                  await walletApi.deposit(Number(depositAmount || 0), depositNote);
+                  const result = await walletApi.deposit(Number(depositAmount || 0), depositNote);
                   setDepositAmount("");
                   setDepositNote("");
-                  setMessage("Wallet funded successfully");
+                  setMessage(
+                    formatSettlementMessage(result.wallet?.settlement, "Wallet funded successfully.")
+                  );
                   await loadWallet();
                 } catch (requestError) {
                   setError(requestError.message || "Unable to fund wallet");

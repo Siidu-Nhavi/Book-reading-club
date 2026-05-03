@@ -284,7 +284,17 @@ export default function BookDetailPage() {
           }}
         >
           <Stack spacing={2.2}>
-            <Paper elevation={0} sx={{ ...PUBLIC_SURFACE_SX, p: 1.8, borderRadius: 4 }}>
+            <Paper
+              elevation={0}
+              sx={{
+                ...PUBLIC_SURFACE_SX,
+                p: 1.4,
+                borderRadius: 4,
+                width: "100%",
+                maxWidth: { xs: "100%", lg: 380 },
+                mx: { xs: 0, lg: "auto" },
+              }}
+            >
               <BookMedia book={book} radius={3} titleMaxLength={44} />
             </Paper>
 
@@ -531,7 +541,7 @@ export default function BookDetailPage() {
                 alt={book.title}
                 sx={{
                   width: "100%",
-                  height: 180,
+                  height: 140,
                   objectFit: "cover",
                   display: "block",
                 }}
