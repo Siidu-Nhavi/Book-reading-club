@@ -38,6 +38,7 @@ async function topUpWallet(req, res) {
       wallet: {
         creditedAmount: result.appliedAmount,
         balance: result.balance,
+        settlement: result.settlement,
       },
     });
   } catch (error) {

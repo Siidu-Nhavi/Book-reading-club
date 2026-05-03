@@ -20,7 +20,14 @@ const walletTransactionSchema = new mongoose.Schema(
     },
     reason: {
       type: String,
-      enum: ["deposit_refund", "damage_charge", "top_up", "rental_fee", "overdue_charge"],
+      enum: [
+        "deposit_refund",
+        "damage_charge",
+        "top_up",
+        "rental_fee",
+        "overdue_charge",
+        "pending_due_settlement",
+      ],
       required: true,
     },
     referenceId: {

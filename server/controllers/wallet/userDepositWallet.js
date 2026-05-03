@@ -21,6 +21,7 @@ async function userDepositWallet(req, res) {
       wallet: {
         creditedAmount: result.appliedAmount,
         balance: result.balance,
+        settlement: result.settlement,
       },
     });
   } catch (error) {

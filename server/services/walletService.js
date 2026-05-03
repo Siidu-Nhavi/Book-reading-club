@@ -80,6 +80,70 @@ async function recordTransaction({
   });
 }
 
+async function settlePendingDues(userId) {
+  const wallet = await ensureWallet(userId);
+  const availableBalance = roundCurrency(wallet.balance);
+
+  if (availableBalance <= 0) {
+    return {
+      settledAmount: 0,
+      settledCount: 0,
+      balance: wallet.balance,
+      clearedDueIds: [],
+    };
+  }
+
+  const pendingDues = await PendingDue.find({ user: userId, status: "pending" }).sort({
+    createdAt: 1,
+    _id: 1,
+  });
+
+  let remainingBalance = availableBalance;
+  let settledAmount = 0;
+  let settledCount = 0;
+  const clearedAt = new Date();
+  const clearedDueIds = [];
+
+  for (const pendingDue of pendingDues) {
+    const dueAmount = roundCurrency(pendingDue.amount || 0);
+
+    if (dueAmount <= 0 || remainingBalance < dueAmount) {
+      break;
+    }
+
+    remainingBalance = roundCurrency(remainingBalance - dueAmount);
+    settledAmount = roundCurrency(settledAmount + dueAmount);
+    settledCount += 1;
+    clearedDueIds.push(pendingDue._id);
+
+    pendingDue.status = "cleared";
+    pendingDue.clearedAt = clearedAt;
+    await pendingDue.save();
+
+    await recordTransaction({
+      userId,
+      type: "debit",
+      amount: dueAmount,
+      reason: "pending_due_settlement",
+      referenceId: pendingDue._id,
+      note: `Auto-settled pending due${pendingDue.note ? `: ${pendingDue.note}` : ""}`,
+    });
+  }
+
+  if (settledAmount > 0) {
+    wallet.balance = remainingBalance;
+    wallet.lastUpdated = clearedAt;
+    await wallet.save();
+  }
+
+  return {
+    settledAmount,
+    settledCount,
+    balance: wallet.balance,
+    clearedDueIds,
+  };
+}
+
 async function creditWallet({ userId, amount, reason, referenceId = null, note = "" }) {
   const normalizedAmount = roundCurrency(amount);
 
@@ -101,11 +165,13 @@ async function creditWallet({ userId, amount, reason, referenceId = null, note =
     note,
   });
 
+  const settlement = await settlePendingDues(userId);
   await syncUserFinancialFlags(userId);
 
   return {
     appliedAmount: normalizedAmount,
-    balance: wallet.balance,
+    balance: settlement.balance,
+    settlement,
   };
 }
 
@@ -228,4 +294,5 @@ module.exports = {
   debitWallet,
   createPendingDue,
   getWalletOverview,
+  settlePendingDues,
 };

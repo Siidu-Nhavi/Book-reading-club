@@ -30,6 +30,10 @@ const pendingDueSchema = new mongoose.Schema(
       default: "pending",
       index: true,
     },
+    clearedAt: {
+      type: Date,
+      default: null,
+    },
     note: {
       type: String,
       trim: true,

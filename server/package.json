@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
+    "test": "node --test",
     "init": "node ./init/index.js",
     "seed:all": "node ./init/index.js",
     "backfill:schema": "node ./scripts/backfillRentalFields.js",
