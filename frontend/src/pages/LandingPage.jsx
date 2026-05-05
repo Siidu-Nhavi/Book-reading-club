@@ -9,7 +9,7 @@ import CategoriesSection from "../components/landing/CategoriesSection";
 import FeaturedBooksSection from "../components/landing/FeaturedBooksSection";
 import TestimonialsSection from "../components/landing/TestimonialsSection";
 import CTABanner from "../components/landing/CTABanner";
-import LandingFooter from "../components/landing/LandingFooter";
+import AppFooter from "../components/shared/AppFooter";
 import { categoryLinks } from "../data/navLinks";
 import { booksApi } from "../lib/api";
 
@@ -107,7 +107,7 @@ export default function LandingPage() {
       <CategoriesSection categories={categories} isLoading={isHomeDataLoading} />
       <TestimonialsSection />
       <CTABanner />
-      <LandingFooter />
+      <AppFooter />
     </div>
   );
 }

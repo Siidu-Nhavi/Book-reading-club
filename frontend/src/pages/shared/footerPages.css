@@ -2,12 +2,13 @@
   min-height: 100vh;
   background: transparent;
   color: #1d2040;
-  padding: 2.25rem 1.5rem 0;
+  padding: 0 1.5rem;
 }
 
 .footer-page__container {
   max-width: 1120px;
   margin: 0 auto;
+  padding-top: 2.25rem;
 }
 
 .footer-page__hero {
@@ -164,7 +165,7 @@
 
 @media (max-width: 640px) {
   .footer-page {
-    padding: 1.75rem 1rem 0;
+    padding: 0 1rem;
   }
 
   .footer-page__hero {

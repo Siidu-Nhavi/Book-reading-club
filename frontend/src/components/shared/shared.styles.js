@@ -8,9 +8,11 @@ export const appNavbarStyles = {
     boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
     backdropFilter: "blur(12px)",
     borderBottom: `1px solid ${PUBLIC_UI.border}`,
+    position: "fixed",
     top: 0,
     left: 0,
     right: 0,
+    zIndex: 1300,
   },
   inner: {
     height: 72,
@@ -18,8 +20,8 @@ export const appNavbarStyles = {
     alignItems: "center",
     justifyContent: "space-between",
     px: { xs: 2, md: 3 },
-    maxWidth: "var(--max-width-page)",
-    mx: "auto",
+    maxWidth: "100%",
+    mx: 0,
     gap: 2,
   },
   brandStack: {
@@ -51,8 +53,14 @@ export const appNavbarStyles = {
     fontWeight: 700,
     fontSize: "1.12rem",
   },
-  searchWrap: {
+  searchAndNavWrap: {
+    display: "flex",
+    alignItems: "center",
+    gap: 1.2,
     flexGrow: 1,
+    justifyContent: "center",
+  },
+  searchWrap: {
     display: "flex",
     justifyContent: "center",
     px: { xs: 0.5, md: 2.4 },
@@ -63,6 +71,18 @@ export const appNavbarStyles = {
     "& .MuiOutlinedInput-root": {
       borderRadius: 999,
       minHeight: 48,
+    },
+  },
+  homeButton: {
+    textTransform: "none",
+    fontWeight: 500,
+    color: "inherit",
+    borderRadius: 2,
+    px: 1.35,
+    display: { xs: "none", md: "inline-flex" },
+    whiteSpace: "nowrap",
+    "&:hover": {
+      backgroundColor: "rgba(0, 0, 0, 0.04)",
     },
   },
   desktopNavWrap: {
@@ -117,6 +137,16 @@ export const appNavbarStyles = {
   },
   drawerStack: {
     height: "100%",
+  },
+  drawerHomeButton: {
+    borderRadius: 2,
+    textTransform: "none",
+    fontWeight: 600,
+    color: PUBLIC_UI.primary,
+    backgroundColor: "rgba(108, 92, 231, 0.08)",
+    "&:hover": {
+      backgroundColor: "rgba(108, 92, 231, 0.15)",
+    },
   },
   drawerHeader: {
     justifyContent: "space-between",

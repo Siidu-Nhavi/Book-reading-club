@@ -80,7 +80,7 @@ export default function AppFooter() {
         </Box>
 
         <Stack direction={{ xs: "column", md: "row" }} spacing={0.6} sx={appFooterStyles.bottomBar}>
-          <Typography variant="body2">(c) 2025-26 BookNest</Typography>
+          <Typography variant="body2">© 2025-26 BookNest</Typography>
           <Typography variant="body2">Made for readers, by readers</Typography>
         </Stack>
       </Container>

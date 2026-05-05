@@ -517,19 +517,7 @@ export default function BooksCatalogPage() {
   return (
     <Box sx={{ pt: `${NAVBAR_HEIGHT}px`, minHeight: "100vh", bgcolor: PUBLIC_UI.pageBackground }}>
       <FilterBar
-        searchValue={searchTerm}
-        onSearchChange={(value) => {
-          updateParams((next) => {
-            if (!value.trim()) {
-              next.delete("search");
-            } else {
-              next.set("search", value.trim());
-            }
-          });
-        }}
-        onSearchSubmit={() => null}
         onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
-        onClearFilters={handleClearFilters}
       />
 
       <Box

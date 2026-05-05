@@ -1,5 +1,6 @@
 import RestartAltRoundedIcon from "@mui/icons-material/RestartAltRounded";
 import StarRoundedIcon from "@mui/icons-material/StarRounded";
+import { useEffect, useState } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -33,6 +34,9 @@ const FILTER_SECTION_SX = {
 
 const ACCORDION_SX = {
   ...FILTER_SECTION_SX,
+  "&:not(:last-of-type)": {
+    mb: 0.8,
+  },
   "&.MuiAccordion-root": {
     margin: 0,
     elevation: 0,
@@ -60,6 +64,12 @@ export default function FilterSidebar({
   hasActiveFilters,
   onClearFilters,
 }) {
+  const [localPriceRange, setLocalPriceRange] = useState(priceRange);
+
+  useEffect(() => {
+    setLocalPriceRange(priceRange);
+  }, [priceRange]);
+
   const categoryEntries = [
     { label: "All Books", value: "__all__", count: categoryOptions.reduce((sum, item) => sum + item.count, 0) },
     ...categoryOptions,
@@ -68,7 +78,7 @@ export default function FilterSidebar({
   const isAllBooksSelected = selectedCategories.length === 0;
 
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={2}>
       <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center", px: 0.5 }}>
         <Typography variant="h6" sx={{ fontWeight: 800, color: PUBLIC_UI.text }}>
           Filters
@@ -194,15 +204,32 @@ export default function FilterSidebar({
         </AccordionSummary>
         <AccordionDetails sx={{ px: 1.5, py: 1.2, pt: 0.5 }}>
           <Slider
-            value={priceRange}
+            value={localPriceRange}
             min={priceBounds.min}
             max={priceBounds.max}
-            onChangeCommitted={(_, value) => onPriceRangeChange(value)}
+            onChange={(_, value) => {
+              if (Array.isArray(value)) {
+                setLocalPriceRange(value);
+              }
+            }}
+            onChangeCommitted={(_, value) => {
+              if (Array.isArray(value)) {
+                onPriceRangeChange(value);
+              }
+            }}
             valueLabelDisplay="auto"
             valueLabelFormat={(value) => formatBookPrice(value)}
+            step={1}
+            disableSwap
             sx={{ 
               color: PUBLIC_UI.primary,
               mb: 1,
+              "& .MuiSlider-thumb": {
+                transition: "transform 0.12s ease",
+              },
+              "& .MuiSlider-track, & .MuiSlider-rail": {
+                transition: "all 0.18s ease",
+              },
               "& .MuiSlider-markLabel": {
                 fontSize: "0.75rem",
               }
@@ -217,7 +244,7 @@ export default function FilterSidebar({
               minWidth: "50%",
             }}>
               <Typography variant="caption" sx={{ color: PUBLIC_UI.primary, fontWeight: 600 }}>
-                {formatBookPrice(priceRange[0])}
+                {formatBookPrice(localPriceRange[0])}
               </Typography>
             </Box>
             <Box sx={{ 
@@ -228,7 +255,7 @@ export default function FilterSidebar({
               minWidth: "50%",
             }}>
               <Typography variant="caption" sx={{ color: PUBLIC_UI.primary, fontWeight: 600 }}>
-                {formatBookPrice(priceRange[1])}
+                {formatBookPrice(localPriceRange[1])}
               </Typography>
             </Box>
           </Stack>

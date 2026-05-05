@@ -147,15 +147,24 @@ export default function AppNavbar() {
           </Stack>
 
           {isBooksRoute ? (
-            <Box sx={appNavbarStyles.searchWrap}>
-              <SearchBar
-                value={searchInput}
-                onChange={setSearchInput}
-                onSubmit={updateSearchNow}
-                placeholder="Search by title, author, or ISBN..."
-                size="medium"
-                sx={appNavbarStyles.searchBar}
-              />
+            <Box sx={appNavbarStyles.searchAndNavWrap}>
+              <Button
+                component={RouterLink}
+                to="/"
+                sx={appNavbarStyles.homeButton}
+              >
+                Home
+              </Button>
+              <Box sx={appNavbarStyles.searchWrap}>
+                <SearchBar
+                  value={searchInput}
+                  onChange={setSearchInput}
+                  onSubmit={updateSearchNow}
+                  placeholder="Search by title, author, or ISBN..."
+                  size="medium"
+                  sx={appNavbarStyles.searchBar}
+                />
+              </Box>
             </Box>
           ) : (
             <Box sx={appNavbarStyles.desktopNavWrap}>{renderNavLinks()}</Box>
@@ -190,15 +199,13 @@ export default function AppNavbar() {
                 </Button>
               </>
             )}
-            {!isBooksRoute ? (
-              <IconButton
-                aria-label="Open navigation menu"
-                onClick={() => setIsDrawerOpen(true)}
-                sx={appNavbarStyles.menuButton}
-              >
-                <MenuRoundedIcon />
-              </IconButton>
-            ) : null}
+            <IconButton
+              aria-label="Open navigation menu"
+              onClick={() => setIsDrawerOpen(true)}
+              sx={appNavbarStyles.menuButton}
+            >
+              <MenuRoundedIcon />
+            </IconButton>
           </Stack>
         </Box>
       </AppBar>
@@ -218,6 +225,18 @@ export default function AppNavbar() {
               <CloseRoundedIcon />
             </IconButton>
           </Stack>
+
+          {isBooksRoute ? (
+            <Button
+              component={RouterLink}
+              to="/"
+              onClick={() => setIsDrawerOpen(false)}
+              fullWidth
+              sx={appNavbarStyles.drawerHomeButton}
+            >
+              Home
+            </Button>
+          ) : null}
 
           {renderNavLinks()}
 
