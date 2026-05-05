@@ -10,7 +10,7 @@ export default function CTABanner() {
 		<section className={styles["cta-shell"]} id="cta">
 			<div className={`${styles["cta-banner"]} ${styles.reveal}`}>
 				<h2>
-					Ready to Start Reading <em>Without Overspending?</em>
+					<em>Ready to Start Reading Without Overspending?</em>
 				</h2>
 				<p>
 					Build your semester reading list, rent smarter, and keep your costs low without

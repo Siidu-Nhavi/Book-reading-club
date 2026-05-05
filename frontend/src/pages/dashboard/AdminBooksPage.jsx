@@ -7,7 +7,11 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
   Paper,
+  Select,
   Stack,
   Table,
   TableBody,
@@ -78,6 +82,7 @@ const emptyBookForm = {
   isbn: "",
   publisher: "",
   yearPublished: new Date().getFullYear(),
+  condition: "Good",
 };
 
 function BookFormDialog({ open, onClose, book, onSave, loading }) {
@@ -695,3 +700,4 @@ export default function AdminBooksPage() {
     </Box>
   );
 }
+
