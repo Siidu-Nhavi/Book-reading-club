@@ -15,7 +15,6 @@ import usePageTitle from "../hooks/usePageTitle";
 import { booksApi } from "../lib/api";
 import { fetchAllBooks } from "../utils/bookCatalog";
 import {
-  formatBookPrice,
   getBookDailyPrice,
   getBookPopularityScore,
   getBookRating,
@@ -106,7 +105,7 @@ export default function BooksCatalogPage() {
   usePageTitle("Books - BookNest");
 
   const navigate = useNavigate();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [allBooks, setAllBooks] = useState([]);
   const [wishlistIds, setWishlistIds] = useState([]);
@@ -472,27 +471,6 @@ export default function BooksCatalogPage() {
     window.dispatchEvent(new Event("wishlist-updated"));
   };
 
-  const getRentDisabledReason = (book) => {
-    if (!isAuthenticated || !user) {
-      return "";
-    }
-
-    if (user.pendingDuesTotal > 0) {
-      return `Pending dues: ${formatBookPrice(user.pendingDuesTotal)}`;
-    }
-
-    if (user.isFlagged) {
-      return "Account flagged";
-    }
-
-    const minimumRequired = getBookDailyPrice(book) + Number(book?.depositAmount || 0);
-
-    if (user.walletBalance < minimumRequired) {
-      return "Insufficient wallet balance";
-    }
-
-    return "";
-  };
 
   const filterPanel = (
     <FilterSidebar
@@ -634,7 +612,6 @@ export default function BooksCatalogPage() {
                           <BookCard
                             key={book._id}
                             book={book}
-                            rentDisabledReason={getRentDisabledReason(book)}
                             wishlistActive={wishlistIds.includes(book._id)}
                             onWishlistToggle={handleToggleWishlist}
                             onRent={() => {

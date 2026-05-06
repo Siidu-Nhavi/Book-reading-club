@@ -33,12 +33,12 @@ import {
   getBookAuthorBlurb,
   getBookDailyPrice,
   getBookDepositAmount,
-  getBookMonthlyPrice,
+  // getBookMonthlyPrice,
   getBookRating,
-  getBookReplacementCost,
+  // getBookReplacementCost,
   getBookReviewCount,
   getBookReviews,
-  getBookWeeklyPrice,
+  // getBookWeeklyPrice,
   getRentalFee,
   getRentalTotal,
   getWalletAfterBalance,
@@ -51,28 +51,6 @@ import {
   PUBLIC_SURFACE_SX,
   PUBLIC_UI,
 } from "../utils/publicUi";
-
-function getLocalRestrictionReason(user, book) {
-  if (!user) {
-    return "";
-  }
-
-  if (user.pendingDuesTotal > 0) {
-    return `You have pending dues of ${formatBookPrice(user.pendingDuesTotal)} — clear dues to rent again`;
-  }
-
-  if (user.isFlagged) {
-    return "Your account is flagged until pending dues are cleared";
-  }
-
-  const minimumRequired = getBookDailyPrice(book) + getBookDepositAmount(book);
-
-  if (user.walletBalance < minimumRequired) {
-    return "Insufficient balance — please top up your wallet";
-  }
-
-  return "";
-}
 
 export default function BookDetailPage() {
   const { id } = useParams();
@@ -118,6 +96,8 @@ export default function BookDetailPage() {
         if (!active) {
           return;
         }
+
+        console.log("Loaded book details:", currentBook);
 
         setBook(currentBook);
 
@@ -190,17 +170,15 @@ export default function BookDetailPage() {
   const rating = useMemo(() => (book ? getBookRating(book) : 0), [book]);
   const reviewCount = useMemo(() => (book ? getBookReviewCount(book) : 0), [book]);
   const depositAmount = useMemo(() => (book ? getBookDepositAmount(book) : 0), [book]);
-  const baseRentPrice = useMemo(() => Number(book?.rentPrice || 0), [book]);
+  // const baseRentPrice = useMemo(() => Number(book?.rentPrice || 0), [book]);
   const dailyPrice = useMemo(() => (book ? getBookDailyPrice(book) : 0), [book]);
-  const weeklyPrice = useMemo(() => (book ? getBookWeeklyPrice(book) : 0), [book]);
-  const monthlyPrice = useMemo(() => (book ? getBookMonthlyPrice(book) : 0), [book]);
-  const replacementCost = useMemo(() => (book ? getBookReplacementCost(book) : 0), [book]);
+  // const weeklyPrice = useMemo(() => (book ? getBookWeeklyPrice(book) : 0), [book]);
+  // const monthlyPrice = useMemo(() => (book ? getBookMonthlyPrice(book) : 0), [book]);
+  // const replacementCost = useMemo(() => (book ? getBookReplacementCost(book) : 0), [book]);
   const rentalFee = useMemo(() => (book ? getRentalFee(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
   const totalCost = useMemo(() => (book ? getRentalTotal(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
   const walletAfter = useMemo(() => getWalletAfterBalance(preview?.walletBalance ?? walletBalance, preview?.total ?? totalCost), [preview, totalCost, walletBalance]);
   const isWishlisted = book ? wishlistIds.includes(book._id) : false;
-  const localRestrictionReason = book ? getLocalRestrictionReason(user, book) : "";
-  const buttonRestrictionReason = rentError || localRestrictionReason;
 
   const displayedReviews = reviews.length > 0
     ? reviews.map((review, index) => ({
@@ -221,6 +199,26 @@ export default function BookDetailPage() {
 
     if (!isAuthenticated) {
       navigate(`/login?redirect=${encodeURIComponent(`/books/${book._id}`)}`);
+      return;
+    }
+
+    // Check for pending dues before rental attempt
+    if (user?.pendingDuesTotal > 0) {
+      setRentError(`You have pending dues of ${formatBookPrice(user.pendingDuesTotal)} — clear dues to rent again`);
+      return;
+    }
+
+    // Check for flagged account
+    if (user?.isFlagged) {
+      setRentError("Your account is flagged until pending dues are cleared");
+      return;
+    }
+
+    // Check for sufficient wallet balance
+    const minimumRequired = getBookDailyPrice(book) + getBookDepositAmount(book);
+    if (walletBalance < minimumRequired) {
+      setIsRentModalOpen(false);
+      navigate("/dashboard/wallet");
       return;
     }
 
@@ -302,9 +300,9 @@ export default function BookDetailPage() {
               <Stack spacing={1.4}>
                 <Stack direction="row" spacing={1} flexWrap="wrap">
                   <AvailabilityBadge available={Boolean(book.isAvailable)} />
-                  <Typography sx={{ color: PUBLIC_UI.muted, fontWeight: 600 }}>
+                  {/* <Typography sx={{ color: PUBLIC_UI.muted, fontWeight: 600 }}>
                     Rent price: {formatBookPrice(baseRentPrice)}
-                  </Typography>
+                  </Typography> */}
                   <Typography sx={{ color: PUBLIC_UI.muted, fontWeight: 600 }}>
                     Deposit: {formatBookPrice(depositAmount)}
                   </Typography>
@@ -313,12 +311,12 @@ export default function BookDetailPage() {
                 <Typography sx={{ fontSize: "1.6rem", fontWeight: 700, color: PUBLIC_UI.text }}>
                   {formatBookPrice(dailyPrice)} / day
                 </Typography>
-                <Typography sx={{ color: PUBLIC_UI.muted }}>
+                {/* <Typography sx={{ color: PUBLIC_UI.muted }}>
                   {formatBookPrice(weeklyPrice)} / week • {formatBookPrice(monthlyPrice)} / month
-                </Typography>
-                <Typography sx={{ color: PUBLIC_UI.muted }}>
+                </Typography> */}
+                {/* <Typography sx={{ color: PUBLIC_UI.muted }}>
                   Replacement cost: {formatBookPrice(replacementCost)}
-                </Typography>
+                </Typography> */}
                 {isAuthenticated ? (
                   <Typography sx={{ color: PUBLIC_UI.primary, fontWeight: 700 }}>
                     Wallet balance: {formatBookPrice(walletBalance)}
@@ -327,12 +325,20 @@ export default function BookDetailPage() {
 
                 <Button
                   variant="contained"
-                  disabled={!book.isAvailable || Boolean(buttonRestrictionReason)}
+                  disabled={!book.isAvailable}
                   onClick={() => {
                     if (!isAuthenticated) {
                       navigate(`/login?redirect=${encodeURIComponent(`/books/${book._id}`)}`);
                       return;
                     }
+
+                    // Check if user has sufficient balance
+                    const minimumRequired = getBookDailyPrice(book) + getBookDepositAmount(book);
+                    if (walletBalance < minimumRequired) {
+                      navigate("/dashboard/wallet");
+                      return;
+                    }
+
                     setIsRentModalOpen(true);
                   }}
                   sx={{
@@ -345,12 +351,6 @@ export default function BookDetailPage() {
                 >
                   Rent Now
                 </Button>
-
-                {buttonRestrictionReason ? (
-                  <Alert severity="warning" sx={{ borderRadius: 2.5 }}>
-                    {buttonRestrictionReason}
-                  </Alert>
-                ) : null}
 
                 <Button
                   variant="outlined"

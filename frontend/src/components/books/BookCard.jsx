@@ -30,7 +30,6 @@ export default function BookCard({
   onRent,
   showWishlist = true,
   showRentButton = true,
-  rentDisabledReason = "",
 }) {
   const navigate = useNavigate();
   const featuredVariant = variant === "featured";
@@ -43,7 +42,7 @@ export default function BookCard({
   const baseRentPrice = Number(book?.rentPrice || 0);
   const rating = getBookRating(book);
   const reviewCount = getBookReviewCount(book);
-  const isRentDisabled = !book?.isAvailable || Boolean(rentDisabledReason);
+  const isRentDisabled = !book?.isAvailable;
 
   return (
     <Paper
@@ -218,14 +217,9 @@ export default function BookCard({
                 },
               }}
             >
-              {book?.isAvailable ? (rentDisabledReason ? "Unavailable" : "Rent Now") : "Rented"}
+              {book?.isAvailable ? "Rent Now" : "Rented"}
             </Button>
           </Stack>
-        ) : null}
-        {rentDisabledReason ? (
-          <Typography sx={{ px: 2, pb: 2, color: PUBLIC_UI.muted, fontSize: "0.8rem" }}>
-            {rentDisabledReason}
-          </Typography>
         ) : null}
       </Stack>
     </Paper>
