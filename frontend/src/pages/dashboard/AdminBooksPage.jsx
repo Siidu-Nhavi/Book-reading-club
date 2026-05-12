@@ -75,9 +75,7 @@ const emptyBookForm = {
   description: "",
   category: "",
   image: "",
-  dailyRentalPrice: "",
-  weeklyRentalPrice: "",
-  depositAmount: "",
+  rentPrice: "",
   totalCopies: "1",
   isbn: "",
   publisher: "",
@@ -102,8 +100,8 @@ function BookFormDialog({ open, onClose, book, onSave, loading }) {
   };
 
   const handleSave = async () => {
-    if (!formData.title || !formData.author || !formData.category) {
-      alert("Please fill in required fields: title, author, category");
+    if (!formData.title || !formData.author || !formData.category || !formData.rentPrice) {
+      alert("Please fill in required fields: title, author, category, book price");
       return;
     }
     await onSave(formData);
@@ -214,45 +212,13 @@ function BookFormDialog({ open, onClose, book, onSave, loading }) {
         <TextField
           fullWidth
           type="number"
-          label="Daily Rental Price (₹) *"
-          name="dailyRentalPrice"
-          value={formData.dailyRentalPrice}
+          label="Book Price (₹) *"
+          name="rentPrice"
+          value={formData.rentPrice}
           onChange={handleChange}
           placeholder="0"
           required
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              fontSize: "14px",
-              padding: "10px",
-              borderRadius: "8px",
-            },
-          }}
-        />
-        <TextField
-          fullWidth
-          type="number"
-          label="Weekly Rental Price (₹)"
-          name="weeklyRentalPrice"
-          value={formData.weeklyRentalPrice}
-          onChange={handleChange}
-          placeholder="0"
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              fontSize: "14px",
-              padding: "10px",
-              borderRadius: "8px",
-            },
-          }}
-        />
-        <TextField
-          fullWidth
-          type="number"
-          label="Deposit Amount (₹) *"
-          name="depositAmount"
-          value={formData.depositAmount}
-          onChange={handleChange}
-          placeholder="0"
-          required
+          helperText="Deposit equals book price; rent per day is 1% of this price."
           sx={{
             "& .MuiOutlinedInput-root": {
               fontSize: "14px",
@@ -532,7 +498,7 @@ export default function AdminBooksPage() {
                 Category
               </TableCell>
               <TableCell sx={{ fontWeight: 700, color: "#fff", fontSize: "14px" }} align="right">
-                Daily Price
+                Rent / Day
               </TableCell>
               <TableCell sx={{ fontWeight: 700, color: "#fff", fontSize: "14px" }} align="right">
                 Copies
@@ -587,7 +553,11 @@ export default function AdminBooksPage() {
                     </Box>
                   </TableCell>
                   <TableCell align="right" sx={{ fontSize: "14px", fontWeight: 600 }}>
-                    ₹{book.dailyRentalPrice}
+                    ₹{Number.isFinite(book.pricePerDay)
+                      ? book.pricePerDay
+                      : Number.isFinite(book.rentPrice)
+                        ? Number(book.rentPrice) * 0.01
+                        : 0}
                   </TableCell>
                   <TableCell align="right" sx={{ fontSize: "14px", fontWeight: 600 }}>
                     <Box

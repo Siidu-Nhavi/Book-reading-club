@@ -1,4 +1,5 @@
 const Book = require("../../models/Book.js");
+const { calculateBookPricing } = require("../../utils/categoryPricing.js");
 
 /**
  * GET /api/admin/books
@@ -58,20 +59,30 @@ async function addBook(req, res) {
       description,
       category,
       image,
-      dailyRentalPrice,
-      weeklyRentalPrice,
-      depositAmount,
-      totalCopies,
+      rentPrice,
       isbn,
       publisher,
       yearPublished,
     } = req.body;
 
-    if (!title || !author || !category || !dailyRentalPrice || !depositAmount) {
+    if (!title || !author || !category || !rentPrice) {
       return res.status(400).json({
-        error: "Missing required fields: title, author, category, dailyRentalPrice, depositAmount",
+        error: "Missing required fields: title, author, category, rentPrice",
       });
     }
+
+    const parsedRentPrice = Number.parseFloat(rentPrice);
+
+    if (!Number.isFinite(parsedRentPrice) || parsedRentPrice <= 0) {
+      return res.status(400).json({
+        error: "rentPrice must be a positive number",
+      });
+    }
+
+    const pricing = calculateBookPricing({
+      basePrice: parsedRentPrice,
+      category,
+    });
 
     const newBook = new Book({
       title,
@@ -79,11 +90,10 @@ async function addBook(req, res) {
       description: description || "",
       category,
       image: image || "",
-      dailyRentalPrice: parseFloat(dailyRentalPrice),
-      weeklyRentalPrice: parseFloat(weeklyRentalPrice) || parseFloat(dailyRentalPrice) * 5,
-      depositAmount: parseFloat(depositAmount),
-      totalCopies: parseInt(totalCopies) || 1,
-      availableCopies: parseInt(totalCopies) || 1,
+      rentPrice: pricing.rentPrice,
+      pricePerDay: pricing.pricePerDay,
+      depositAmount: pricing.depositAmount,
+      replacementCost: pricing.replacementCost,
       isbn: isbn || "",
       publisher: publisher || "",
       yearPublished: parseInt(yearPublished) || new Date().getFullYear(),
@@ -116,34 +126,47 @@ async function updateBook(req, res) {
       description,
       category,
       image,
-      dailyRentalPrice,
-      weeklyRentalPrice,
-      depositAmount,
-      totalCopies,
-      availableCopies,
+      rentPrice,
       isbn,
       publisher,
       yearPublished,
     } = req.body;
 
+    const updatePayload = {
+      ...(title && { title }),
+      ...(author && { author }),
+      ...(description !== undefined && { description }),
+      ...(category && { category }),
+      ...(image !== undefined && { image }),
+      ...(isbn !== undefined && { isbn }),
+      ...(publisher !== undefined && { publisher }),
+      ...(yearPublished && { yearPublished: parseInt(yearPublished) }),
+      updatedAt: new Date(),
+    };
+
+    if (rentPrice !== undefined && rentPrice !== null && rentPrice !== "") {
+      const parsedRentPrice = Number.parseFloat(rentPrice);
+
+      if (!Number.isFinite(parsedRentPrice) || parsedRentPrice <= 0) {
+        return res.status(400).json({
+          error: "rentPrice must be a positive number",
+        });
+      }
+
+      const pricing = calculateBookPricing({
+        basePrice: parsedRentPrice,
+        category: category || undefined,
+      });
+
+      updatePayload.rentPrice = pricing.rentPrice;
+      updatePayload.pricePerDay = pricing.pricePerDay;
+      updatePayload.depositAmount = pricing.depositAmount;
+      updatePayload.replacementCost = pricing.replacementCost;
+    }
+
     const book = await Book.findByIdAndUpdate(
       id,
-      {
-        ...(title && { title }),
-        ...(author && { author }),
-        ...(description !== undefined && { description }),
-        ...(category && { category }),
-        ...(image !== undefined && { image }),
-        ...(dailyRentalPrice && { dailyRentalPrice: parseFloat(dailyRentalPrice) }),
-        ...(weeklyRentalPrice && { weeklyRentalPrice: parseFloat(weeklyRentalPrice) }),
-        ...(depositAmount && { depositAmount: parseFloat(depositAmount) }),
-        ...(totalCopies && { totalCopies: parseInt(totalCopies) }),
-        ...(availableCopies !== undefined && { availableCopies: parseInt(availableCopies) }),
-        ...(isbn !== undefined && { isbn }),
-        ...(publisher !== undefined && { publisher }),
-        ...(yearPublished && { yearPublished: parseInt(yearPublished) }),
-        updatedAt: new Date(),
-      },
+      updatePayload,
       { new: true }
     );
 

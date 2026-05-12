@@ -107,8 +107,6 @@ function toBookDocument(row) {
       `Format: ${row.format || "N/A"}. ISBN: ${row.isbn || "N/A"}. Rating: ${row.book_depository_stars || "N/A"}`,
     rentPrice: pricing.rentPrice,
     pricePerDay: pricing.pricePerDay,
-    pricePerWeek: pricing.pricePerWeek,
-    pricePerMonth: pricing.pricePerMonth,
     depositAmount: pricing.depositAmount,
     replacementCost: pricing.replacementCost,
     image: row.image || "",
@@ -374,12 +372,9 @@ function buildRentals(users, books, count, rng) {
     let damageCharge = 0;
     let damageCondition = null;
     let restrictionApplied = false;
-    const rentalFee =
-      rentalType === "daily"
-        ? book.pricePerDay * rentalDuration
-        : rentalType === "weekly"
-          ? book.pricePerWeek * rentalDuration
-          : book.pricePerMonth * rentalDuration;
+    const rentalDays =
+      rentalType === "daily" ? rentalDuration : rentalType === "weekly" ? rentalDuration * 7 : rentalDuration * 30;
+    const totalRentPrice = book.pricePerDay * rentalDays;
 
     if (status === "returned") {
       returnedAt = new Date(
@@ -408,7 +403,7 @@ function buildRentals(users, books, count, rng) {
       book: book._id,
       rentalType,
       rentalDuration,
-      rentalFee,
+      totalRentPrice,
       depositAmount: book.depositAmount,
       status,
       rentedAt,

@@ -1,7 +1,7 @@
 const Book = require("../models/Book.js");
 const Rental = require("../models/Rental.js");
 const User = require("../models/User.js");
-const { getDueDate, getOverdueDays, getRentalFee, roundCurrency } = require("../utils/rentalPricing.js");
+const { getDueDate, getOverdueDays, getTotalRentPrice, roundCurrency } = require("../utils/rentalPricing.js");
 const {
   creditWallet,
   createPendingDue,
@@ -53,9 +53,9 @@ async function evaluateRentalEligibility({ userId, bookId, rentalType, rentalDur
     return { allowed: false, status: 400, message: "Book is currently unavailable" };
   }
 
-  const rentalFee = getRentalFee(book, rentalType, rentalDuration);
+  const totalRentPrice = getTotalRentPrice(book, rentalType, rentalDuration);
   const depositAmount = roundCurrency(book.depositAmount);
-  const total = roundCurrency(rentalFee + depositAmount);
+  const total = roundCurrency(totalRentPrice + depositAmount);
   const restrictionMessage = getRestrictionMessage({
     user,
     pendingDuesTotal: walletInfo.pendingDuesTotal,
@@ -70,7 +70,7 @@ async function evaluateRentalEligibility({ userId, bookId, rentalType, rentalDur
       message: restrictionMessage,
       walletBalance: walletInfo.wallet.balance,
       pendingDuesTotal: walletInfo.pendingDuesTotal,
-      rentalFee,
+      totalRentPrice,
       depositAmount,
       total,
     };
@@ -81,7 +81,7 @@ async function evaluateRentalEligibility({ userId, bookId, rentalType, rentalDur
     user,
     book,
     wallet: walletInfo.wallet,
-    rentalFee,
+    totalRentPrice,
     depositAmount,
     total,
   };
@@ -118,7 +118,7 @@ async function createRental({ userId, bookId, rentalType, rentalDuration }) {
     book: bookId,
     rentalType,
     rentalDuration,
-    rentalFee: eligibility.rentalFee,
+    totalRentPrice: eligibility.totalRentPrice,
     depositAmount: eligibility.depositAmount,
     rentedAt,
     dueDate,

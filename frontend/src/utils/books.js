@@ -18,11 +18,13 @@ export function getBookDailyPrice(book = {}) {
 }
 
 export function getBookWeeklyPrice(book = {}) {
-  return Number.isFinite(book?.pricePerWeek) ? Number(book.pricePerWeek) : 0;
+  const daily = getBookDailyPrice(book);
+  return daily * 7;
 }
 
 export function getBookMonthlyPrice(book = {}) {
-  return Number.isFinite(book?.pricePerMonth) ? Number(book.pricePerMonth) : 0;
+  const daily = getBookDailyPrice(book);
+  return daily * 30;
 }
 
 export function getBookDepositAmount(book = {}) {
@@ -45,24 +47,18 @@ export function getWeeklyRentFilterValue(bookOrPrice) {
   return Math.min(RENT_FILTER_MAX, Math.max(RENT_FILTER_MIN, Math.round(bookOrPrice)));
 }
 
-export function getRentalFee(book = {}, rentalType = "daily", rentalDuration = 1) {
+export function getTotalRentPrice(book = {}, rentalType = "daily", rentalDuration = 1) {
   if (!Number.isFinite(rentalDuration) || rentalDuration < 1) {
     return 0;
   }
 
-  if (rentalType === "weekly") {
-    return getBookWeeklyPrice(book) * rentalDuration;
-  }
-
-  if (rentalType === "monthly") {
-    return getBookMonthlyPrice(book) * rentalDuration;
-  }
-
-  return getBookDailyPrice(book) * rentalDuration;
+  const dailyPrice = getBookDailyPrice(book);
+  const days = rentalType === "weekly" ? rentalDuration * 7 : rentalType === "monthly" ? rentalDuration * 30 : rentalDuration;
+  return dailyPrice * days;
 }
 
 export function getRentalTotal(book = {}, rentalType = "daily", rentalDuration = 1) {
-  return getRentalFee(book, rentalType, rentalDuration) + getBookDepositAmount(book);
+  return getTotalRentPrice(book, rentalType, rentalDuration) + getBookDepositAmount(book);
 }
 
 export function getWalletAfterBalance(walletBalance = 0, total = 0) {

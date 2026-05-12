@@ -27,7 +27,7 @@ function normalizeImageUrl(value = "") {
 function normalizeBook(book = {}) {
   return {
     ...book,
-    price: Number.isFinite(book?.pricePerWeek) ? book.pricePerWeek : book?.price,
+    price: Number.isFinite(book?.rentPrice) ? book.rentPrice : book?.price,
     image: normalizeImageUrl(book?.image || book?.coverImage || book?.thumbnail || book?.coverUrl || ""),
   };
 }
@@ -68,8 +68,7 @@ async function hydrateBooksWithDetails(books = []) {
       depositAmount: hydrated.depositAmount ?? book.depositAmount,
       replacementCost: hydrated.replacementCost ?? book.replacementCost,
       pricePerDay: hydrated.pricePerDay ?? book.pricePerDay,
-      pricePerWeek: hydrated.pricePerWeek ?? book.pricePerWeek,
-      pricePerMonth: hydrated.pricePerMonth ?? book.pricePerMonth,
+      rentPrice: hydrated.rentPrice ?? book.rentPrice,
       totalReviews: hydrated.totalReviews ?? book.totalReviews,
     };
   });

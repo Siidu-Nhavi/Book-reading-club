@@ -28,16 +28,6 @@ const bookSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
-    pricePerWeek: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
-    pricePerMonth: {
-      type: Number,
-      required: true,
-      min: 0,
-    },
     depositAmount: {
       type: Number,
       required: true,

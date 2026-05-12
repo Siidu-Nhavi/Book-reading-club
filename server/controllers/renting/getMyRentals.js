@@ -30,7 +30,7 @@ async function getMyRentals(req, res) {
   try {
     const [rentals, totalRentals, alerts, walletOverview] = await Promise.all([
       Rental.find(filters)
-        .populate("book", "title author image pricePerDay pricePerWeek pricePerMonth depositAmount isAvailable")
+        .populate("book", "title author image pricePerDay depositAmount isAvailable")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
         .limit(limit),

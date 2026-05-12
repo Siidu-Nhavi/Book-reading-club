@@ -39,7 +39,7 @@ import {
   getBookReviewCount,
   getBookReviews,
   // getBookWeeklyPrice,
-  getRentalFee,
+  getTotalRentPrice,
   getRentalTotal,
   getWalletAfterBalance,
   getWishlistIds,
@@ -175,7 +175,7 @@ export default function BookDetailPage() {
   // const weeklyPrice = useMemo(() => (book ? getBookWeeklyPrice(book) : 0), [book]);
   // const monthlyPrice = useMemo(() => (book ? getBookMonthlyPrice(book) : 0), [book]);
   // const replacementCost = useMemo(() => (book ? getBookReplacementCost(book) : 0), [book]);
-  const rentalFee = useMemo(() => (book ? getRentalFee(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
+  const totalRentPrice = useMemo(() => (book ? getTotalRentPrice(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
   const totalCost = useMemo(() => (book ? getRentalTotal(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
   const walletAfter = useMemo(() => getWalletAfterBalance(preview?.walletBalance ?? walletBalance, preview?.total ?? totalCost), [preview, totalCost, walletBalance]);
   const isWishlisted = book ? wishlistIds.includes(book._id) : false;
@@ -215,7 +215,7 @@ export default function BookDetailPage() {
     }
 
     // Check for sufficient wallet balance
-    const minimumRequired = getBookDailyPrice(book) + getBookDepositAmount(book);
+    const minimumRequired = totalCost;
     if (walletBalance < minimumRequired) {
       setIsRentModalOpen(false);
       navigate("/dashboard/wallet");
@@ -333,7 +333,7 @@ export default function BookDetailPage() {
                     }
 
                     // Check if user has sufficient balance
-                    const minimumRequired = getBookDailyPrice(book) + getBookDepositAmount(book);
+                    const minimumRequired = totalCost;
                     if (walletBalance < minimumRequired) {
                       navigate("/dashboard/wallet");
                       return;
@@ -574,7 +574,7 @@ export default function BookDetailPage() {
               <Stack spacing={1}>
                 <Typography sx={{ fontWeight: 700, color: PUBLIC_UI.text }}>Price breakdown</Typography>
                 <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
-                  Rental fee: {formatBookPrice(preview?.rentalFee ?? rentalFee)}
+                  Total rent: {formatBookPrice(preview?.totalRentPrice ?? totalRentPrice)}
                 </Typography>
                 <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
                   Security deposit: {formatBookPrice(preview?.depositAmount ?? depositAmount)}

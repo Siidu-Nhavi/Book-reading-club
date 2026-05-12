@@ -18,13 +18,14 @@ const rentalSchema = new mongoose.Schema(
       type: String,
       enum: ["daily", "weekly", "monthly"],
       required: true,
+      index: true,
     },
     rentalDuration: {
       type: Number,
       required: true,
       min: 1,
     },
-    rentalFee: {
+    totalRentPrice: {
       type: Number,
       required: true,
       min: 0,

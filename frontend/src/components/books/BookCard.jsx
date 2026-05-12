@@ -6,10 +6,8 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   formatBookPrice,
   getBookDepositAmount,
-  getBookMonthlyPrice,
   getBookRating,
   getBookReviewCount,
-  getBookWeeklyPrice,
   formatCategoryLabel,
   truncateText,
 } from "../../utils/books";
@@ -35,9 +33,7 @@ export default function BookCard({
   const featuredVariant = variant === "featured";
   const similarVariant = variant === "similar";
   const fixedWidthVariant = featuredVariant;
-  const weeklyRent = getBookWeeklyPrice(book);
   const dailyRent = Number(book?.pricePerDay || 0);
-  const monthlyRent = getBookMonthlyPrice(book);
   const depositAmount = getBookDepositAmount(book);
   const baseRentPrice = Number(book?.rentPrice || 0);
   const rating = getBookRating(book);
@@ -169,13 +165,10 @@ export default function BookCard({
           >
             <Stack spacing={0.4}>
               <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
-                Rent price: {formatBookPrice(baseRentPrice)}
+                Book price: {formatBookPrice(baseRentPrice)}
               </Typography>
               <Typography sx={{ color: PUBLIC_UI.text, fontWeight: 600 }}>
                 {formatBookPrice(dailyRent)} / day
-              </Typography>
-              <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
-                {formatBookPrice(weeklyRent)} / week • {formatBookPrice(monthlyRent)} / month
               </Typography>
               <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
                 Deposit: {formatBookPrice(depositAmount)}

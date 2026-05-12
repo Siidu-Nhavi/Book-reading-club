@@ -60,7 +60,7 @@ async function rentBook(req, res) {
         book: rentalResult.rental.book,
         rentalType: rentalResult.rental.rentalType,
         rentalDuration: rentalResult.rental.rentalDuration,
-        rentalFee: rentalResult.rental.rentalFee,
+        totalRentPrice: rentalResult.rental.totalRentPrice,
         depositAmount: rentalResult.rental.depositAmount,
         rentedAt: rentalResult.rental.rentedAt,
         dueDate: rentalResult.rental.dueDate,
@@ -104,14 +104,14 @@ async function previewRental(req, res) {
       message: eligibility.message || "",
       pricing: eligibility.allowed
         ? {
-            rentalFee: eligibility.rentalFee,
+            totalRentPrice: eligibility.totalRentPrice,
             depositAmount: eligibility.depositAmount,
             total: eligibility.total,
             walletBalance: eligibility.wallet.balance,
             walletAfter: eligibility.wallet.balance - eligibility.total,
           }
         : {
-            rentalFee: eligibility.rentalFee || 0,
+            totalRentPrice: eligibility.totalRentPrice || 0,
             depositAmount: eligibility.depositAmount || 0,
             total: eligibility.total || 0,
             walletBalance: eligibility.walletBalance || 0,

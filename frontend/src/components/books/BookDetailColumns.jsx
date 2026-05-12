@@ -4,7 +4,7 @@ import { formatBookPrice } from "../../utils/books";
 
 function getBookDetails(book = {}) {
   return [
-    { label: "Rent Price", value: Number.isFinite(book.rentPrice) ? formatBookPrice(book.rentPrice) : "N/A" },
+    { label: "Book Price", value: Number.isFinite(book.rentPrice) ? formatBookPrice(book.rentPrice) : "N/A" },
     { label: "Deposit", value: Number.isFinite(book.depositAmount) ? formatBookPrice(book.depositAmount) : "N/A" },
     { label: "Publisher", value: book.publisher || "N/A" },
     { label: "Edition", value: book.edition || "N/A" },

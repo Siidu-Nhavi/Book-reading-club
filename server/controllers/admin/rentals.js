@@ -1,6 +1,7 @@
 const Rental = require("../../models/Rental.js");
 const User = require("../../models/User.js");
 const Book = require("../../models/Book.js");
+const { processReturn } = require("../../services/rentalFinanceService.js");
 
 /**
  * GET /api/admin/rentals
@@ -57,38 +58,77 @@ async function getAllRentals(req, res) {
 async function forceReturn(req, res) {
   try {
     const { id } = req.params;
-    const { damageLevel = "none", damageCost = 0 } = req.body;
+    const { damageLevel = "none", damageCost = 0, adminNote = "" } = req.body;
+    const normalizedDamage = String(damageLevel || "none").trim().toLowerCase();
 
-    if (!["none", "minor", "moderate", "severe"].includes(damageLevel)) {
+    if (!["none", "minor", "moderate", "severe", "good", "major", "lost"].includes(normalizedDamage)) {
       return res.status(400).json({ error: "Invalid damage level" });
     }
 
-    const rental = await Rental.findByIdAndUpdate(
-      id,
-      {
-        status: "returned",
-        returnedDate: new Date(),
-        damageLevel,
-        damageCost: parseFloat(damageCost) || 0,
-        updatedAt: new Date(),
-      },
-      { new: true }
-    )
-      .populate("user", "name email")
-      .populate("book", "title");
+    const rental = await Rental.findById(id).populate("book");
 
     if (!rental) {
       return res.status(404).json({ error: "Rental not found" });
     }
 
-    // Update book availability
-    await Book.findByIdAndUpdate(rental.book._id, {
-      $inc: { availableCopies: 1 },
+    const condition =
+      normalizedDamage === "none" || normalizedDamage === "good"
+        ? "good"
+        : normalizedDamage === "minor"
+          ? "minor"
+          : normalizedDamage === "moderate" || normalizedDamage === "major"
+            ? "major"
+            : "lost";
+
+    let damagePercentage = null;
+
+    if (condition === "minor") {
+      const replacementCost = Number(rental.book?.replacementCost || 0);
+      const parsedDamageCost = Number(damageCost);
+
+      if (Number.isFinite(parsedDamageCost) && parsedDamageCost > 0 && replacementCost > 0) {
+        damagePercentage = Math.min(0.5, Math.max(0.25, parsedDamageCost / replacementCost));
+      } else {
+        damagePercentage = 0.25;
+      }
+    }
+
+    const result = await processReturn({
+      rentalId: id,
+      condition,
+      damagePercentage,
+      adminNote: String(adminNote || "").trim(),
     });
+
+    if (!result.ok) {
+      return res.status(result.status || 400).json({ error: result.message });
+    }
+
+    const updatedRental = await Rental.findById(id)
+      .populate("user", "name email")
+      .populate("book", "title");
 
     return res.status(200).json({
       message: "Rental forced returned successfully",
-      rental,
+      rental: updatedRental || rental,
+      returnSummary: {
+        rentalId: result.rentalId,
+        returnedAt: result.returnedAt,
+        status: result.status,
+        condition: result.condition,
+        damageCharge: result.damageCharge,
+        depositRefund: result.depositRefund,
+        extraWalletDeduction: result.extraWalletDeduction,
+        pendingDue: result.pendingDue
+          ? {
+              _id: result.pendingDue._id,
+              amount: result.pendingDue.amount,
+              reason: result.pendingDue.reason,
+            }
+          : null,
+        depositHeld: result.depositHeld,
+        depositReleasedNow: result.depositReleasedNow,
+      },
     });
   } catch (error) {
     console.error("Force return error:", error);

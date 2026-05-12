@@ -49,10 +49,6 @@ function getSort(sortBy) {
     case "rentPrice":
     case "pricePerDay":
       return "pricePerDay";
-    case "pricePerWeek":
-      return "pricePerWeek";
-    case "pricePerMonth":
-      return "pricePerMonth";
     case "averageRating":
       return "averageRating";
     case "title":
@@ -107,7 +103,7 @@ async function getAllBook(req, res) {
       Book.find(filters)
         .sort(sort)
         .select(
-          "_id title author category rentPrice pricePerDay pricePerWeek pricePerMonth depositAmount replacementCost isAvailable unavailabilityReason averageRating image",
+          "_id title author category rentPrice pricePerDay depositAmount replacementCost isAvailable unavailabilityReason averageRating image",
         )
         .skip((page - 1) * limit)
         .limit(limit),

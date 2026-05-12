@@ -171,7 +171,7 @@ export default function MyRentalsPage() {
                       Due: {formatDate(rental.dueDate)}
                     </Typography>
                     <Typography variant="body2" sx={{ color: BOOKNEST_COLORS.muted }}>
-                      Rental fee: {formatBookPrice(Number(rental.rentalFee || 0))}
+                      Total rent: {formatBookPrice(Number(rental.totalRentPrice || 0))}
                     </Typography>
                     <Typography variant="body2" sx={{ color: BOOKNEST_COLORS.muted }}>
                       Deposit paid: {formatBookPrice(Number(rental.depositAmount || 0))}

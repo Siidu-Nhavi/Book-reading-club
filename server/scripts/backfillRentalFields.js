@@ -53,10 +53,8 @@ async function backfillBooks() {
           $set: {
             rentPrice: pricing.rentPrice,
             pricePerDay: pricing.pricePerDay,
-            pricePerWeek: pricing.pricePerWeek,
-            pricePerMonth: pricing.pricePerMonth,
-            depositAmount: book.depositAmount ?? Math.max(50, pricing.depositAmount),
-            replacementCost: book.replacementCost ?? pricing.replacementCost,
+            depositAmount: pricing.depositAmount,
+            replacementCost: pricing.replacementCost,
             averageRating: book.averageRating ?? 0,
             totalReviews: book.totalReviews ?? 0,
             isAvailable: book.isAvailable ?? true,
@@ -64,6 +62,8 @@ async function backfillBooks() {
           },
           $unset: {
             price: 1,
+            pricePerWeek: 1,
+            pricePerMonth: 1,
             depositRequired: 1,
             penaltyPerDay: 1,
           },
@@ -126,7 +126,7 @@ async function backfillRentals() {
           $set: {
             rentalType: rental.rentalType ?? "daily",
             rentalDuration: rental.rentalDuration ?? 7,
-            rentalFee: rental.rentalFee ?? Number(rental.penaltyAmount || 0),
+            totalRentPrice: rental.totalRentPrice ?? rental.rentalFee ?? Number(rental.penaltyAmount || 0),
             depositAmount: rental.depositAmount ?? 0,
             rentedAt: rental.rentedAt ?? rental.startDate ?? rental.createdAt,
             dueDate: rental.dueDate,
@@ -148,6 +148,7 @@ async function backfillRentals() {
             returnedDate: 1,
             penaltyAmount: 1,
             penaltyPaid: 1,
+            rentalFee: 1,
           },
         },
       },

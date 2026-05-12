@@ -2,13 +2,17 @@ import { Link as RouterLink } from "react-router-dom";
 import styles from "./landingpage.module.css";
 
 function formatPrice(book = {}) {
-  const numericPrice = Number(book?.pricePerWeek || book?.price);
+  const numericPrice = Number.isFinite(book?.pricePerDay)
+    ? Number(book.pricePerDay)
+    : Number.isFinite(book?.rentPrice)
+      ? Number(book.rentPrice) * 0.01
+      : Number.NaN;
 
   if (!Number.isFinite(numericPrice)) {
     return "Price unavailable";
   }
 
-  return `Rs ${numericPrice}/week`;
+  return `Rs ${numericPrice}/day`;
 }
 
 export default function FeaturedBooksSection({ books = [], isLoading = false }) {

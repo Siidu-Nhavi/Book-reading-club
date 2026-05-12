@@ -4,25 +4,30 @@ function roundCurrency(value) {
   return Math.round((Number(value) + Number.EPSILON) * 100) / 100;
 }
 
-function getRentalFee(book, rentalType, rentalDuration) {
-  if (!book) {
-    throw new Error("Book is required for pricing");
-  }
-
+function getRentalDays(rentalType, rentalDuration) {
   if (!Number.isInteger(rentalDuration) || rentalDuration < 1) {
     throw new Error("Rental duration must be a positive integer");
   }
 
   switch (rentalType) {
     case "daily":
-      return roundCurrency(book.pricePerDay * rentalDuration);
+      return rentalDuration;
     case "weekly":
-      return roundCurrency(book.pricePerWeek * rentalDuration);
+      return rentalDuration * 7;
     case "monthly":
-      return roundCurrency(book.pricePerMonth * rentalDuration);
+      return rentalDuration * 30;
     default:
       throw new Error("Invalid rental type");
   }
+}
+
+function getTotalRentPrice(book, rentalType, rentalDuration) {
+  if (!book) {
+    throw new Error("Book is required for pricing");
+  }
+
+  const days = getRentalDays(rentalType, rentalDuration);
+  return roundCurrency((book.pricePerDay || 0) * days);
 }
 
 function getDueDate(rentedAt, rentalType, rentalDuration) {
@@ -61,7 +66,8 @@ function getOverdueDays(now, dueDate) {
 module.exports = {
   DAY_IN_MS,
   roundCurrency,
-  getRentalFee,
+  getRentalDays,
+  getTotalRentPrice,
   getDueDate,
   getOverdueDays,
 };
