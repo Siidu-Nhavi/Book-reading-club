@@ -6,7 +6,7 @@ export const rentalsApi = {
     return apiRequest(`/api/rentals/preview${query}`);
   },
   rentBook(bookId, rentalType, rentalDuration) {
-    return apiRequest("/api/rentals/create", {
+    return apiRequest("/api/rentals/reserve", {
       method: "POST",
       body: JSON.stringify({ bookId, rentalType, rentalDuration }),
     });

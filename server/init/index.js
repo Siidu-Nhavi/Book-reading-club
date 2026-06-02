@@ -6,7 +6,6 @@ const Book = require("../models/Book");
 const User = require("../models/User");
 const Rental = require("../models/Rental");
 const Review = require("../models/Review");
-const Wallet = require("../models/Wallet");
 const { generateSalt, hashPassword } = require("../utils/security.js");
 const { calculateBookPricing } = require("../utils/categoryPricing.js");
 
@@ -285,17 +284,12 @@ async function buildUsers(count, rng) {
     const hashedPassword = await hashPassword(password, salt);
 
     const role = index === 0 ? "admin" : "user";
-    const walletBalance = randomInt(rng, 500, 8000);
-
     users.push({
       name: `${firstName} ${lastName}`,
       email: `${normalizeSlug(firstName)}.${normalizeSlug(lastName)}.${suffix}@demo.local`,
       password: hashedPassword,
       salt,
       role,
-      walletBalanceCache: walletBalance,
-      pendingDuesTotal: 0,
-      isFlagged: false,
       depositAmount: 0,
       depositStatus: "pending",
       activeRentalsCount: 0,
@@ -507,7 +501,7 @@ async function syncDerivedFields() {
       {},
       { $set: { averageRating: 0, totalReviews: 0, isAvailable: true, unavailabilityReason: "none" } },
     ),
-    User.updateMany({}, { $set: { activeRentalsCount: 0, pendingDuesTotal: 0, isFlagged: false } }),
+    User.updateMany({}, { $set: { activeRentalsCount: 0 } }),
   ]);
 
   if (reviewStats.length > 0) {
@@ -570,12 +564,11 @@ async function initialize() {
     }
 
     console.log(
-      `Fresh-seed mode active. Clearing existing data for reviews, rentals, wallets, users, and books.`,
+      `Fresh-seed mode active. Clearing existing data for reviews, rentals, users, and books.`,
     );
 
     await Review.deleteMany({});
     await Rental.deleteMany({});
-    await Wallet.deleteMany({});
     await User.deleteMany({});
     await Book.deleteMany({});
 
@@ -592,9 +585,6 @@ async function initialize() {
       password: adminHashedPassword,
       salt: adminSalt,
       role: "admin",
-      walletBalanceCache: 10000,
-      pendingDuesTotal: 0,
-      isFlagged: false,
       depositAmount: 0,
       depositStatus: "pending",
       activeRentalsCount: 0,
@@ -607,17 +597,6 @@ async function initialize() {
         address: "Admin Office, Mumbai",
       },
     });
-
-    const allUsers = [...insertedUsers, adminUser];
-
-    await Wallet.insertMany(
-      allUsers.map((user) => ({
-        user: user._id,
-        balance: user.walletBalanceCache || 0,
-        lastUpdated: new Date(),
-      })),
-      { ordered: true },
-    );
 
     const rentalsPayload = buildRentals(insertedUsers, insertedBooks, TARGET_RENTALS, rng);
     const insertedRentals = await Rental.insertMany(rentalsPayload, { ordered: true });

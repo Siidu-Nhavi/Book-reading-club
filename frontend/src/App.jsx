@@ -8,7 +8,6 @@ import {
   AdminReturnsPage,
   AdminReviewsPage,
   AdminUsersPage,
-  AdminWalletPage,
   BookDetailPage,
   BooksCatalogPage,
   CareersPage,
@@ -25,7 +24,7 @@ import {
   SupportPage,
   TermsOfServicePage,
   UpdateProfile,
-  WalletPage,
+  PaymentMethods,
 } from "./pages/index.js";
 import PublicLayout from "./layouts/PublicLayout";
 import DashboardLayout from "./layouts/DashboardLayout";
@@ -64,8 +63,8 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
             <Route path="rentals" element={<MyRentalsPage />} />
-            <Route path="wallet" element={<WalletPage />} />
             <Route path="profile" element={<UpdateProfile />} />
+            <Route path="profile/payment" element={<PaymentMethods />} />
             <Route path="settings" element={<AccountSettings />} />
           </Route>
 
@@ -119,14 +118,6 @@ function App() {
             }
           />
           {/* Legacy admin routes for backward compatibility */}
-          <Route
-            path="/dashboard/admin/wallets"
-            element={
-              <AdminLayout>
-                <AdminWalletPage />
-              </AdminLayout>
-            }
-          />
           <Route
             path="/dashboard/admin/returns"
             element={

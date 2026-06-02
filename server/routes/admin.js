@@ -13,7 +13,6 @@ const {
   getAllUsers,
   toggleUserSuspension,
   assignRole,
-  topUpWallet,
 } = require("../controllers/admin/users.js");
 const {
   getAllRentals,
@@ -43,7 +42,6 @@ router.delete("/books/:id", requireAuth, requireAdmin, deleteBook);
 router.get("/users", requireAuth, requireAdmin, getAllUsers);
 router.put("/users/:id/suspend", requireAuth, requireAdmin, toggleUserSuspension);
 router.put("/users/:id/role", requireAuth, requireAdmin, assignRole);
-router.put("/users/:id/wallet", requireAuth, requireAdmin, topUpWallet);
 
 // Rentals Management
 router.get("/rentals", requireAuth, requireAdmin, getAllRentals);

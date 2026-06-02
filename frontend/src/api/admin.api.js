@@ -9,12 +9,6 @@ export const adminApi = {
     const query = buildQueryString(params);
     return apiRequest(`/api/rentals/all${query}`);
   },
-  topUpWallet(payload) {
-    return apiRequest("/api/wallet/topup", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    });
-  },
   processReturn(rentalId, payload) {
     return apiRequest(`/api/rentals/${rentalId}/return`, {
       method: "POST",

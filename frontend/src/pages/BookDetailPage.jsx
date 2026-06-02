@@ -23,7 +23,7 @@ import EmptyState from "../components/common/EmptyState";
 import LoadingSkeleton from "../components/common/LoadingSkeleton";
 import AvailabilityBadge from "../components/common/AvailabilityBadge";
 import RatingStars from "../components/common/RatingStars";
-import { rentalsApi, reviewsApi, walletApi } from "../api";
+import { paymentsApi, rentalsApi, reviewsApi } from "../api";
 import { booksApi } from "../lib/api";
 import { useAuth } from "../context/useAuth";
 import usePageTitle from "../hooks/usePageTitle";
@@ -41,7 +41,6 @@ import {
   // getBookWeeklyPrice,
   getTotalRentPrice,
   getRentalTotal,
-  getWalletAfterBalance,
   getWishlistIds,
   toggleWishlistBook,
 } from "../utils/books";
@@ -55,26 +54,27 @@ import {
 export default function BookDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated, refreshSession, user } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [book, setBook] = useState(null);
   const [similarBooks, setSimilarBooks] = useState([]);
   const [wishlistIds, setWishlistIds] = useState([]);
   const [rentalType, setRentalType] = useState("daily");
   const [rentalDuration, setRentalDuration] = useState(7);
   const [preview, setPreview] = useState(null);
-  const [walletBalance, setWalletBalance] = useState(Number(user?.walletBalance || 0));
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [reviews, setReviews] = useState([]);
   const [isRenting, setIsRenting] = useState(false);
   const [rentError, setRentError] = useState("");
+  const [rentMessage, setRentMessage] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState("");
   const [isRentModalOpen, setIsRentModalOpen] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState("");
+  const [paymentMethodsError, setPaymentMethodsError] = useState("");
+  const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] = useState(false);
 
   usePageTitle(book ? `${book.title} - BookNest` : "Book Details - BookNest");
-
-  useEffect(() => {
-    setWalletBalance(Number(user?.walletBalance || 0));
-  }, [user]);
 
   useEffect(() => {
     const handleUpdate = () => setWishlistIds(getWishlistIds());
@@ -142,18 +142,16 @@ export default function BookDetailPage() {
       }
 
       try {
-        const [wallet, pricingPreview] = await Promise.all([
-          walletApi.getBalance(),
-          rentalsApi.previewRental(book._id, rentalType, rentalDuration),
-        ]);
+        const pricingPreview = await rentalsApi.previewRental(book._id, rentalType, rentalDuration);
 
         if (!active) {
           return;
         }
 
-        setWalletBalance(Number(wallet.balance || 0));
         setPreview(pricingPreview.pricing || null);
         setRentError(pricingPreview.allowed ? "" : pricingPreview.message || "");
+        setRentMessage("");
+        setPaymentStatus("");
       } catch (requestError) {
         if (active) {
           setRentError(requestError.message || "Unable to preview rental");
@@ -167,6 +165,45 @@ export default function BookDetailPage() {
     };
   }, [book, isAuthenticated, rentalDuration, rentalType]);
 
+  useEffect(() => {
+    if (!isRentModalOpen || !isAuthenticated) {
+      return;
+    }
+
+    let active = true;
+
+    const loadPaymentMethods = async () => {
+      try {
+        setIsPaymentMethodsLoading(true);
+        setPaymentMethodsError("");
+        const response = await paymentsApi.getPaymentMethods();
+
+        if (!active) {
+          return;
+        }
+
+        setPaymentMethods(response?.methods || []);
+        setDefaultPaymentMethodId(response?.defaultPaymentMethodId || "");
+      } catch (requestError) {
+        if (active) {
+          setPaymentMethodsError(requestError.message || "Unable to load payment methods");
+          setPaymentMethods([]);
+          setDefaultPaymentMethodId("");
+        }
+      } finally {
+        if (active) {
+          setIsPaymentMethodsLoading(false);
+        }
+      }
+    };
+
+    loadPaymentMethods();
+
+    return () => {
+      active = false;
+    };
+  }, [isRentModalOpen, isAuthenticated]);
+
   const rating = useMemo(() => (book ? getBookRating(book) : 0), [book]);
   const reviewCount = useMemo(() => (book ? getBookReviewCount(book) : 0), [book]);
   const depositAmount = useMemo(() => (book ? getBookDepositAmount(book) : 0), [book]);
@@ -177,9 +214,7 @@ export default function BookDetailPage() {
   // const replacementCost = useMemo(() => (book ? getBookReplacementCost(book) : 0), [book]);
   const totalRentPrice = useMemo(() => (book ? getTotalRentPrice(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
   const totalCost = useMemo(() => (book ? getRentalTotal(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
-  const walletAfter = useMemo(() => getWalletAfterBalance(preview?.walletBalance ?? walletBalance, preview?.total ?? totalCost), [preview, totalCost, walletBalance]);
   const isWishlisted = book ? wishlistIds.includes(book._id) : false;
-
   const displayedReviews = reviews.length > 0
     ? reviews.map((review, index) => ({
         id: review?._id || `review-${index + 1}`,
@@ -202,34 +237,33 @@ export default function BookDetailPage() {
       return;
     }
 
-    // Check for pending dues before rental attempt
-    if (user?.pendingDuesTotal > 0) {
-      setRentError(`You have pending dues of ${formatBookPrice(user.pendingDuesTotal)} — clear dues to rent again`);
-      return;
-    }
-
-    // Check for flagged account
-    if (user?.isFlagged) {
-      setRentError("Your account is flagged until pending dues are cleared");
-      return;
-    }
-
-    // Check for sufficient wallet balance
-    const minimumRequired = totalCost;
-    if (walletBalance < minimumRequired) {
-      setIsRentModalOpen(false);
-      navigate("/dashboard/wallet");
+    if (!defaultPaymentMethodId) {
+      navigate(`/dashboard/profile/payment?return=${encodeURIComponent(`/books/${book._id}`)}`);
       return;
     }
 
     try {
       setIsRenting(true);
       setRentError("");
-      await rentalsApi.rentBook(book._id, rentalType, rentalDuration);
-      await refreshSession();
-      setIsRentModalOpen(false);
-      navigate("/dashboard/rentals");
+      setRentMessage("");
+      setPaymentStatus("");
+      const response = await rentalsApi.rentBook(book._id, rentalType, rentalDuration);
+      const status = response?.payment?.status || "processing";
+      const nextMessage = status === "succeeded"
+        ? "Payment captured. Finalizing your rental now."
+        : "Payment is processing. We will finalize your rental shortly.";
+      setPaymentStatus(nextMessage);
+      setRentMessage("");
+
+      setTimeout(() => {
+        setIsRentModalOpen(false);
+        navigate("/dashboard/rentals");
+      }, 1400);
     } catch (requestError) {
+      if (requestError?.code === "payment_method_required" || requestError?.code === "authentication_required") {
+        navigate(`/dashboard/profile/payment?return=${encodeURIComponent(`/books/${book._id}`)}`);
+        return;
+      }
       setRentError(requestError.message || "Unable to rent this book right now.");
     } finally {
       setIsRenting(false);
@@ -317,25 +351,12 @@ export default function BookDetailPage() {
                 {/* <Typography sx={{ color: PUBLIC_UI.muted }}>
                   Replacement cost: {formatBookPrice(replacementCost)}
                 </Typography> */}
-                {isAuthenticated ? (
-                  <Typography sx={{ color: PUBLIC_UI.primary, fontWeight: 700 }}>
-                    Wallet balance: {formatBookPrice(walletBalance)}
-                  </Typography>
-                ) : null}
-
                 <Button
                   variant="contained"
                   disabled={!book.isAvailable}
                   onClick={() => {
                     if (!isAuthenticated) {
                       navigate(`/login?redirect=${encodeURIComponent(`/books/${book._id}`)}`);
-                      return;
-                    }
-
-                    // Check if user has sufficient balance
-                    const minimumRequired = totalCost;
-                    if (walletBalance < minimumRequired) {
-                      navigate("/dashboard/wallet");
                       return;
                     }
 
@@ -581,17 +602,84 @@ export default function BookDetailPage() {
                 </Typography>
                 <Divider />
                 <Typography sx={{ fontWeight: 700, color: PUBLIC_UI.text }}>
-                  Total deducted now: {formatBookPrice(preview?.total ?? totalCost)}
+                  Total due now: {formatBookPrice(preview?.total ?? totalCost)}
                 </Typography>
-                <Typography variant="body2" sx={{ color: walletAfter < 0 ? PUBLIC_UI.danger : PUBLIC_UI.muted }}>
-                  Your wallet after: {formatBookPrice(walletAfter)}
-                </Typography>
+              </Stack>
+            </Paper>
+
+            <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, border: `1px solid ${PUBLIC_UI.border}` }}>
+              <Stack spacing={1}>
+                <Typography sx={{ fontWeight: 700, color: PUBLIC_UI.text }}>Saved payment methods</Typography>
+                {isPaymentMethodsLoading ? (
+                  <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
+                    Loading saved payment methods...
+                  </Typography>
+                ) : paymentMethodsError ? (
+                  <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
+                    {paymentMethodsError}
+                  </Typography>
+                ) : paymentMethods.length > 0 ? (
+                  <Stack spacing={0.6}>
+                    {paymentMethods.map((method) => (
+                      <Box
+                        key={method.id}
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                          bgcolor: PUBLIC_UI.surface,
+                          borderRadius: 2,
+                          px: 1.2,
+                          py: 0.8,
+                        }}
+                      >
+                        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                          <Typography variant="body2" sx={{ color: PUBLIC_UI.text, fontWeight: 600 }}>
+                            {method.brand ? method.brand.toUpperCase() : "Card"} •••• {method.last4}
+                          </Typography>
+                          {method.id === defaultPaymentMethodId ? (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                px: 0.8,
+                                py: 0.2,
+                                borderRadius: 999,
+                                bgcolor: PUBLIC_UI.accentSoft,
+                                color: PUBLIC_UI.accent,
+                                fontWeight: 700,
+                              }}
+                            >
+                              Default
+                            </Typography>
+                          ) : null}
+                        </Stack>
+                        <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
+                          exp {method.expMonth}/{String(method.expYear).slice(-2)}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Stack>
+                ) : (
+                  <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
+                    No saved cards found. Add one in your payment settings to continue.
+                  </Typography>
+                )}
               </Stack>
             </Paper>
 
             {rentError ? (
               <Alert severity="warning" sx={{ borderRadius: 2.5 }}>
                 {rentError}
+              </Alert>
+            ) : null}
+            {rentMessage ? (
+              <Alert severity="info" sx={{ borderRadius: 2.5 }}>
+                {rentMessage}
+              </Alert>
+            ) : null}
+            {paymentStatus ? (
+              <Alert severity="success" sx={{ borderRadius: 2.5 }}>
+                {paymentStatus}
               </Alert>
             ) : null}
 

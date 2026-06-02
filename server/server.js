@@ -1,4 +1,5 @@
 const express = require("express");
+const bodyParser = require("body-parser");
 const path = require("path");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/auth.js");
@@ -6,7 +7,8 @@ const booksRoutes = require("./routes/books.js");
 const profileRoutes = require("./routes/profile.js");
 const rentalsRoutes = require("./routes/rentals.js");
 const reviewsRoutes = require("./routes/reviews.js");
-const walletRoutes = require("./routes/wallet.js");
+const stripeRoutes = require("./routes/stripe.js");
+const paymentsRoutes = require("./routes/payments.js");
 const adminRoutes = require("./routes/admin.js");
 const cronRoutes = require("./routes/cron.js");
 const connectDB = require("./config/db.js");
@@ -42,8 +44,21 @@ app.use((req, res, next) => {
 });
 
 // content type - application/json
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use("/webhook", bodyParser.raw({ type: "application/json" }));
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith("/webhook")) {
+    return next();
+  }
+
+  return express.json()(req, res, next);
+});
+app.use((req, res, next) => {
+  if (req.originalUrl.startsWith("/webhook")) {
+    return next();
+  }
+
+  return express.urlencoded({ extended: true })(req, res, next);
+});
 app.use((req, _res, next) => {
   req.cookies = parseCookies(req.headers.cookie);
   next();
@@ -64,7 +79,8 @@ app.use("/api/books", booksRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/rentals", rentalsRoutes);
 app.use("/api/reviews", reviewsRoutes);
-app.use("/api/wallet", walletRoutes);
+app.use("/webhook", stripeRoutes);
+app.use("/api/payments", paymentsRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/cron", cronRoutes);
 

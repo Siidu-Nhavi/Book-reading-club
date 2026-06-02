@@ -1,14 +1,9 @@
 import {
   Alert,
   Avatar,
-  AvatarGroup,
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   FormControl,
   InputLabel,
   MenuItem,
@@ -25,12 +20,10 @@ import {
   Typography,
   Chip,
   Tooltip,
-  Badge,
 } from "@mui/material";
 import BlockIcon from "@mui/icons-material/Block";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import WalletIcon from "@mui/icons-material/Wallet";
 import { useEffect, useState } from "react";
 import usePageTitle from "../../hooks/usePageTitle";
 
@@ -64,164 +57,7 @@ const adminApi = {
     if (!response.ok) throw new Error("Failed to assign role");
     return response.json();
   },
-  topUpWallet: async (id, amount) => {
-    const response = await fetch(`/api/admin/users/${id}/wallet`, {
-      method: "PUT",
-      credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ amount }),
-    });
-    if (!response.ok) throw new Error("Failed to top-up wallet");
-    return response.json();
-  },
 };
-
-function WalletDialog({ open, onClose, user, onTopUp, loading }) {
-  const [amount, setAmount] = useState("");
-
-  const handleTopUp = () => {
-    if (!amount || parseFloat(amount) <= 0) {
-      alert("Please enter a valid amount");
-      return;
-    }
-    onTopUp(amount);
-    setAmount("");
-  };
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2.5,
-          boxShadow: "0 10px 40px rgba(0, 0, 0, 0.15)",
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          fontSize: "18px",
-          fontWeight: 800,
-          bgcolor: "linear-gradient(135deg, #1565c0 0%, #1040a2 100%)",
-          color: "#fff",
-          borderBottom: "none",
-          padding: "24px",
-        }}
-      >
-        💰 Top-up Wallet
-      </DialogTitle>
-      <Box sx={{ bgcolor: "#f5f5f5", px: 3, py: 1.5, fontSize: "13px", color: "#666", fontWeight: 600 }}>
-        User: <span style={{ color: "#1565c0", fontWeight: 800 }}>{user?.name}</span>
-      </Box>
-      <DialogContent sx={{ pt: 3, pb: 2.5 }}>
-        <Box
-          sx={{
-            mb: 3,
-            p: 2.5,
-            bgcolor: "#e3f2fd",
-            borderRadius: 2,
-            border: "1px solid #b3e5fc",
-          }}
-        >
-          <Typography variant="body2" sx={{ color: "#0d47a1", fontWeight: 700, fontSize: "13px", mb: 0.5 }}>
-            Current Balance
-          </Typography>
-          <Typography sx={{ color: "#1565c0", fontWeight: 800, fontSize: "24px" }}>
-            ₹{user?.walletBalance || 0}
-          </Typography>
-        </Box>
-        <Typography variant="caption" sx={{ color: "#999", fontWeight: 600, mb: 1, display: "block" }}>
-          Amount to Add
-        </Typography>
-        <TextField
-          fullWidth
-          type="number"
-          label="Enter amount in ₹"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="0"
-          variant="outlined"
-          size="medium"
-          inputProps={{ min: 0, step: 10 }}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              fontSize: "15px",
-              borderRadius: "12px",
-              fontWeight: 700,
-              "& input": {
-                textAlign: "right",
-              },
-              "&:hover": {
-                boxShadow: "0 2px 8px rgba(21, 101, 192, 0.1)",
-              },
-            },
-            "& .MuiOutlinedInput-input": {
-              padding: "12px 16px",
-            },
-          }}
-        />
-        {amount && (
-          <Box
-            sx={{
-              mt: 2,
-              p: 1.5,
-              bgcolor: "#f5f5f5",
-              borderRadius: 1.5,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography sx={{ fontSize: "13px", color: "#666", fontWeight: 600 }}>
-              New Balance
-            </Typography>
-            <Typography sx={{ fontSize: "16px", color: "#2e7d32", fontWeight: 800 }}>
-              ₹{(parseInt(user?.walletBalance || 0) + parseInt(amount || 0)).toLocaleString("en-IN")}
-            </Typography>
-          </Box>
-        )}
-      </DialogContent>
-      <DialogActions
-        sx={{
-          padding: "16px 24px",
-          borderTop: "1px solid #e0e0e0",
-          bgcolor: "#f9f9f9",
-          gap: 1.5,
-        }}
-      >
-        <Button
-          onClick={onClose}
-          sx={{
-            textTransform: "none",
-            fontWeight: 600,
-            color: "#666",
-            "&:hover": { bgcolor: "#e0e0e0" },
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={handleTopUp}
-          variant="contained"
-          disabled={loading || !amount || amount <= 0}
-          sx={{
-            textTransform: "none",
-            fontWeight: 700,
-            padding: "10px 28px",
-            borderRadius: "8px",
-            background: "linear-gradient(135deg, #1565c0 0%, #1040a2 100%)",
-            transition: "all 0.3s ease",
-            "&:hover:not(:disabled)": {
-              transform: "translateY(-2px)",
-              boxShadow: "0 8px 16px rgba(21, 101, 192, 0.3)",
-            },
-          }}
-        >
-          {loading ? "Processing..." : `Top-up ₹${amount || 0}`}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  );
-}
 
 export default function AdminUsersPage() {
   usePageTitle("Admin Users - BookNest");
@@ -232,8 +68,6 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [totalPages, setTotalPages] = useState(1);
-  const [walletDialogOpen, setWalletDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     loadUsers();
@@ -276,20 +110,6 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleTopUpWallet = async (amount) => {
-    try {
-      await adminApi.topUpWallet(selectedUser._id, parseFloat(amount));
-      setWalletDialogOpen(false);
-      loadUsers();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
-  const openWalletDialog = (user) => {
-    setSelectedUser(user);
-    setWalletDialogOpen(true);
-  };
 
   return (
     <Box sx={{ minHeight: "100vh", bgcolor: "#fafafa" }}>
@@ -311,7 +131,7 @@ export default function AdminUsersPage() {
               👥 Users Management
             </Typography>
             <Typography sx={{ color: "#666", fontSize: "14px" }}>
-              Manage user accounts, roles, permissions, and wallet balances.
+              Manage user accounts, roles, and permissions.
             </Typography>
           </Box>
           {/* Quick Stats */}
@@ -446,12 +266,6 @@ export default function AdminUsersPage() {
               <TableCell sx={{ fontWeight: 700, color: "#fff", fontSize: "14px", padding: "16px 12px" }} align="center">
                 Role
               </TableCell>
-              <TableCell
-                sx={{ fontWeight: 700, color: "#fff", fontSize: "14px", padding: "16px 12px" }}
-                align="right"
-              >
-                Balance
-              </TableCell>
               <TableCell sx={{ fontWeight: 700, color: "#fff", fontSize: "14px", padding: "16px 12px" }} align="center">
                 Status
               </TableCell>
@@ -466,13 +280,13 @@ export default function AdminUsersPage() {
             <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
                   <CircularProgress />
                 </TableCell>
               </TableRow>
             ) : users.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 8 }}>
+                <TableCell colSpan={5} align="center" sx={{ py: 8 }}>
                   <Box sx={{ textAlign: "center" }}>
                     <Typography sx={{ fontSize: "48px", mb: 1 }}>📭</Typography>
                     <Typography sx={{ color: "#999", fontWeight: 600 }}>
@@ -575,47 +389,6 @@ export default function AdminUsersPage() {
                       </Select>
                     </FormControl>
                   </TableCell>
-                  <TableCell align="right" sx={{ fontSize: "14px", fontWeight: 700, padding: "12px" }}>
-                    <Tooltip
-                      title={
-                        user.walletBalance > 500
-                          ? "Healthy balance"
-                          : user.walletBalance > 100
-                          ? "Good balance"
-                          : "Low balance"
-                      }
-                    >
-                      <Box
-                        sx={{
-                          display: "inline-block",
-                          bgcolor:
-                            user.walletBalance > 500
-                              ? "#e8f5e9"
-                              : user.walletBalance > 100
-                              ? "#fff3e0"
-                              : "#ffebee",
-                          color:
-                            user.walletBalance > 500
-                              ? "#2e7d32"
-                              : user.walletBalance > 100
-                              ? "#e65100"
-                              : "#d32f2f",
-                          padding: "6px 14px",
-                          borderRadius: "20px",
-                          fontSize: "13px",
-                          fontWeight: 700,
-                          border:
-                            user.walletBalance > 500
-                              ? "1px solid #a5d6a7"
-                              : user.walletBalance > 100
-                              ? "1px solid #ffe0b2"
-                              : "1px solid #ef9a9a",
-                        }}
-                      >
-                        ₹{user.walletBalance || 0}
-                      </Box>
-                    </Tooltip>
-                  </TableCell>
                   <TableCell align="center" sx={{ fontSize: "14px", padding: "12px" }}>
                     {user.isSuspended ? (
                       <Chip
@@ -665,26 +438,6 @@ export default function AdminUsersPage() {
                           }}
                         >
                           {user.isSuspended ? "Restore" : "Suspend"}
-                        </Button>
-                      </Tooltip>
-                      <Tooltip title="Add funds to wallet">
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<WalletIcon />}
-                          onClick={() => openWalletDialog(user)}
-                          sx={{
-                            textTransform: "none",
-                            fontSize: "11px",
-                            fontWeight: 600,
-                            padding: "6px 12px",
-                            borderColor: "#1565c0",
-                            color: "#1565c0",
-                            "&:hover": { bgcolor: "#e3f2fd", borderColor: "#0d47a1" },
-                            transition: "all 0.2s ease",
-                          }}
-                        >
-                          Top-up
                         </Button>
                       </Tooltip>
                     </Stack>
@@ -752,14 +505,6 @@ export default function AdminUsersPage() {
           </Stack>
         </Paper>
 
-        {/* Wallet Dialog */}
-        <WalletDialog
-          open={walletDialogOpen}
-          onClose={() => setWalletDialogOpen(false)}
-          user={selectedUser}
-          onTopUp={handleTopUpWallet}
-          loading={loading}
-        />
       </Box>
     </Box>
   );

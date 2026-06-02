@@ -30,6 +30,33 @@ const rentalSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    paymentStatus: {
+      type: String,
+      enum: ["pending", "paid", "failed", "refunded"],
+      default: "pending",
+      index: true,
+    },
+    paymentAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    paymentCurrency: {
+      type: String,
+      default: "INR",
+      uppercase: true,
+      trim: true,
+    },
+    paymentIntentId: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
+    paymentConfirmedAt: {
+      type: Date,
+      default: null,
+    },
     depositAmount: {
       type: Number,
       required: true,

@@ -29,9 +29,8 @@ function calculatePreview(rental, condition, damagePercentage) {
   }
 
   const depositRefund = condition === "good" ? depositAmount : Math.max(0, depositAmount - damageCharge);
-  const extraWalletDeduction = Math.max(0, damageCharge - depositAmount);
 
-  return { damageCharge, depositRefund, extraWalletDeduction };
+  return { damageCharge, depositRefund };
 }
 
 export default function AdminReturnsPage() {
@@ -75,7 +74,7 @@ export default function AdminReturnsPage() {
             Admin Rentals & Returns
           </Typography>
           <Typography sx={{ color: BOOKNEST_COLORS.muted }}>
-            Process returns, calculate damage charges, refund deposits, and create pending dues automatically.
+            Process returns, calculate damage charges, and manage deposit refunds.
           </Typography>
           {statusMessage ? <Alert severity="info">{statusMessage}</Alert> : null}
         </Stack>
@@ -142,8 +141,7 @@ export default function AdminReturnsPage() {
                 </Stack>
                 <Typography variant="body2" sx={{ color: BOOKNEST_COLORS.muted }}>
                   Damage charge: {formatBookPrice(Number(preview.damageCharge || 0))} • Deposit refund:{" "}
-                  {formatBookPrice(Number(preview.depositRefund || 0))} • Extra wallet deduction:{" "}
-                  {formatBookPrice(Number(preview.extraWalletDeduction || 0))}
+                  {formatBookPrice(Number(preview.depositRefund || 0))}
                 </Typography>
                 <Button
                   variant="contained"

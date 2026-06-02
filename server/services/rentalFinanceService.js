@@ -2,29 +2,10 @@ const Book = require("../models/Book.js");
 const Rental = require("../models/Rental.js");
 const User = require("../models/User.js");
 const { getDueDate, getOverdueDays, getTotalRentPrice, roundCurrency } = require("../utils/rentalPricing.js");
-const {
-  creditWallet,
-  createPendingDue,
-  debitWallet,
-  getWalletOverview,
-  syncUserFinancialFlags,
-} = require("./walletService.js");
 
-function getRestrictionMessage({ user, pendingDuesTotal, requiredTotal, walletBalance }) {
+function getRestrictionMessage({ user }) {
   if (user.isSuspended) {
     return "Your account is suspended";
-  }
-
-  if (pendingDuesTotal > 0) {
-    return `You have pending dues of ₹${pendingDuesTotal.toFixed(0)} — clear dues to rent again`;
-  }
-
-  if (user.isFlagged) {
-    return "Your account is flagged until pending dues are cleared";
-  }
-
-  if (walletBalance < requiredTotal) {
-    return "Insufficient balance — please top up your wallet";
   }
 
   if (user.activeRentalsCount >= user.maxRentalsAllowed) {
@@ -35,10 +16,9 @@ function getRestrictionMessage({ user, pendingDuesTotal, requiredTotal, walletBa
 }
 
 async function evaluateRentalEligibility({ userId, bookId, rentalType, rentalDuration }) {
-  const [user, book, walletInfo] = await Promise.all([
+  const [user, book] = await Promise.all([
     User.findById(userId),
     Book.findById(bookId),
-    getWalletOverview(userId),
   ]);
 
   if (!user) {
@@ -56,20 +36,13 @@ async function evaluateRentalEligibility({ userId, bookId, rentalType, rentalDur
   const totalRentPrice = getTotalRentPrice(book, rentalType, rentalDuration);
   const depositAmount = roundCurrency(book.depositAmount);
   const total = roundCurrency(totalRentPrice + depositAmount);
-  const restrictionMessage = getRestrictionMessage({
-    user,
-    pendingDuesTotal: walletInfo.pendingDuesTotal,
-    requiredTotal: total,
-    walletBalance: walletInfo.wallet.balance,
-  });
+  const restrictionMessage = getRestrictionMessage({ user });
 
   if (restrictionMessage) {
     return {
       allowed: false,
       status: 400,
       message: restrictionMessage,
-      walletBalance: walletInfo.wallet.balance,
-      pendingDuesTotal: walletInfo.pendingDuesTotal,
       totalRentPrice,
       depositAmount,
       total,
@@ -80,7 +53,6 @@ async function evaluateRentalEligibility({ userId, bookId, rentalType, rentalDur
     allowed: true,
     user,
     book,
-    wallet: walletInfo.wallet,
     totalRentPrice,
     depositAmount,
     total,
@@ -97,28 +69,16 @@ async function createRental({ userId, bookId, rentalType, rentalDuration }) {
   const rentedAt = new Date();
   const dueDate = getDueDate(rentedAt, rentalType, rentalDuration);
 
-  const debitResult = await debitWallet({
-    userId,
-    amount: eligibility.total,
-    reason: "rental_fee",
-    allowPartial: false,
-    note: `Rental charge for ${eligibility.book.title}`,
-  });
-
-  if (debitResult.appliedAmount !== eligibility.total) {
-    return {
-      allowed: false,
-      status: 400,
-      message: "Insufficient balance — please top up your wallet",
-    };
-  }
-
   const rental = await Rental.create({
     user: userId,
     book: bookId,
     rentalType,
     rentalDuration,
     totalRentPrice: eligibility.totalRentPrice,
+    paymentStatus: "paid",
+    paymentAmount: eligibility.total,
+    paymentCurrency: "INR",
+    paymentConfirmedAt: rentedAt,
     depositAmount: eligibility.depositAmount,
     rentedAt,
     dueDate,
@@ -141,7 +101,6 @@ async function createRental({ userId, bookId, rentalType, rentalDuration }) {
   return {
     allowed: true,
     rental,
-    walletBalance: debitResult.balance,
     chargedAmount: eligibility.total,
   };
 }
@@ -178,40 +137,11 @@ async function settleDamageAndDeposit({
     ? rental.depositAmount
     : Math.max(0, roundCurrency(rental.depositAmount - damageCharge));
 
-  let extraWalletDeduction = 0;
-  let pendingDue = null;
-  let shouldFlag = false;
-
-  if (deductible > 0) {
-    const reason = condition === "lost" ? "damage_charge" : "damage_charge";
-    const debitResult = await debitWallet({
-      userId,
-      amount: deductible,
-      reason,
-      referenceId: rental._id,
-      note: `Damage adjustment for ${book.title}`,
-      allowPartial: true,
-    });
-
-    extraWalletDeduction = debitResult.appliedAmount;
-
-    if (debitResult.remainingAmount > 0) {
-      pendingDue = await createPendingDue({
-        userId,
-        rentalId: rental._id,
-        amount: debitResult.remainingAmount,
-        reason: condition === "lost" ? "lost_charge" : "damage_charge",
-        note: `${condition} return due for ${book.title}`,
-      });
-      shouldFlag = true;
-    }
-  }
+  const shouldFlag = false;
 
   return {
     damageCharge,
     depositRefund,
-    extraWalletDeduction,
-    pendingDue,
     shouldFlag,
   };
 }
@@ -241,14 +171,6 @@ async function releaseHeldDepositsIfEligible(userId) {
     if (amount <= 0) {
       continue;
     }
-
-    await creditWallet({
-      userId,
-      amount,
-      reason: "deposit_refund",
-      referenceId: heldRental._id,
-      note: `Deposit refund released for ${heldRental.book?.title || "book"}`,
-    });
 
     await Rental.updateOne(
       { _id: heldRental._id },
@@ -341,10 +263,6 @@ async function processReturn({
     },
   };
 
-  if (settlement.shouldFlag) {
-    userUpdate.$set = { isFlagged: true };
-  }
-
   await User.updateOne(
     { _id: rental.user, activeRentalsCount: { $gt: 0 } },
     userUpdate,
@@ -363,7 +281,6 @@ async function processReturn({
 
   await Book.updateOne({ _id: book._id }, { $set: nextBookUpdate });
   const releasedDeposits = await releaseHeldDepositsIfEligible(rental.user);
-  await syncUserFinancialFlags(rental.user);
 
   return {
     ok: true,
@@ -375,8 +292,6 @@ async function processReturn({
     depositRefund: settlement.depositRefund,
     depositReleasedNow: releasedDeposits.releasedAmount,
     depositHeld: releaseStatus === "held" ? settlement.depositRefund : 0,
-    extraWalletDeduction: settlement.extraWalletDeduction,
-    pendingDue: settlement.pendingDue,
   };
 }
 
@@ -401,42 +316,15 @@ async function applyOverdueCharges(now = new Date()) {
     }
 
     const chargeAmount = roundCurrency((rental.book?.pricePerDay || 0) * incrementalDays);
-    const debitResult = await debitWallet({
-      userId: rental.user,
-      amount: chargeAmount,
-      reason: "overdue_charge",
-      referenceId: rental._id,
-      note: `Overdue charge for ${rental.book?.title || "book"}`,
-      allowPartial: true,
-    });
-
-    let pendingDue = null;
-    let nextStatus = "overdue";
-    let shouldFlag = false;
-
-    if (debitResult.remainingAmount > 0) {
-      pendingDue = await createPendingDue({
-        userId: rental.user,
-        rentalId: rental._id,
-        amount: debitResult.remainingAmount,
-        reason: "overdue_charge",
-        note: `Overdue balance for ${rental.book?.title || "book"}`,
-      });
-      nextStatus = "overdue";
-      shouldFlag = true;
-    }
-
-    if (overdueDays >= 7) {
-      nextStatus = "flagged";
-      shouldFlag = true;
-    }
+    const nextStatus = overdueDays >= 7 ? "flagged" : "overdue";
+    const shouldFlag = overdueDays >= 7;
 
     await Rental.updateOne(
       { _id: rental._id },
       {
         $set: {
           overdueDays,
-          overdueCharge: roundCurrency((rental.overdueCharge || 0) + debitResult.appliedAmount),
+          overdueCharge: roundCurrency((rental.overdueCharge || 0) + chargeAmount),
           lastOverdueChargeAt: now,
           status: nextStatus,
           restrictionApplied: shouldFlag,
@@ -444,15 +332,10 @@ async function applyOverdueCharges(now = new Date()) {
       },
     );
 
-    if (shouldFlag) {
-      await User.updateOne({ _id: rental.user }, { $set: { isFlagged: true } });
-    }
-
     results.push({
       rentalId: rental._id,
       overdueDays,
-      charged: debitResult.appliedAmount,
-      pendingDue: pendingDue?.amount || 0,
+      charged: chargeAmount,
       status: nextStatus,
     });
   }

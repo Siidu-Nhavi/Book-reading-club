@@ -54,7 +54,7 @@ function RatingInput({ value, onChange }) {
 
 export default function MyRentalsPage() {
   usePageTitle("My Rentals - BookNest");
-  const [data, setData] = useState({ rentals: [], alerts: [], wallet: null });
+  const [data, setData] = useState({ rentals: [], alerts: [] });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -106,12 +106,6 @@ export default function MyRentalsPage() {
           </Typography>
           <Typography sx={{ color: BOOKNEST_COLORS.muted }}>
             Track due dates, overdue charges, deposit holds, damage outcomes, and refund release status.
-          </Typography>
-          <Typography sx={{ fontWeight: 700, color: BOOKNEST_COLORS.primaryBrown }}>
-            Wallet balance: {formatBookPrice(Number(data.wallet?.balance || 0))}
-          </Typography>
-          <Typography sx={{ color: BOOKNEST_COLORS.muted }}>
-            Held refundable deposits: {formatBookPrice(Number(data.wallet?.heldRefundTotal || 0))}
           </Typography>
         </Stack>
       </Paper>
@@ -290,7 +284,7 @@ export default function MyRentalsPage() {
                   const heldAmount = Number(result?.returnSummary?.depositHeld || 0);
                   setMessage(
                     releasedNow > 0
-                      ? `Return completed and ${formatBookPrice(releasedNow)} was refunded to your wallet.`
+                      ? `Return completed and ${formatBookPrice(releasedNow)} was released.`
                       : heldAmount > 0
                         ? `Return completed. ${formatBookPrice(heldAmount)} refund is being held until you have no active rentals.`
                         : "Return completed successfully.",

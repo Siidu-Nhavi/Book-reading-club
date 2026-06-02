@@ -2,7 +2,6 @@ require("dotenv").config();
 const connectDB = require("../config/db.js");
 const User = require("../models/User.js");
 const Book = require("../models/Book.js");
-const Wallet = require("../models/Wallet.js");
 const Rental = require("../models/Rental.js");
 const { calculateBookPricing } = require("../utils/categoryPricing.js");
 
@@ -11,9 +10,6 @@ async function backfillUsers() {
     {},
     {
       $set: {
-        walletBalanceCache: 0,
-        pendingDuesTotal: 0,
-        isFlagged: false,
         depositAmount: 0,
         depositStatus: "pending",
         maxRentalsAllowed: 3,
@@ -80,29 +76,6 @@ async function backfillBooks() {
   };
 }
 
-async function backfillWallets() {
-  const users = await User.find({}).select("_id walletBalanceCache").lean();
-  const bulk = users.map((user) => ({
-    updateOne: {
-      filter: { user: user._id },
-      update: {
-        $setOnInsert: {
-          user: user._id,
-          balance: user.walletBalanceCache || 0,
-          lastUpdated: new Date(),
-        },
-      },
-      upsert: true,
-    },
-  }));
-
-  if (bulk.length === 0) {
-    return { upsertedCount: 0 };
-  }
-
-  return Wallet.bulkWrite(bulk);
-}
-
 async function backfillRentals() {
   const rentals = await Rental.find({}).lean();
 
@@ -167,17 +140,15 @@ async function run() {
   try {
     await connectDB();
 
-    const [userResult, bookResult, walletResult, rentalResult] = await Promise.all([
+    const [userResult, bookResult, rentalResult] = await Promise.all([
       backfillUsers(),
       backfillBooks(),
-      backfillWallets(),
       backfillRentals(),
     ]);
 
     console.log("Backfill completed successfully.");
     console.log(`Users matched: ${userResult.matchedCount}, modified: ${userResult.modifiedCount}`);
     console.log(`Books matched: ${bookResult.matchedCount}, modified: ${bookResult.modifiedCount}`);
-    console.log(`Wallet upserts: ${walletResult.upsertedCount || 0}`);
     console.log(`Rentals matched: ${rentalResult.matchedCount}, modified: ${rentalResult.modifiedCount}`);
 
     process.exit(0);

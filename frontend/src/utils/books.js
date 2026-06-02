@@ -61,10 +61,6 @@ export function getRentalTotal(book = {}, rentalType = "daily", rentalDuration =
   return getTotalRentPrice(book, rentalType, rentalDuration) + getBookDepositAmount(book);
 }
 
-export function getWalletAfterBalance(walletBalance = 0, total = 0) {
-  return Number(walletBalance || 0) - Number(total || 0);
-}
-
 export function formatCategoryLabel(category = "") {
   if (!category) {
     return "Uncategorized";

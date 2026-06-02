@@ -1,5 +1,4 @@
 const User = require("../../models/User.js");
-const Wallet = require("../../models/Wallet.js");
 const {
   hashPassword,
   generateToken,
@@ -38,11 +37,6 @@ async function register(req, res) {
     });
 
     await newUser.save();
-    await Wallet.create({
-      user: newUser._id,
-      balance: 0,
-      lastUpdated: new Date(),
-    });
 
     const token = generateToken(newUser);
 
@@ -56,9 +50,6 @@ async function register(req, res) {
         email: newUser.email,
         role: newUser.role,
         isSuspended: newUser.isSuspended,
-        isFlagged: newUser.isFlagged,
-        pendingDuesTotal: newUser.pendingDuesTotal,
-        walletBalance: 0,
       },
     });
   } catch (error) {

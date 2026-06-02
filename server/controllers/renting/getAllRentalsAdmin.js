@@ -28,7 +28,7 @@ async function getAllRentalsAdmin(req, res) {
   try {
     const [rentals, total] = await Promise.all([
       Rental.find(filters)
-        .populate("user", "name email isFlagged pendingDuesTotal")
+        .populate("user", "name email")
         .populate("book", "title author image replacementCost")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)

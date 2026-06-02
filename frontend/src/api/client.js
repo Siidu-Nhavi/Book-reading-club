@@ -39,7 +39,12 @@ export async function apiRequest(path, options = {}) {
 
   if (!response.ok) {
     const message = data?.error || data?.message || "Something went wrong";
-    throw new Error(message);
+    const error = new Error(message);
+    error.status = response.status;
+    if (data?.code) {
+      error.code = data.code;
+    }
+    throw error;
   }
 
   return data;

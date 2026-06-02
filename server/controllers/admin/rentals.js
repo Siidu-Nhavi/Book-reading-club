@@ -118,14 +118,6 @@ async function forceReturn(req, res) {
         condition: result.condition,
         damageCharge: result.damageCharge,
         depositRefund: result.depositRefund,
-        extraWalletDeduction: result.extraWalletDeduction,
-        pendingDue: result.pendingDue
-          ? {
-              _id: result.pendingDue._id,
-              amount: result.pendingDue.amount,
-              reason: result.pendingDue.reason,
-            }
-          : null,
         depositHeld: result.depositHeld,
         depositReleasedNow: result.depositReleasedNow,
       },

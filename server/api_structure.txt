@@ -1,6 +1,6 @@
 # Book Reading Club API Structure
 
-This file reflects the rental + wallet system now implemented in the server app.
+This file reflects the rental system now implemented in the server app.
 
 Base notes:
 - Base API prefix: `/api`
@@ -68,11 +68,9 @@ Response:
   "allowed": true,
   "message": "",
   "pricing": {
-    "rentalFee": 280,
+    "totalRentPrice": 280,
     "depositAmount": 500,
-    "total": 780,
-    "walletBalance": 1200,
-    "walletAfter": 420
+    "total": 780
   }
 }
 ```
@@ -98,15 +96,17 @@ Response:
     "book": "...",
     "rentalType": "daily",
     "rentalDuration": 7,
-    "rentalFee": 280,
+    "totalRentPrice": 280,
     "depositAmount": 500,
     "rentedAt": "...",
     "dueDate": "...",
-    "status": "active"
+    "status": "active",
+    "paymentStatus": "paid",
+    "paymentAmount": 780,
+    "paymentCurrency": "INR"
   },
-  "wallet": {
-    "chargedAmount": 780,
-    "balance": 420
+  "payment": {
+    "chargedAmount": 780
   }
 }
 ```
@@ -125,10 +125,6 @@ Response:
       "message": "Due in 2 days"
     }
   ],
-  "wallet": {
-    "balance": 420,
-    "pendingDuesTotal": 0
-  },
   "rentals": []
 }
 ```
@@ -138,86 +134,6 @@ Requires admin.
 
 Returns all rentals for return processing/admin reporting.
 
-### `POST /api/rentals/:id/return`
-Requires admin.
-
-Request:
-```json
-{
-  "condition": "minor",
-  "damagePercentage": 0.25,
-  "adminNote": "Corner tear"
-}
-```
-
-Conditions:
-- `good`
-- `minor`
-- `major`
-- `lost`
-
-Response:
-```json
-{
-  "message": "Return processed successfully",
-  "returnSummary": {
-    "rentalId": "...",
-    "returnedAt": "...",
-    "status": "returned",
-    "condition": "minor",
-    "damageCharge": 300,
-    "depositRefund": 200,
-    "extraWalletDeduction": 0,
-    "pendingDue": null
-  }
-}
-```
-
-## Wallet - `/api/wallet`
-
-### `GET /api/wallet/balance`
-Requires auth.
-
-Response:
-```json
-{
-  "balance": 420,
-  "pendingDuesTotal": 120,
-  "pendingDues": []
-}
-```
-
-### `GET /api/wallet/transactions`
-Requires auth.
-
-Response:
-```json
-{
-  "transactions": [
-    {
-      "_id": "...",
-      "type": "debit",
-      "amount": 780,
-      "reason": "rental_fee",
-      "referenceId": "...",
-      "createdAt": "..."
-    }
-  ]
-}
-```
-
-### `POST /api/wallet/topup`
-Requires admin.
-
-Request:
-```json
-{
-  "userId": "...",
-  "amount": 1000,
-  "note": "Manual admin top-up"
-}
-```
-
 ## Cron - `/api/cron`
 
 ### `POST /api/cron/check-overdue`
@@ -225,9 +141,7 @@ Requires admin.
 
 Runs the daily overdue processor:
 - calculates overdue days
-- deducts daily overdue charges from wallet
-- creates pending dues if wallet is short
-- flags rentals/accounts after 7 overdue days
+- updates rental overdue charges and status
 
 ## Admin - `/api/admin`
 
@@ -242,41 +156,14 @@ Response fields:
 - `name`
 - `email`
 - `role`
-- `isFlagged`
-- `pendingDuesTotal`
 - `isSuspended`
-- `walletBalance`
 
 ## Core Collections
 
 ### User
-- `walletBalanceCache`
-- `pendingDuesTotal`
-- `isFlagged`
 - `activeRentalsCount`
 - `maxRentalsAllowed`
 - `isSuspended`
-
-### Wallet
-- `user`
-- `balance`
-- `lastUpdated`
-
-### WalletTransaction
-- `user`
-- `type`
-- `amount`
-- `reason`
-- `referenceId`
-- `note`
-
-### PendingDue
-- `user`
-- `rental`
-- `amount`
-- `reason`
-- `status`
-- `note`
 
 ### Book
 - `pricePerDay`
@@ -303,15 +190,15 @@ Response fields:
 - `overdueCharge`
 - `status`
 - `restrictionApplied`
+- `paymentStatus`
+- `paymentAmount`
+- `paymentCurrency`
+- `paymentIntentId`
 
 ## Restriction Rules
 
 Block new rentals when:
-- wallet balance is lower than rental total
-- `pendingDuesTotal > 0`
-- `isFlagged === true`
 - `isSuspended === true`
 
 Show reasons such as:
-- `Insufficient balance — please top up your wallet`
-- `You have pending dues of ₹X — clear dues to rent again`
+ - `Your account is suspended`

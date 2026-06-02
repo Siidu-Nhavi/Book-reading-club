@@ -1,12 +1,11 @@
 import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import MenuBookRoundedIcon from "@mui/icons-material/MenuBookRounded";
-import AccountBalanceWalletRoundedIcon from "@mui/icons-material/AccountBalanceWalletRounded";
 import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
 import SupportAgentRoundedIcon from "@mui/icons-material/SupportAgentRounded";
 import AssignmentReturnRoundedIcon from "@mui/icons-material/AssignmentReturnRounded";
 import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
-
+import CreditCardRoundedIcon from "@mui/icons-material/CreditCardRounded";
 export const dashboardNavItems = [
   {
     label: "Overview",
@@ -20,14 +19,14 @@ export const dashboardNavItems = [
     icon: EditRoundedIcon,
   },
   {
+    label: "Payment Methods",
+    to: "/dashboard/profile/payment",
+    icon: CreditCardRoundedIcon,
+  },
+  {
     label: "My Rentals",
     to: "/dashboard/rentals",
     icon: AssignmentReturnRoundedIcon,
-  },
-  {
-    label: "Wallet",
-    to: "/dashboard/wallet",
-    icon: AccountBalanceWalletRoundedIcon,
   },
   {
     label: "Settings",
@@ -66,12 +65,6 @@ export const dashboardNavItems = [
     label: "Admin Reviews",
     to: "/dashboard/admin/reviews",
     icon: SupportAgentRoundedIcon,
-    roles: ["admin"],
-  },
-  {
-    label: "Admin Wallets",
-    to: "/dashboard/admin/wallets",
-    icon: ManageAccountsRoundedIcon,
     roles: ["admin"],
   },
   {

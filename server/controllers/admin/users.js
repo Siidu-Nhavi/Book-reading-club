@@ -1,5 +1,4 @@
 const User = require("../../models/User.js");
-const Wallet = require("../../models/Wallet.js");
 
 /**
  * GET /api/admin/users
@@ -36,21 +35,10 @@ async function getAllUsers(req, res) {
       .limit(parseInt(limit))
       .lean();
 
-    // Get wallet info for each user
-    const usersWithWallet = await Promise.all(
-      users.map(async (user) => {
-        const wallet = await Wallet.findOne({ user: user._id }).select("balance");
-        return {
-          ...user,
-          walletBalance: wallet?.balance || 0,
-        };
-      })
-    );
-
     const total = await User.countDocuments(searchFilter);
 
     return res.status(200).json({
-      users: usersWithWallet,
+      users,
       total,
       page: parseInt(page),
       limit: parseInt(limit),
@@ -128,45 +116,8 @@ async function assignRole(req, res) {
   }
 }
 
-/**
- * PUT /api/admin/users/:id/wallet
- * Top-up user wallet
- */
-async function topUpWallet(req, res) {
-  try {
-    const { id } = req.params;
-    const { amount, note } = req.body;
-
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ error: "Amount must be greater than 0" });
-    }
-
-    const user = await User.findById(id);
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-
-    let wallet = await Wallet.findOne({ user: id });
-    if (!wallet) {
-      wallet = new Wallet({ user: id, balance: 0 });
-    }
-
-    wallet.balance += parseFloat(amount);
-    await wallet.save();
-
-    return res.status(200).json({
-      message: "Wallet topped up successfully",
-      wallet,
-    });
-  } catch (error) {
-    console.error("Top-up wallet error:", error);
-    return res.status(500).json({ error: "Unable to top-up wallet" });
-  }
-}
-
 module.exports = {
   getAllUsers,
   toggleUserSuspension,
   assignRole,
-  topUpWallet,
 };

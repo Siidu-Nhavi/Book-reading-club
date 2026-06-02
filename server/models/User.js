@@ -28,20 +28,6 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    walletBalanceCache: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    pendingDuesTotal: {
-      type: Number,
-      default: 0,
-      min: 0,
-    },
-    isFlagged: {
-      type: Boolean,
-      default: false,
-    },
     depositAmount: {
       type: Number,
       default: 0,
@@ -65,6 +51,12 @@ const userSchema = new mongoose.Schema(
     isSuspended: {
       type: Boolean,
       default: false,
+    },
+    stripeCustomerId: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
     },
     profile: {
       type: profileSchema,

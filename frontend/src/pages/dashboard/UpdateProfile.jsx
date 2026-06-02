@@ -207,6 +207,38 @@ export default function UpdateProfile() {
 				</Typography>
 			</Box>
 
+			<Paper
+				elevation={0}
+				sx={{
+					p: 2,
+					borderRadius: 3,
+					border: `1px solid ${BOOKNEST_COLORS.border}`,
+					backgroundColor: BOOKNEST_COLORS.card,
+				}}
+			>
+				<Stack
+					direction={{ xs: "column", sm: "row" }}
+					spacing={1.5}
+					sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}
+				>
+					<Box>
+						<Typography sx={{ fontWeight: 700, color: BOOKNEST_COLORS.text }}>
+							Payment details
+						</Typography>
+						<Typography variant="body2" sx={{ color: BOOKNEST_COLORS.muted }}>
+							Add or update the card used for renting books.
+						</Typography>
+					</Box>
+					<Button
+						variant="contained"
+						onClick={() => navigate("/dashboard/profile/payment")}
+						sx={{ borderRadius: 999, textTransform: "none", fontWeight: 700 }}
+					>
+						Manage payment methods
+					</Button>
+				</Stack>
+			</Paper>
+
 			<Box
 				sx={{
 					display: "grid",

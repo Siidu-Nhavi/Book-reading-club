@@ -9,20 +9,20 @@
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js",
-    "test": "node --test",
     "init": "node ./init/index.js",
     "seed:all": "node ./init/index.js",
     "backfill:schema": "node ./scripts/backfillRentalFields.js",
-    "backfill:rental-wallet": "node ./scripts/backfillRentalFields.js",
     "cron:check-overdue": "node -e \"console.log('Call POST /api/cron/check-overdue with an admin session to run the overdue job.')\""
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "body-parser": "^2.2.2",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.3.1",
-    "multer": "^2.1.1"
+    "multer": "^2.1.1",
+    "stripe": "^22.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

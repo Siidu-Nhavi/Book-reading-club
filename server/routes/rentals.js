@@ -11,6 +11,7 @@ router.get("/preview", requireAuth, previewRental);
 router.get("/my-rentals", requireAuth, getMyRentals);
 router.get("/my", requireAuth, getMyRentals);
 router.get("/all", requireAuth, requireAdmin, getAllRentalsAdmin);
+router.post("/reserve", requireAuth, requireNotSuspended, rentBook);
 router.post("/create", requireAuth, requireNotSuspended, rentBook);
 router.post("/rent", requireAuth, requireNotSuspended, rentBook);
 router.post("/:id/return", requireAuth, returnBook);
