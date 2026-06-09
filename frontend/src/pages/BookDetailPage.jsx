@@ -248,7 +248,7 @@ export default function BookDetailPage() {
                     "&:hover": { bgcolor: PUBLIC_UI.primaryDark },
                   }}
                 >
-                  Rent Now
+                  Rent
                 </Button>
 
                 <Button

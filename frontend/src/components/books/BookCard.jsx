@@ -210,7 +210,7 @@ export default function BookCard({
                 },
               }}
             >
-              {book?.isAvailable ? "Rent Now" : "Rented"}
+              {book?.isAvailable ? "Rent" : "Rented"}
             </Button>
           </Stack>
         ) : null}

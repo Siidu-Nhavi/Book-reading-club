@@ -229,6 +229,22 @@ function BookFormDialog({ open, onClose, book, onSave, loading }) {
         />
         <TextField
           fullWidth
+          type="string"
+          label="Image"
+          name="image"
+          value={formData.image}
+          onChange={handleChange}
+          placeholder="Image URL"
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              fontSize: "14px",
+              padding: "10px",
+              borderRadius: "8px",
+            },
+          }}
+        />
+        <TextField
+          fullWidth
           type="number"
           label="Total Copies"
           name="totalCopies"

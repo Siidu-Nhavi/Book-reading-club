@@ -27,6 +27,16 @@ import { PUBLIC_SURFACE_SX, PUBLIC_UI } from "../utils/publicUi";
 
 const PAGE_SIZE = 12;
 const NAVBAR_HEIGHT = 72;
+const BOOK_GRID_SX = {
+  display: "grid",
+  gridTemplateColumns: {
+    xs: "repeat(auto-fill, minmax(150px, 1fr))",
+    sm: "repeat(auto-fill, minmax(190px, 1fr))",
+    md: "repeat(auto-fill, minmax(220px, 1fr))",
+    lg: "repeat(auto-fill, minmax(230px, 1fr))",
+  },
+  gap: { xs: 1.5, md: 1.75 },
+};
 
 const sortOptions = [
   { value: "relevance", label: "Relevance" },
@@ -493,7 +503,7 @@ export default function BooksCatalogPage() {
   );
 
   return (
-    <Box sx={{ pt: `${NAVBAR_HEIGHT}px`, minHeight: "100vh", bgcolor: PUBLIC_UI.pageBackground }}>
+    <Box sx={{ pt: `${0}px`, minHeight: "100vh", bgcolor: PUBLIC_UI.pageBackground }}>
       <FilterBar
         onOpenMobileFilters={() => setIsMobileFiltersOpen(true)}
       />
@@ -501,10 +511,11 @@ export default function BooksCatalogPage() {
       <Box
         sx={{
           display: "flex",
-          gap: { xs: 0, md: 3 },
-          maxWidth: "var(--max-width-page)",
+          gap: { xs: 0, md: 2 },
+          width: "100%",
+          maxWidth: "none",
           mx: "auto",
-          px: { xs: 2, md: 3 },
+          px: { xs: 2, md: 2 },
           py: { xs: 3, md: 4 },
           alignItems: "flex-start",
         }}
@@ -516,7 +527,7 @@ export default function BooksCatalogPage() {
             flexShrink: 0,
             position: "sticky",
             top: `${NAVBAR_HEIGHT + 20}px`,
-            width: { md: "240px", lg: "280px" },
+            width: { md: "220px", lg: "260px" },
             maxHeight: "calc(100vh - 100px)",
             overflowY: "auto",
             overflowX: "hidden",
@@ -588,26 +599,14 @@ export default function BooksCatalogPage() {
 
                 <Box>
                   {isLoading ? (
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: { xs: "repeat(auto-fill, minmax(150px, 1fr))", sm: "repeat(auto-fill, minmax(200px, 1fr))", md: "repeat(auto-fill, minmax(220px, 1fr))", lg: "repeat(auto-fill, minmax(260px, 1fr))" },
-                        gap: 2.2,
-                      }}
-                    >
+                    <Box sx={BOOK_GRID_SX}>
                       {Array.from({ length: 12 }).map((_, index) => (
                         <BookCardSkeleton key={`book-skeleton-${index + 1}`} />
                       ))}
                     </Box>
                   ) : paginatedBooks.length > 0 ? (
                     <Stack spacing={3}>
-                      <Box
-                        sx={{
-                          display: "grid",
-                          gridTemplateColumns: { xs: "repeat(auto-fill, minmax(150px, 1fr))", sm: "repeat(auto-fill, minmax(200px, 1fr))", md: "repeat(auto-fill, minmax(220px, 1fr))", lg: "repeat(auto-fill, minmax(260px, 1fr))" },
-                          gap: 2.2,
-                        }}
-                      >
+                      <Box sx={BOOK_GRID_SX}>
                         {paginatedBooks.map((book) => (
                           <BookCard
                             key={book._id}

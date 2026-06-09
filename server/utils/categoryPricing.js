@@ -8,7 +8,7 @@ function roundCurrency(value) {
 
 function calculateBookPricing({ basePrice, category }) {
   const normalizedBasePrice = Number.isFinite(Number(basePrice)) ? Number(basePrice) : 0;
-  const pricePerDay = roundCurrency(normalizedBasePrice * 0.001) + 3;
+  const pricePerDay = roundCurrency(normalizedBasePrice * 0.001) + 1;
   const depositAmount = roundCurrency(normalizedBasePrice);
   const replacementCost = roundCurrency(normalizedBasePrice);
 
