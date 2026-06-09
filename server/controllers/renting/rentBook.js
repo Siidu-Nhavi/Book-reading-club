@@ -33,6 +33,10 @@ function validateRentalInput({ rentalType, rentalDuration }) {
   return "";
 }
 
+function getRequestedPaymentMethodId(body = {}) {
+  return typeof body.paymentMethodId === "string" ? body.paymentMethodId.trim() : "";
+}
+
 function buildReservationPayload(reservation) {
   return {
     _id: reservation._id,
@@ -82,7 +86,43 @@ async function getDefaultPaymentMethod({ stripe, customer }) {
     return null;
   }
 
-  return defaultPaymentMethodId;
+  return typeof defaultPaymentMethodId === "string"
+    ? defaultPaymentMethodId
+    : defaultPaymentMethodId.id;
+}
+
+async function resolvePaymentMethodId({ stripe, customer, requestedPaymentMethodId }) {
+  if (!requestedPaymentMethodId) {
+    return getDefaultPaymentMethod({ stripe, customer });
+  }
+
+  let paymentMethod;
+
+  try {
+    paymentMethod = await stripe.paymentMethods.retrieve(requestedPaymentMethodId);
+  } catch {
+    const invalidPaymentMethodError = new Error("Invalid payment method");
+    invalidPaymentMethodError.status = 400;
+    throw invalidPaymentMethodError;
+  }
+
+  if (!paymentMethod || paymentMethod.type !== "card") {
+    const error = new Error("Invalid payment method");
+    error.status = 400;
+    throw error;
+  }
+
+  const ownerId = typeof paymentMethod.customer === "string"
+    ? paymentMethod.customer
+    : paymentMethod.customer?.id;
+
+  if (ownerId !== customer.id) {
+    const error = new Error("Payment method does not belong to this customer");
+    error.status = 403;
+    throw error;
+  }
+
+  return paymentMethod.id;
 }
 
 async function createOffSessionPaymentIntent({
@@ -128,6 +168,7 @@ async function rentBook(req, res) {
   }
 
   const rentalInput = normalizeRentalInput(req.body);
+  const requestedPaymentMethodId = getRequestedPaymentMethodId(req.body);
   const validationError = validateRentalInput(rentalInput);
 
   if (validationError) {
@@ -148,9 +189,13 @@ async function rentBook(req, res) {
 
     const stripe = getStripeClient();
     const customer = await getOrCreateStripeCustomer(req.user, stripe);
-    const defaultPaymentMethodId = await getDefaultPaymentMethod({ stripe, customer });
+    const paymentMethodId = await resolvePaymentMethodId({
+      stripe,
+      customer,
+      requestedPaymentMethodId,
+    });
 
-    if (!defaultPaymentMethodId) {
+    if (!paymentMethodId) {
       return res.status(400).json({
         error: "Payment method required",
         code: "payment_method_required",
@@ -220,7 +265,7 @@ async function rentBook(req, res) {
           stripe,
           reservation: activeReservation,
           customerId: customer.id,
-          paymentMethodId: defaultPaymentMethodId,
+          paymentMethodId,
         });
 
         return res.status(200).json({
@@ -267,7 +312,7 @@ async function rentBook(req, res) {
         stripe,
         reservation,
         customerId: customer.id,
-        paymentMethodId: defaultPaymentMethodId,
+        paymentMethodId,
       });
     } catch (error) {
       const paymentError = resolvePaymentError(error);
@@ -291,6 +336,10 @@ async function rentBook(req, res) {
       },
     });
   } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ error: error.message });
+    }
+
     console.error("Rent book error:", error);
     return res.status(500).json({ error: "Unable to create reservation" });
   }

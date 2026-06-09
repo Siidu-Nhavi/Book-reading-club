@@ -69,6 +69,7 @@ async function getAllBook(req, res) {
   const available = req.query.available;
 
   const filters = {};
+  filters.listingStatus = { $ne: "removed" };
 
   if (categories.length > 0) {
     filters.category = {

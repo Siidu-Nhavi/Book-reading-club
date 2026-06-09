@@ -1,6 +1,7 @@
 export { default as LandingPage } from "./LandingPage";
 export { default as BooksCatalogPage } from "./BooksCatalogPage";
 export { default as BookDetailPage } from "./BookDetailPage";
+export { default as BookCheckoutPage } from "./BookCheckoutPage";
 export { default as FeaturesPage } from "./FeaturesPage";
 export { default as PricingPage } from "./PricingPage";
 export { default as CommunityPage } from "./CommunityPage";
@@ -12,6 +13,7 @@ export { default as TermsOfServicePage } from "./legal/TermsOfServicePage";
 export { default as Login } from "./auth/Login";
 export { default as Signup } from "./auth/Signup";
 export { default as DashboardHome } from "./dashboard/DashboardHome";
+export { default as MyListingsPage } from "./dashboard/MyListingsPage";
 export { default as MyRentalsPage } from "./dashboard/MyRentalsPage";
 export { default as AdminDashboard } from "./dashboard/AdminDashboard";
 export { default as AdminBooksPage } from "./dashboard/AdminBooksPage";

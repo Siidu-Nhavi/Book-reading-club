@@ -4,6 +4,7 @@ const path = require("path");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/auth.js");
 const booksRoutes = require("./routes/books.js");
+const listingsRoutes = require("./routes/listings.js");
 const profileRoutes = require("./routes/profile.js");
 const rentalsRoutes = require("./routes/rentals.js");
 const reviewsRoutes = require("./routes/reviews.js");
@@ -76,6 +77,7 @@ app.get("/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/books", booksRoutes);
+app.use("/api/listings", listingsRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/rentals", rentalsRoutes);
 app.use("/api/reviews", reviewsRoutes);

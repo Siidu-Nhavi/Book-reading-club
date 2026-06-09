@@ -6,24 +6,20 @@ import {
   Box,
   Button,
   Container,
-  Dialog,
-  DialogContent,
-  DialogTitle,
   Divider,
   Paper,
   Stack,
   Typography,
 } from "@mui/material";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import BookCard from "../components/books/BookCard";
 import BookDetailColumns from "../components/books/BookDetailColumns";
 import BookMedia from "../components/books/BookMedia";
-import RentalDurationSelector from "../components/books/RentalDurationSelector";
 import EmptyState from "../components/common/EmptyState";
 import LoadingSkeleton from "../components/common/LoadingSkeleton";
 import AvailabilityBadge from "../components/common/AvailabilityBadge";
 import RatingStars from "../components/common/RatingStars";
-import { paymentsApi, rentalsApi, reviewsApi } from "../api";
+import { reviewsApi } from "../api";
 import { booksApi } from "../lib/api";
 import { useAuth } from "../context/useAuth";
 import usePageTitle from "../hooks/usePageTitle";
@@ -39,8 +35,6 @@ import {
   getBookReviewCount,
   getBookReviews,
   // getBookWeeklyPrice,
-  getTotalRentPrice,
-  getRentalTotal,
   getWishlistIds,
   toggleWishlistBook,
 } from "../utils/books";
@@ -54,25 +48,17 @@ import {
 export default function BookDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { isAuthenticated } = useAuth();
   const [book, setBook] = useState(null);
   const [similarBooks, setSimilarBooks] = useState([]);
   const [wishlistIds, setWishlistIds] = useState([]);
-  const [rentalType, setRentalType] = useState("daily");
-  const [rentalDuration, setRentalDuration] = useState(7);
-  const [preview, setPreview] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [reviews, setReviews] = useState([]);
-  const [isRenting, setIsRenting] = useState(false);
-  const [rentError, setRentError] = useState("");
-  const [rentMessage, setRentMessage] = useState("");
-  const [paymentStatus, setPaymentStatus] = useState("");
-  const [isRentModalOpen, setIsRentModalOpen] = useState(false);
-  const [paymentMethods, setPaymentMethods] = useState([]);
-  const [defaultPaymentMethodId, setDefaultPaymentMethodId] = useState("");
-  const [paymentMethodsError, setPaymentMethodsError] = useState("");
-  const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] = useState(false);
+  const pageNotice = searchParams.get("error") === "unavailable"
+    ? "This book is currently unavailable for checkout."
+    : "";
 
   usePageTitle(book ? `${book.title} - BookNest` : "Book Details - BookNest");
 
@@ -133,77 +119,6 @@ export default function BookDetailPage() {
     };
   }, [id]);
 
-  useEffect(() => {
-    let active = true;
-
-    const loadPreview = async () => {
-      if (!book || !isAuthenticated) {
-        return;
-      }
-
-      try {
-        const pricingPreview = await rentalsApi.previewRental(book._id, rentalType, rentalDuration);
-
-        if (!active) {
-          return;
-        }
-
-        setPreview(pricingPreview.pricing || null);
-        setRentError(pricingPreview.allowed ? "" : pricingPreview.message || "");
-        setRentMessage("");
-        setPaymentStatus("");
-      } catch (requestError) {
-        if (active) {
-          setRentError(requestError.message || "Unable to preview rental");
-        }
-      }
-    };
-
-    loadPreview();
-    return () => {
-      active = false;
-    };
-  }, [book, isAuthenticated, rentalDuration, rentalType]);
-
-  useEffect(() => {
-    if (!isRentModalOpen || !isAuthenticated) {
-      return;
-    }
-
-    let active = true;
-
-    const loadPaymentMethods = async () => {
-      try {
-        setIsPaymentMethodsLoading(true);
-        setPaymentMethodsError("");
-        const response = await paymentsApi.getPaymentMethods();
-
-        if (!active) {
-          return;
-        }
-
-        setPaymentMethods(response?.methods || []);
-        setDefaultPaymentMethodId(response?.defaultPaymentMethodId || "");
-      } catch (requestError) {
-        if (active) {
-          setPaymentMethodsError(requestError.message || "Unable to load payment methods");
-          setPaymentMethods([]);
-          setDefaultPaymentMethodId("");
-        }
-      } finally {
-        if (active) {
-          setIsPaymentMethodsLoading(false);
-        }
-      }
-    };
-
-    loadPaymentMethods();
-
-    return () => {
-      active = false;
-    };
-  }, [isRentModalOpen, isAuthenticated]);
-
   const rating = useMemo(() => (book ? getBookRating(book) : 0), [book]);
   const reviewCount = useMemo(() => (book ? getBookReviewCount(book) : 0), [book]);
   const depositAmount = useMemo(() => (book ? getBookDepositAmount(book) : 0), [book]);
@@ -212,8 +127,6 @@ export default function BookDetailPage() {
   // const weeklyPrice = useMemo(() => (book ? getBookWeeklyPrice(book) : 0), [book]);
   // const monthlyPrice = useMemo(() => (book ? getBookMonthlyPrice(book) : 0), [book]);
   // const replacementCost = useMemo(() => (book ? getBookReplacementCost(book) : 0), [book]);
-  const totalRentPrice = useMemo(() => (book ? getTotalRentPrice(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
-  const totalCost = useMemo(() => (book ? getRentalTotal(book, rentalType, rentalDuration) : 0), [book, rentalDuration, rentalType]);
   const isWishlisted = book ? wishlistIds.includes(book._id) : false;
   const displayedReviews = reviews.length > 0
     ? reviews.map((review, index) => ({
@@ -227,7 +140,7 @@ export default function BookDetailPage() {
       }))
     : getBookReviews(book || {});
 
-  const handleRentConfirm = async () => {
+  const handleRentNow = () => {
     if (!book) {
       return;
     }
@@ -237,37 +150,7 @@ export default function BookDetailPage() {
       return;
     }
 
-    if (!defaultPaymentMethodId) {
-      navigate(`/dashboard/profile/payment?return=${encodeURIComponent(`/books/${book._id}`)}`);
-      return;
-    }
-
-    try {
-      setIsRenting(true);
-      setRentError("");
-      setRentMessage("");
-      setPaymentStatus("");
-      const response = await rentalsApi.rentBook(book._id, rentalType, rentalDuration);
-      const status = response?.payment?.status || "processing";
-      const nextMessage = status === "succeeded"
-        ? "Payment captured. Finalizing your rental now."
-        : "Payment is processing. We will finalize your rental shortly.";
-      setPaymentStatus(nextMessage);
-      setRentMessage("");
-
-      setTimeout(() => {
-        setIsRentModalOpen(false);
-        navigate("/dashboard/rentals");
-      }, 1400);
-    } catch (requestError) {
-      if (requestError?.code === "payment_method_required" || requestError?.code === "authentication_required") {
-        navigate(`/dashboard/profile/payment?return=${encodeURIComponent(`/books/${book._id}`)}`);
-        return;
-      }
-      setRentError(requestError.message || "Unable to rent this book right now.");
-    } finally {
-      setIsRenting(false);
-    }
+    navigate(`/books/${book._id}/checkout?rentalType=daily&rentalDuration=7`);
   };
 
   if (isLoading) {
@@ -307,6 +190,8 @@ export default function BookDetailPage() {
   return (
     <Container maxWidth="xl" sx={{ py: { xs: 3.5, md: 6 } }}>
       <Stack spacing={4}>
+        {pageNotice ? <Alert severity="warning">{pageNotice}</Alert> : null}
+
         <Box
           sx={{
             display: "grid",
@@ -354,14 +239,7 @@ export default function BookDetailPage() {
                 <Button
                   variant="contained"
                   disabled={!book.isAvailable}
-                  onClick={() => {
-                    if (!isAuthenticated) {
-                      navigate(`/login?redirect=${encodeURIComponent(`/books/${book._id}`)}`);
-                      return;
-                    }
-
-                    setIsRentModalOpen(true);
-                  }}
+                  onClick={handleRentNow}
                   sx={{
                     ...PUBLIC_BUTTON_PRIMARY_SX,
                     borderRadius: 999,
@@ -515,185 +393,6 @@ export default function BookDetailPage() {
           </Box>
         </Box>
       </Stack>
-
-      <Dialog
-        open={isRentModalOpen}
-        onClose={() => setIsRentModalOpen(false)}
-        maxWidth="xs"
-        scroll="paper"
-        BackdropProps={{
-          sx: {
-            backgroundColor: "rgba(0, 0, 0, 0.58)",
-          },
-        }}
-        PaperProps={{
-          sx: {
-            width: "min(100%, 420px)",
-            maxWidth: "calc(100vw - 24px)",
-            maxHeight: "calc(100vh - 24px)",
-            m: { xs: 1.5, sm: 2 },
-            borderRadius: 4,
-            p: 0.5,
-            display: "flex",
-            flexDirection: "column",
-            overflow: "hidden",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            textAlign: "center",
-            fontWeight: 700,
-            pb: 1,
-          }}
-        >
-          Rent {book.title}
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={2.2} sx={{ pt: 1 }}>
-            <Paper
-              elevation={0}
-              sx={{
-                overflow: "hidden",
-                borderRadius: 3,
-                border: `1px solid ${PUBLIC_UI.border}`,
-              }}
-            >
-              <Box
-                component="img"
-                src={book.image}
-                alt={book.title}
-                sx={{
-                  width: "100%",
-                  height: 140,
-                  objectFit: "cover",
-                  display: "block",
-                }}
-              />
-            </Paper>
-
-            <Stack spacing={0.4} sx={{ textAlign: "center" }}>
-              <Typography sx={{ fontWeight: 700, color: PUBLIC_UI.text }}>
-                {book.title}
-              </Typography>
-              <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
-                by {book.author}
-              </Typography>
-            </Stack>
-
-            <RentalDurationSelector
-              rentalType={rentalType}
-              rentalDuration={rentalDuration}
-              onTypeChange={(nextType) => {
-                setRentalType(nextType);
-                setRentalDuration(nextType === "daily" ? 7 : 1);
-              }}
-              onDurationChange={setRentalDuration}
-            />
-
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, bgcolor: PUBLIC_UI.surfaceSoft }}>
-              <Stack spacing={1}>
-                <Typography sx={{ fontWeight: 700, color: PUBLIC_UI.text }}>Price breakdown</Typography>
-                <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
-                  Total rent: {formatBookPrice(preview?.totalRentPrice ?? totalRentPrice)}
-                </Typography>
-                <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
-                  Security deposit: {formatBookPrice(preview?.depositAmount ?? depositAmount)}
-                </Typography>
-                <Divider />
-                <Typography sx={{ fontWeight: 700, color: PUBLIC_UI.text }}>
-                  Total due now: {formatBookPrice(preview?.total ?? totalCost)}
-                </Typography>
-              </Stack>
-            </Paper>
-
-            <Paper elevation={0} sx={{ p: 2, borderRadius: 2.5, border: `1px solid ${PUBLIC_UI.border}` }}>
-              <Stack spacing={1}>
-                <Typography sx={{ fontWeight: 700, color: PUBLIC_UI.text }}>Saved payment methods</Typography>
-                {isPaymentMethodsLoading ? (
-                  <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
-                    Loading saved payment methods...
-                  </Typography>
-                ) : paymentMethodsError ? (
-                  <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
-                    {paymentMethodsError}
-                  </Typography>
-                ) : paymentMethods.length > 0 ? (
-                  <Stack spacing={0.6}>
-                    {paymentMethods.map((method) => (
-                      <Box
-                        key={method.id}
-                        sx={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          bgcolor: PUBLIC_UI.surface,
-                          borderRadius: 2,
-                          px: 1.2,
-                          py: 0.8,
-                        }}
-                      >
-                        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                          <Typography variant="body2" sx={{ color: PUBLIC_UI.text, fontWeight: 600 }}>
-                            {method.brand ? method.brand.toUpperCase() : "Card"} •••• {method.last4}
-                          </Typography>
-                          {method.id === defaultPaymentMethodId ? (
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                px: 0.8,
-                                py: 0.2,
-                                borderRadius: 999,
-                                bgcolor: PUBLIC_UI.accentSoft,
-                                color: PUBLIC_UI.accent,
-                                fontWeight: 700,
-                              }}
-                            >
-                              Default
-                            </Typography>
-                          ) : null}
-                        </Stack>
-                        <Typography variant="caption" sx={{ color: PUBLIC_UI.muted }}>
-                          exp {method.expMonth}/{String(method.expYear).slice(-2)}
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                ) : (
-                  <Typography variant="body2" sx={{ color: PUBLIC_UI.muted }}>
-                    No saved cards found. Add one in your payment settings to continue.
-                  </Typography>
-                )}
-              </Stack>
-            </Paper>
-
-            {rentError ? (
-              <Alert severity="warning" sx={{ borderRadius: 2.5 }}>
-                {rentError}
-              </Alert>
-            ) : null}
-            {rentMessage ? (
-              <Alert severity="info" sx={{ borderRadius: 2.5 }}>
-                {rentMessage}
-              </Alert>
-            ) : null}
-            {paymentStatus ? (
-              <Alert severity="success" sx={{ borderRadius: 2.5 }}>
-                {paymentStatus}
-              </Alert>
-            ) : null}
-
-            <Button
-              variant="contained"
-              onClick={handleRentConfirm}
-              disabled={isRenting || Boolean(rentError)}
-              sx={{ ...PUBLIC_BUTTON_PRIMARY_SX, borderRadius: 999, py: 1.1 }}
-            >
-              {isRenting ? "Processing..." : "Confirm Rental"}
-            </Button>
-          </Stack>
-        </DialogContent>
-      </Dialog>
     </Container>
   );
 }

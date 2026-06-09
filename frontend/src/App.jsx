@@ -9,6 +9,7 @@ import {
   AdminReviewsPage,
   AdminUsersPage,
   BookDetailPage,
+  BookCheckoutPage,
   BooksCatalogPage,
   CareersPage,
   CommunityPage,
@@ -16,6 +17,7 @@ import {
   FeaturesPage,
   LandingPage,
   Login,
+  MyListingsPage,
   MyRentalsPage,
   NotFoundPage,
   PricingPage,
@@ -59,9 +61,14 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route element={<ProtectedRoute />}>
+          <Route element={<PublicLayout />}>
+            <Route path="/books/:id/checkout" element={<BookCheckoutPage />} />
+          </Route>
+
           {/* Regular Dashboard Routes */}
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<DashboardHome />} />
+            <Route path="listings" element={<MyListingsPage />} />
             <Route path="rentals" element={<MyRentalsPage />} />
             <Route path="profile" element={<UpdateProfile />} />
             <Route path="profile/payment" element={<PaymentMethods />} />

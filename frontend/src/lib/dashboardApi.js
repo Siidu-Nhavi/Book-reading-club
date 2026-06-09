@@ -1,5 +1,5 @@
 import { booksApi } from "./api";
-import { rentalsApi } from "../api";
+import { listingsApi, rentalsApi } from "../api";
 import {
   formatBookPrice,
   formatCategoryLabel,
@@ -35,7 +35,10 @@ function createBookCover(book) {
 
 function normalizeDashboardBook(book = {}, overrides = {}) {
   const weeklyRent = getBookWeeklyPrice(book);
-  const availability = book?.available === false ? "paused" : "active";
+  const availability =
+    book?.available === false || book?.isAvailable === false || book?.listingStatus === "inactive"
+      ? "paused"
+      : "active";
 
   return {
     id: String(book?._id || overrides.id || Math.random()),
@@ -90,10 +93,10 @@ function buildFallbackActivity(userSummary, listedBooks) {
     },
     {
       id: "activity-2",
-      title: "Wishlist updated",
+      title: listedBooks[0] ? "Listing active" : "Listings ready",
       description: listedBooks[0]
-        ? `${listedBooks[0].title} is pinned as a recommended catalog pick for your dashboard.`
-        : "Add books to your wishlist to surface personalized recommendations here.",
+        ? `${listedBooks[0].title} is available from your personal listings.`
+        : "Add a book listing to make it available for readers to rent.",
       timeLabel: "Today",
       tone: "accent",
     },
@@ -123,18 +126,6 @@ function buildFallbackRentals(catalogBooks) {
     });
 }
 
-function buildFallbackListedBooks(catalogBooks) {
-  return safeArray(catalogBooks)
-    .slice(3, 6)
-    .map((book) =>
-      normalizeDashboardBook(book, {
-        meta: "Live in catalog",
-        ctaLabel: "View details",
-        ctaTo: `/books/${book?._id}`,
-      }),
-    );
-}
-
 function buildFallbackWishlist(catalogBooks) {
   const wishlistIds = new Set(getWishlistIds());
   const wishlistedBooks = safeArray(catalogBooks).filter((book) => wishlistIds.has(book?._id));
@@ -145,6 +136,16 @@ function buildFallbackWishlist(catalogBooks) {
       meta: book?.available === false ? "Unavailable right now" : "Available to rent",
       ctaLabel: "Browse",
       ctaTo: `/books/${book?._id}`,
+    }),
+  );
+}
+
+function buildLiveListedBooks(listings = []) {
+  return safeArray(listings).map((listing) =>
+    normalizeDashboardBook(listing, {
+      meta: listing?.listedAt ? `Listed ${formatDateLabel(new Date(listing.listedAt))}` : "Listed by you",
+      ctaLabel: "Manage",
+      ctaTo: "/dashboard/listings",
     }),
   );
 }
@@ -256,7 +257,7 @@ export function normalizeDashboardOverview(raw = {}, user = {}) {
   const userSummary = normalizeUserSummary(user);
   const catalogBooks = safeArray(raw?.books);
   const rentals = buildFallbackRentals(catalogBooks);
-  const listedBooks = buildFallbackListedBooks(catalogBooks);
+  const listedBooks = buildLiveListedBooks(raw?.listings);
   const wishlist = buildFallbackWishlist(catalogBooks);
   const activity = buildFallbackActivity(userSummary, listedBooks);
 
@@ -274,8 +275,15 @@ export async function getDashboardOverview(user, options = {}) {
   const useRealRentals = Boolean(options?.useRealRentals);
 
   try {
-    const response = await booksApi.list({ limit: 12, sortBy: "newest" });
-    const normalized = normalizeDashboardOverview({ books: response?.books || [] }, user);
+    const [booksResponse, listingsResponse] = await Promise.allSettled([
+      booksApi.list({ limit: 12, sortBy: "newest" }),
+      listingsApi.getMyListings(),
+    ]);
+    const books =
+      booksResponse.status === "fulfilled" ? booksResponse.value?.books || [] : [];
+    const listings =
+      listingsResponse.status === "fulfilled" ? listingsResponse.value?.listings || [] : [];
+    const normalized = normalizeDashboardOverview({ books, listings }, user);
 
     if (!useRealRentals) {
       return normalized;

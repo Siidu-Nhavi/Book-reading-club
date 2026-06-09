@@ -5,10 +5,10 @@ export const rentalsApi = {
     const query = buildQueryString({ bookId, rentalType, rentalDuration });
     return apiRequest(`/api/rentals/preview${query}`);
   },
-  rentBook(bookId, rentalType, rentalDuration) {
+  rentBook(bookId, rentalType, rentalDuration, paymentMethodId = "") {
     return apiRequest("/api/rentals/reserve", {
       method: "POST",
-      body: JSON.stringify({ bookId, rentalType, rentalDuration }),
+      body: JSON.stringify({ bookId, rentalType, rentalDuration, paymentMethodId }),
     });
   },
   returnBook(rentalId, payload) {

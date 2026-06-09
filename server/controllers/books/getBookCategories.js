@@ -2,7 +2,7 @@ const Book = require("../../models/Book.js");
 
 async function getBookCategories(_req, res) {
   try {
-    const categories = await Book.distinct("category");
+    const categories = await Book.distinct("category", { listingStatus: { $ne: "removed" } });
 
     const normalizedCategories = categories
       .filter(Boolean)

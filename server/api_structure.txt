@@ -48,6 +48,58 @@ Full book fields include:
 - `isAvailable`
 - `unavailabilityReason`
 
+### `GET /api/listings/my`
+Requires auth.
+
+Returns the current user’s active and inactive listings, excluding removed listings.
+
+### `POST /api/listings`
+Requires auth.
+
+Request:
+```json
+{
+  "title": "Tokyo Drift",
+  "author": "Kei Watanabe",
+  "description": "A fast-paced novel set in modern Tokyo.",
+  "category": "Fiction",
+  "image": "https://example.com/cover.jpg",
+  "rentPrice": 299
+}
+```
+
+Response:
+```json
+{
+  "message": "Book listing created successfully",
+  "listing": {
+    "_id": "...",
+    "listedBy": "...",
+    "listingStatus": "active",
+    "title": "Tokyo Drift",
+    "author": "Kei Watanabe",
+    "description": "A fast-paced novel set in modern Tokyo.",
+    "category": "Fiction",
+    "rentPrice": 299,
+    "pricePerDay": 3.3,
+    "depositAmount": 299,
+    "replacementCost": 299,
+    "isAvailable": true,
+    "unavailabilityReason": "none"
+  }
+}
+```
+
+### `PUT /api/listings/:id`
+Requires auth.
+
+Updates a listing owned by the authenticated user using the same request shape as create.
+
+### `DELETE /api/listings/:id`
+Requires auth.
+
+Marks a listing as removed so it no longer appears in public book queries.
+
 ## Rentals - `/api/rentals`
 
 ### `GET /api/rentals/preview`

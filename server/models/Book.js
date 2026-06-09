@@ -3,6 +3,22 @@ const mongoose = require("mongoose");
 
 const bookSchema = new mongoose.Schema(
   {
+    listedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+      index: true,
+    },
+    listingStatus: {
+      type: String,
+      enum: ["active", "inactive", "removed"],
+      default: "active",
+      index: true,
+    },
+    listedAt: {
+      type: Date,
+      default: null,
+    },
     title: {
       type: String,
       required: true,
@@ -76,3 +92,20 @@ const bookSchema = new mongoose.Schema(
 const Book = mongoose.models.Book || mongoose.model("Book", bookSchema);
 
 module.exports = Book;
+
+// middleware to calculate average rating and total reviews
+bookSchema.pre("save", async function (next) {
+  if (!this.isModified("averageRating") && !this.isModified("totalReviews")) {
+    return next();
+  }
+
+  try {
+    const Review = mongoose.model("Review");
+    const reviews = await Review.find({ book: this._id });
+    this.totalReviews = reviews.length;
+    this.averageRating = reviews.length > 0 ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length : 0;
+    next();
+  } catch (err) {
+    next(err);
+  }
+});

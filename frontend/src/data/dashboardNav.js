@@ -29,6 +29,11 @@ export const dashboardNavItems = [
     icon: AssignmentReturnRoundedIcon,
   },
   {
+    label: "My Listings",
+    to: "/dashboard/listings",
+    icon: MenuBookRoundedIcon,
+  },
+  {
     label: "Settings",
     to: "/dashboard/settings",
     icon: SettingsRoundedIcon,

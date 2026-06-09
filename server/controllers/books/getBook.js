@@ -9,7 +9,7 @@ async function getBook(req, res) {
   }
 
   try {
-    const book = await Book.findById(id);
+    const book = await Book.findOne({ _id: id, listingStatus: { $ne: "removed" } });
 
     if (!book) {
       return res.status(404).json({ error: "Book not found" });

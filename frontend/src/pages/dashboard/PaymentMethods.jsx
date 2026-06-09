@@ -14,7 +14,11 @@ const stripePromise = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
   : null;
 
-function SetupCardForm({ clientSecret, onComplete, onError }) {
+function getSafeReturnPath(value = "") {
+  return value.startsWith("/") && !value.startsWith("//") ? value : "";
+}
+
+function SetupCardForm({ onComplete, onError }) {
   const stripe = useStripe();
   const elements = useElements();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -97,7 +101,10 @@ export default function PaymentMethods() {
   const [isCreatingSetupIntent, setIsCreatingSetupIntent] = useState(false);
   const [notice, setNotice] = useState("");
 
-  const returnPath = useMemo(() => searchParams.get("return") || "", [searchParams]);
+  const returnPath = useMemo(() => getSafeReturnPath(searchParams.get("return") || ""), [searchParams]);
+  const redirectNotice = searchParams.get("notice") === "payment_required"
+    ? "Add a saved card before confirming your rental."
+    : "";
 
   const loadMethods = async () => {
     try {
@@ -190,6 +197,7 @@ export default function PaymentMethods() {
       </Box>
 
       {pageError ? <Alert severity="error">{pageError}</Alert> : null}
+      {redirectNotice ? <Alert severity="info">{redirectNotice}</Alert> : null}
       {actionError ? <Alert severity="warning">{actionError}</Alert> : null}
       {notice ? <Alert severity="success">{notice}</Alert> : null}
 
@@ -304,7 +312,6 @@ export default function PaymentMethods() {
           ) : stripePromise && stripeOptions ? (
             <Elements stripe={stripePromise} options={stripeOptions}>
               <SetupCardForm
-                clientSecret={clientSecret}
                 onComplete={handleSetupComplete}
                 onError={setActionError}
               />

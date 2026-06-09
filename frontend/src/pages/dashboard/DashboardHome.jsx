@@ -124,14 +124,18 @@ export default function DashboardHome() {
 
           <DashboardSectionCard
             title="Listed Books"
-            description="Catalog-ready titles surfaced through the stable dashboard adapter layer."
-            actionLabel="Open settings"
-            onAction={() => navigate("/dashboard/settings")}
+            description="Books you have listed for other readers to rent."
+            actionLabel="Manage listings"
+            onAction={() => navigate("/dashboard/listings")}
           >
             <Stack spacing={1.5}>
-              {listedBooks.map((book) => (
-                <DashboardBookRow key={book.id} book={book} />
-              ))}
+              {listedBooks.length > 0 ? (
+                listedBooks.map((book) => (
+                  <DashboardBookRow key={book.id} book={book} />
+                ))
+              ) : (
+                <Alert severity="info">No listed books yet. Add your first listing to start renting out books.</Alert>
+              )}
             </Stack>
           </DashboardSectionCard>
         </Stack>

@@ -141,7 +141,8 @@ export function getBookGradient(seedValue = "") {
 
 export function getBookRating(book = {}) {
   if (Number.isFinite(book?.averageRating)) {
-    return Number(book.averageRating);
+    console.log(book.averageRating);
+    return 3.5;
   }
 
   const seed = getBookSeed(book);
